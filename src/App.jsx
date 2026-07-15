@@ -1,0 +1,65 @@
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/Login';
+import AdminLayout from './pages/AdminLayout';
+import ProfesionalLayout from './pages/ProfesionalLayout';
+import Placeholder from './pages/Placeholder';
+import Productos from './pages/admin/Productos';
+import Campanas from './pages/admin/Campanas';
+import PedidosHoy from './pages/admin/PedidosHoy';
+
+function RaizSegunSesion() {
+  const { usuario, cargandoSesion } = useAuth();
+  if (cargandoSesion) return <div className="pantalla-carga">Cargando sesión…</div>;
+  if (!usuario) return <Navigate to="/login" replace />;
+  return <Navigate to={usuario.rol === 'PROFESIONAL' ? '/profesional' : '/admin'} replace />;
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<RaizSegunSesion />} />
+      <Route path="/login" element={<Login />} />
+
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute rolesPermitidos={['ADMIN', 'RECEPCION']}>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Placeholder titulo="Dashboard" />} />
+        <Route path="agenda" element={<Placeholder titulo="Agenda del día" />} />
+        <Route path="chats" element={<Placeholder titulo="Chats en vivo" />} />
+        <Route path="lista-espera" element={<Placeholder titulo="Lista de espera" />} />
+        <Route path="productos" element={<Productos />} />
+        <Route path="campanas" element={<Campanas />} />
+        <Route path="pedidos" element={<PedidosHoy />} />
+      </Route>
+
+      <Route
+        path="/profesional"
+        element={
+          <ProtectedRoute rolesPermitidos={['PROFESIONAL']}>
+            <ProfesionalLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Placeholder titulo="Mi agenda" />} />
+        <Route path="disponibilidad" element={<Placeholder titulo="Mi disponibilidad" />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  );
+}

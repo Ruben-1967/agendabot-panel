@@ -1,0 +1,43 @@
+import { Outlet, NavLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
+export default function AdminLayout() {
+  const { usuario, cerrarSesion } = useAuth();
+  const esCatalogoRotativo = usuario?.empresaModoOperacion === 'CATALOGO_ROTATIVO';
+
+  return (
+    <div className="layout">
+      <aside className="sidebar">
+        <div className="sidebar-brand">
+          Agenda<span className="accent">Bot</span>
+        </div>
+        <nav>
+          <NavLink to="/admin" end>Dashboard</NavLink>
+          {esCatalogoRotativo ? (
+            <>
+              <NavLink to="/admin/pedidos">Pedidos de hoy</NavLink>
+              <NavLink to="/admin/campanas">Campañas</NavLink>
+              <NavLink to="/admin/productos">Productos</NavLink>
+            </>
+          ) : (
+            <>
+              <NavLink to="/admin/agenda">Agenda del día</NavLink>
+              <NavLink to="/admin/chats">Chats en vivo</NavLink>
+              <NavLink to="/admin/lista-espera">Lista de espera</NavLink>
+            </>
+          )}
+        </nav>
+        <div className="sidebar-footer">
+          <div className="usuario-info">
+            <strong>{usuario?.nombre}</strong>
+            <span>{usuario?.empresaNombre}</span>
+          </div>
+          <button className="btn-salir" onClick={cerrarSesion}>Cerrar sesión</button>
+        </div>
+      </aside>
+      <main className="contenido">
+        <Outlet />
+      </main>
+    </div>
+  );
+}
