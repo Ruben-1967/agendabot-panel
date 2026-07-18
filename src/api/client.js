@@ -63,15 +63,36 @@ export function crearCampana(token, data) {
 export function prepararEnvioHoy(token, campanaId) {
   return apiFetch(`/campanas/${campanaId}/preparar-hoy`, { method: 'POST', token });
 }
-export function fetchEstimadoEnvio(token, campanaId) {
-  return apiFetch(`/campanas/${campanaId}/estimar-envio`, { token });
+export function fetchEstimadoEnvio(token, campanaId, clienteIds) {
+  const query = clienteIds && clienteIds.length > 0 ? `?clienteIds=${clienteIds.join(',')}` : '';
+  return apiFetch(`/campanas/${campanaId}/estimar-envio${query}`, { token });
 }
-export function enviarCampana(token, campanaId, envioId, productoIds) {
+export function enviarCampana(token, campanaId, envioId, productoIds, extra = {}) {
   return apiFetch(`/campanas/${campanaId}/envios/${envioId}/enviar`, {
     method: 'POST',
-    body: { productoIds },
+    body: { productoIds, ...extra },
     token,
   });
+}
+
+// ---------- Catálogo rotativo: segmentación de clientes (para elegir destinatarios puntuales) ----------
+export function fetchSegmentacionClientes(token, filtros = {}) {
+  const params = new URLSearchParams();
+  if (filtros.dias) params.set('dias', filtros.dias);
+  if (filtros.montoMinimo) params.set('montoMinimo', filtros.montoMinimo);
+  if (filtros.minPedidos) params.set('minPedidos', filtros.minPedidos);
+  if (filtros.productoId) params.set('productoId', filtros.productoId);
+  if (filtros.diasSinComprar) params.set('diasSinComprar', filtros.diasSinComprar);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return apiFetch(`/clientes/segmentacion${query}`, { token });
+}
+
+// ---------- Billetera de créditos de campaña ----------
+export function fetchBilletera(token) {
+  return apiFetch('/billetera', { token });
+}
+export function comprarCreditos(token, cantidad) {
+  return apiFetch('/billetera/comprar', { method: 'POST', body: { cantidadCreditos: cantidad }, token });
 }
 
 // ---------- Catálogo rotativo: pedidos ----------
