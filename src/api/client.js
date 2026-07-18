@@ -82,4 +82,43 @@ export function actualizarEstadoPedido(token, id, estado) {
   return apiFetch(`/pedidos/${id}`, { method: 'PATCH', body: { estado }, token });
 }
 
+// ---------- Información del negocio ----------
+export function fetchInfoNegocio(token) {
+  return apiFetch('/empresa/info', { token });
+}
+export function actualizarInfoNegocio(token, data) {
+  return apiFetch('/empresa/info', { method: 'PUT', body: data, token });
+}
+
+// ---------- Agenda: recurso, horario semanal, bloqueos ----------
+export function fetchAgenda(token) {
+  return apiFetch('/agenda', { token });
+}
+export function guardarRecurso(token, data) {
+  return apiFetch('/agenda/recurso', { method: 'PUT', body: data, token });
+}
+export function guardarHorarios(token, bloques) {
+  return apiFetch('/agenda/horarios', { method: 'PUT', body: { bloques }, token });
+}
+export function crearBloqueo(token, data) {
+  return apiFetch('/agenda/bloqueos', { method: 'POST', body: data, token });
+}
+export function eliminarBloqueo(token, id) {
+  return apiFetch(`/agenda/bloqueos/${id}`, { method: 'DELETE', token });
+}
+
+// ---------- Servicios ----------
+export function fetchServicios(token) {
+  return apiFetch('/servicios', { token });
+}
+export function crearServicio(token, data) {
+  return apiFetch('/servicios', { method: 'POST', body: data, token });
+}
+export function actualizarServicio(token, id, data) {
+  return apiFetch(`/servicios/${id}`, { method: 'PATCH', body: data, token });
+}
+export function eliminarServicio(token, id) {
+  return apiFetch(`/servicios/${id}`, { method: 'DELETE', token });
+}
+
 export { API_URL };

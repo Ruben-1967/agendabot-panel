@@ -272,6 +272,11 @@ button {
 
 .form-campana { flex-direction: column; align-items: stretch; max-width: 420px; }
 
+.form-campana label {
+  display: flex; flex-direction: column; gap: 5px; font-size: 0.82rem; font-weight: 600; color: var(--muted);
+}
+.form-campana label.checkbox-segmentacion { flex-direction: row; align-items: center; font-weight: 400; }
+
 .form-inline input, .form-campana input, .form-campana select, .form-inline select {
   font-size: 0.86rem;
   padding: 8px 10px;
@@ -371,3 +376,29 @@ button {
 .tarjeta-pedido-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .items-pedido { margin: 0 0 8px; padding-left: 18px; font-size: 0.85rem; }
 .total-pedido { font-weight: 600; margin: 0; font-size: 0.88rem; }
+
+/* ---------- Agenda: horario semanal ---------- */
+.fila-horario-dia {
+  display: flex; gap: 16px; align-items: flex-start;
+  padding: 10px 0; border-bottom: 1px solid var(--line);
+}
+.fila-horario-dia-nombre { width: 100px; flex-shrink: 0; font-weight: 600; font-size: 0.85rem; padding-top: 6px; }
+.fila-horario-dia-bloques { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; flex: 1; }
+.bloque-horario {
+  display: flex; align-items: center; gap: 6px; background: var(--card);
+  border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 0.82rem;
+}
+.bloque-horario input[type="time"] {
+  font-size: 0.82rem; padding: 4px 6px; border-radius: 4px; border: 1px solid var(--line); background: #fff;
+}
+
+/* ---------- Información del negocio ---------- */
+.form-campana textarea {
+  font-size: 0.86rem; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line);
+  background: #fff; font-family: inherit; resize: vertical;
+}
+.texto-ayuda { color: var(--muted); font-size: 0.74rem; font-weight: 400; }
+.mensaje-ok {
+  background: var(--teal-soft); color: var(--teal-deep); font-size: 0.82rem;
+  padding: 8px 12px; border-radius: 6px; margin: 10px 0;
+}

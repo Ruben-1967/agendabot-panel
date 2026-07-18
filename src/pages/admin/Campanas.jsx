@@ -7,9 +7,13 @@ import {
   enviarCampana,
   fetchProductos,
   fetchEstimadoEnvio,
+  fetchSegmentacionClientes,
+  comprarCreditos,
 } from '../../api/client';
 
 const NOMBRES_DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const LIMITE_MENSAJE_DEL_DIA = 80;
+const MINIMO_CREDITOS_COMPRA = 50;
 
 function SelectorDias({ seleccionados, onChange }) {
   function alternar(dia) {
@@ -36,8 +40,177 @@ function SelectorDias({ seleccionados, onChange }) {
   );
 }
 
+// NUEVO: bloque plegable para elegir destinatarios puntuales de este envío
+// específico, en vez de usar la segmentación persistente de la campaña.
+function SelectorClientesPuntual({ token, productosActivos, seleccionClientes, onCambioSeleccion }) {
+  const [abierto, setAbierto] = useState(false);
+  const [clientes, setClientes] = useState([]);
+  const [cargando, setCargando] = useState(false);
+  const [filtros, setFiltros] = useState({
+    montoMinimo: '', minPedidos: '', productoId: '', diasSinComprar: '',
+  });
+
+  async function buscar() {
+    setCargando(true);
+    try {
+      const data = await fetchSegmentacionClientes(token, filtros);
+      setClientes(data.clientes || []);
+    } catch (err) {
+      console.error('Error buscando clientes:', err);
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  useEffect(() => {
+    if (abierto && clientes.length === 0) buscar();
+  }, [abierto]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function alternarCliente(id) {
+    onCambioSeleccion(
+      seleccionClientes.includes(id)
+        ? seleccionClientes.filter((x) => x !== id)
+        : [...seleccionClientes, id]
+    );
+  }
+
+  return (
+    <div className="bloque-segmentacion-puntual">
+      <button type="button" className="link-toggle" onClick={() => setAbierto(!abierto)}>
+        {abierto ? 'Ocultar selección puntual de clientes' : '¿Elegir clientes específicos para este envío?'}
+      </button>
+
+      {abierto && (
+        <div className="panel-segmentacion-puntual">
+          <p className="texto-muted" style={{ margin: '4px 0' }}>
+            Si eliges clientes acá, este envío va SOLO a ellos — ignora la segmentación
+            persistente configurada en la campaña, solo por esta vez.
+          </p>
+          <div className="filtros-puntual">
+            <input
+              type="number" placeholder="Gastó al menos (CLP)"
+              value={filtros.montoMinimo}
+              onChange={(e) => setFiltros((f) => ({ ...f, montoMinimo: e.target.value }))}
+            />
+            <input
+              type="number" placeholder="Mín. de pedidos"
+              value={filtros.minPedidos}
+              onChange={(e) => setFiltros((f) => ({ ...f, minPedidos: e.target.value }))}
+            />
+            <select
+              value={filtros.productoId}
+              onChange={(e) => setFiltros((f) => ({ ...f, productoId: e.target.value }))}
+            >
+              <option value="">Cualquier producto</option>
+              {productosActivos.map((p) => (
+                <option key={p.id} value={p.id}>{p.nombre}</option>
+              ))}
+            </select>
+            <select
+              value={filtros.diasSinComprar}
+              onChange={(e) => setFiltros((f) => ({ ...f, diasSinComprar: e.target.value }))}
+            >
+              <option value="">Sin filtro de inactividad</option>
+              <option value="14">Sin comprar hace 14+ días</option>
+              <option value="21">Sin comprar hace 21+ días</option>
+              <option value="30">Sin comprar hace 30+ días</option>
+            </select>
+            <button type="button" onClick={buscar} disabled={cargando}>
+              {cargando ? 'Buscando…' : 'Aplicar filtros'}
+            </button>
+          </div>
+
+          {clientes.length === 0 && !cargando && (
+            <p className="texto-muted">Ningún cliente cumple estos filtros.</p>
+          )}
+
+          {clientes.length > 0 && (
+            <div className="lista-clientes-puntual">
+              {clientes.map((c) => (
+                <label key={c.clienteId} className="checkbox-producto">
+                  <input
+                    type="checkbox"
+                    checked={seleccionClientes.includes(c.clienteId)}
+                    onChange={() => alternarCliente(c.clienteId)}
+                  />
+                  {c.nombre} — {c.numPedidos} pedidos, ${c.totalGastado.toLocaleString('es-CL')}
+                  {c.productoTopNombre ? ` · le gusta ${c.productoTopNombre}` : ''}
+                </label>
+              ))}
+            </div>
+          )}
+
+          <p className="texto-muted">
+            Seleccionados: <b>{seleccionClientes.length}</b>
+            {seleccionClientes.length > 0 && (
+              <button type="button" className="link-toggle" onClick={() => onCambioSeleccion([])}>
+                {' '}(limpiar selección)
+              </button>
+            )}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// NUEVO: aviso de saldo + compra rápida cuando no alcanza
+function AvisoCreditos({ token, estimado, onCompraRealizada }) {
+  const [cantidad, setCantidad] = useState(MINIMO_CREDITOS_COMPRA);
+  const [comprando, setComprando] = useState(false);
+
+  if (!estimado) return null;
+
+  const faltan = Math.max(0, estimado.clientesSuscritos - (estimado.saldoActual || 0));
+
+  async function comprar() {
+    if (cantidad < MINIMO_CREDITOS_COMPRA) return;
+    setComprando(true);
+    try {
+      const data = await comprarCreditos(token, cantidad);
+      alert(
+        `Orden creada por $${data.montoClp.toLocaleString('es-CL')} CLP. ` +
+        `La integración de pago con Flow.cl todavía está en desarrollo — por ahora esto no ` +
+        `acredita el saldo automáticamente. Avísale a soporte para completar el pago manualmente.`
+      );
+      await onCompraRealizada();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setComprando(false);
+    }
+  }
+
+  return (
+    <div className="aviso-creditos">
+      <p className="aviso-costo">
+        💳 Saldo de créditos: <b>{estimado.saldoActual ?? 0}</b> · Este envío necesita{' '}
+        <b>{estimado.clientesSuscritos}</b> crédito(s).
+      </p>
+      {estimado.saldoInsuficiente && (
+        <div className="compra-rapida-creditos">
+          <p className="mensaje-error">
+            Te faltan {faltan} créditos para poder enviar esto.
+          </p>
+          <input
+            type="number" min={MINIMO_CREDITOS_COMPRA} step={10}
+            value={cantidad}
+            onChange={(e) => setCantidad(parseInt(e.target.value) || 0)}
+            style={{ width: '90px', marginRight: '8px' }}
+          />
+          <button type="button" onClick={comprar} disabled={comprando}>
+            {comprando ? 'Procesando…' : `Comprar ${cantidad} créditos`}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TarjetaCampana({ campana, productosActivos, token, onCambio }) {
   const [seleccion, setSeleccion] = useState([]);
+  const [seleccionClientes, setSeleccionClientes] = useState([]);
+  const [mensajeDelDia, setMensajeDelDia] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [preparando, setPreparando] = useState(false);
   const [error, setError] = useState('');
@@ -45,11 +218,24 @@ function TarjetaCampana({ campana, productosActivos, token, onCambio }) {
 
   const envio = campana.envioDeHoy;
 
+  async function recargarEstimado() {
+    try {
+      const data = await fetchEstimadoEnvio(
+        token,
+        campana.id,
+        seleccionClientes.length > 0 ? seleccionClientes : undefined
+      );
+      setEstimado(data);
+    } catch {
+      setEstimado(null);
+    }
+  }
+
   useEffect(() => {
     if (envio && envio.estado === 'BORRADOR') {
-      fetchEstimadoEnvio(token, campana.id).then(setEstimado).catch(() => setEstimado(null));
+      recargarEstimado();
     }
-  }, [envio?.id, envio?.estado]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [envio?.id, envio?.estado, seleccionClientes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function preparar() {
     setPreparando(true);
@@ -69,19 +255,41 @@ function TarjetaCampana({ campana, productosActivos, token, onCambio }) {
       setError('Elige al menos un producto para este envío.');
       return;
     }
+    if (mensajeDelDia.length > LIMITE_MENSAJE_DEL_DIA) {
+      setError(`El mensaje del día no puede superar los ${LIMITE_MENSAJE_DEL_DIA} caracteres.`);
+      return;
+    }
+    const audiencia = seleccionClientes.length > 0
+      ? `${seleccionClientes.length} cliente(s) elegidos puntualmente`
+      : 'todos los clientes suscritos (o la segmentación configurada)';
     const costoTexto = estimado
-      ? ` — costo estimado: $${estimado.costoEstimadoClp.toLocaleString('es-CL')} CLP (${estimado.clientesSuscritos} clientes × $${estimado.tarifaPorMensajeClp.toFixed(2)})`
+      ? ` — costo estimado: $${estimado.costoEstimadoClp.toLocaleString('es-CL')} CLP (${estimado.clientesSuscritos} clientes)`
       : '';
-    if (!confirm(`¿Enviar "${campana.nombre}" con ${seleccion.length} producto(s) a todos los clientes suscritos?${costoTexto}`)) return;
+    if (!confirm(`¿Enviar "${campana.nombre}" con ${seleccion.length} producto(s) a ${audiencia}?${costoTexto}`)) return;
 
     setEnviando(true);
     setError('');
     try {
-      const resultado = await enviarCampana(token, campana.id, campana.envioDeHoy.id, seleccion);
-      alert(`Enviado a ${resultado.enviados} clientes (${resultado.fallidos} fallidos). Costo real: $${resultado.costoClp?.toLocaleString('es-CL')} CLP.`);
+      const resultado = await enviarCampana(
+        token, campana.id, campana.envioDeHoy.id, seleccion,
+        {
+          clienteIds: seleccionClientes.length > 0 ? seleccionClientes : undefined,
+          mensajeDelDia: mensajeDelDia || undefined,
+        }
+      );
+      alert(
+        `Enviado a ${resultado.enviados} clientes (${resultado.fallidos} fallidos). ` +
+        `Costo real: $${resultado.costoClp?.toLocaleString('es-CL')} CLP. ` +
+        `Saldo restante: ${resultado.saldoRestante} créditos.`
+      );
       await onCambio();
     } catch (err) {
-      setError(err.message);
+      if (err.message.includes('Saldo de créditos insuficiente')) {
+        setError('Saldo de créditos insuficiente — compra más créditos abajo antes de reintentar.');
+        recargarEstimado();
+      } else {
+        setError(err.message);
+      }
     } finally {
       setEnviando(false);
     }
@@ -124,11 +332,34 @@ function TarjetaCampana({ campana, productosActivos, token, onCambio }) {
           {estimado && (
             <p className="aviso-costo">
               💸 Este envío llegaría a <b>{estimado.clientesSuscritos} clientes</b>
-              {estimado.segmentada ? ' (ya filtrado por el segmento configurado)' : ''} ≈{' '}
+              {estimado.segmentada ? ' (ya filtrado por el segmento)' : ''} ≈{' '}
               <b>${estimado.costoEstimadoClp.toLocaleString('es-CL')} CLP</b> en tarifa de Meta
               (categoría Marketing, ${estimado.tarifaPorMensajeClp.toFixed(2)}/mensaje).
             </p>
           )}
+
+          <AvisoCreditos token={token} estimado={estimado} onCompraRealizada={recargarEstimado} />
+
+          <div className="campo-mensaje-dia">
+            <label className="texto-muted">Mensaje del día (opcional)</label>
+            <textarea
+              maxLength={LIMITE_MENSAJE_DEL_DIA}
+              placeholder="ej. ¡Hoy tenemos algo especial para el Día del Café!"
+              value={mensajeDelDia}
+              onChange={(e) => setMensajeDelDia(e.target.value)}
+            />
+            <p className="texto-muted" style={{ textAlign: 'right', fontSize: '0.8em' }}>
+              {mensajeDelDia.length} / {LIMITE_MENSAJE_DEL_DIA}
+            </p>
+          </div>
+
+          <SelectorClientesPuntual
+            token={token}
+            productosActivos={productosActivos}
+            seleccionClientes={seleccionClientes}
+            onCambioSeleccion={setSeleccionClientes}
+          />
+
           <p className="texto-muted">Elige qué productos van en el envío de hoy:</p>
           <div className="grilla-checkbox">
             {productosActivos.map((p) => (
@@ -145,8 +376,11 @@ function TarjetaCampana({ campana, productosActivos, token, onCambio }) {
           {productosActivos.length === 0 && (
             <p className="mensaje-error">No tienes productos activos en tu catálogo todavía.</p>
           )}
-          <button onClick={enviar} disabled={enviando || productosActivos.length === 0}>
-            {enviando ? 'Enviando…' : `Enviar a clientes suscritos`}
+          <button
+            onClick={enviar}
+            disabled={enviando || productosActivos.length === 0 || (estimado && estimado.saldoInsuficiente)}
+          >
+            {enviando ? 'Enviando…' : 'Enviar'}
           </button>
         </div>
       )}

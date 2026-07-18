@@ -8,6 +8,8 @@ import Placeholder from './pages/Placeholder';
 import Productos from './pages/admin/Productos';
 import Campanas from './pages/admin/Campanas';
 import PedidosHoy from './pages/admin/PedidosHoy';
+import ConfiguracionAgenda from './pages/admin/ConfiguracionAgenda';
+import InformacionNegocio from './pages/admin/InformacionNegocio';
 
 function RaizSegunSesion() {
   const { usuario, cargandoSesion } = useAuth();
@@ -32,6 +34,8 @@ function AppRoutes() {
       >
         <Route index element={<Placeholder titulo="Dashboard" />} />
         <Route path="agenda" element={<Placeholder titulo="Agenda del día" />} />
+        <Route path="configuracion-agenda" element={<ConfiguracionAgenda />} />
+        <Route path="informacion-negocio" element={<InformacionNegocio />} />
         <Route path="chats" element={<Placeholder titulo="Chats en vivo" />} />
         <Route path="lista-espera" element={<Placeholder titulo="Lista de espera" />} />
         <Route path="productos" element={<Productos />} />
