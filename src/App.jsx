@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { VendedorAuthProvider } from './context/VendedorAuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRouteVendedor from './components/ProtectedRouteVendedor';
 import Login from './pages/Login';
 import AdminLayout from './pages/AdminLayout';
 import ProfesionalLayout from './pages/ProfesionalLayout';
@@ -10,6 +12,9 @@ import Campanas from './pages/admin/Campanas';
 import PedidosHoy from './pages/admin/PedidosHoy';
 import ConfiguracionAgenda from './pages/admin/ConfiguracionAgenda';
 import InformacionNegocio from './pages/admin/InformacionNegocio';
+import LoginVendedor from './pages/vendedor/LoginVendedor';
+import NuevaDemo from './pages/vendedor/NuevaDemo';
+import MisDemos from './pages/vendedor/MisDemos';
 
 function RaizSegunSesion() {
   const { usuario, cargandoSesion } = useAuth();
@@ -55,6 +60,29 @@ function AppRoutes() {
         <Route path="disponibilidad" element={<Placeholder titulo="Mi disponibilidad" />} />
       </Route>
 
+      {/* ------------------------------------------------------------
+          Módulo de vendedores (demos comerciales). Autenticación y
+          sesión completamente independientes del panel de negocios
+          (ver VendedorAuthContext) — no comparten localStorage ni rol.
+      ------------------------------------------------------------ */}
+      <Route path="/vendedor/login" element={<LoginVendedor />} />
+      <Route
+        path="/vendedor/nueva-demo"
+        element={
+          <ProtectedRouteVendedor>
+            <NuevaDemo />
+          </ProtectedRouteVendedor>
+        }
+      />
+      <Route
+        path="/vendedor/mis-demos"
+        element={
+          <ProtectedRouteVendedor>
+            <MisDemos />
+          </ProtectedRouteVendedor>
+        }
+      />
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
@@ -63,7 +91,9 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppRoutes />
+      <VendedorAuthProvider>
+        <AppRoutes />
+      </VendedorAuthProvider>
     </AuthProvider>
   );
 }

@@ -142,4 +142,15 @@ export function eliminarServicio(token, id) {
   return apiFetch(`/servicios/${id}`, { method: 'DELETE', token });
 }
 
+// ---------- Vendedores (demos comerciales) ----------
+export function loginVendedor(email, password) {
+  return apiFetch('/auth-vendedor/login', { method: 'POST', body: { email, password } });
+}
+export function crearProspectoDemo(token, data) {
+  return apiFetch('/demos/prospectos', { method: 'POST', body: data, token });
+}
+export function fetchProspectosDemo(token) {
+  return apiFetch('/demos/prospectos', { token });
+}
+
 export { API_URL };
