@@ -12,12 +12,22 @@ const OPCIONES_RUBRO = [
   { valor: 'OTRO', etiqueta: 'Otro' },
 ];
 
+const OPCIONES_PAIS = [
+  { valor: 'CL', etiqueta: '🇨🇱 Chile (+56)' },
+  { valor: 'MX', etiqueta: '🇲🇽 México (+52)' },
+  { valor: 'AR', etiqueta: '🇦🇷 Argentina (+54)' },
+  { valor: 'PE', etiqueta: '🇵🇪 Perú (+51)' },
+  { valor: 'CO', etiqueta: '🇨🇴 Colombia (+57)' },
+  { valor: 'ES', etiqueta: '🇪🇸 España (+34)' },
+];
+
 export default function NuevaDemo() {
   const { token } = useVendedorAuth();
   const navigate = useNavigate();
 
   const [nombreNegocio, setNombreNegocio] = useState('');
   const [telefono, setTelefono] = useState('');
+  const [paisTelefono, setPaisTelefono] = useState('CL');
   const [nombreEncargado, setNombreEncargado] = useState('');
   const [rubro, setRubro] = useState('');
   const [sitioWeb, setSitioWeb] = useState('');
@@ -36,15 +46,15 @@ export default function NuevaDemo() {
       const data = await crearProspectoDemo(token, {
         nombreNegocio: nombreNegocio.trim(),
         telefono: telefono.trim(),
+        paisTelefono,
         nombreEncargado: nombreEncargado.trim(),
         rubro,
         sitioWeb: sitioWeb.trim() || undefined,
       });
       setResultado(data);
-      // Limpiamos el formulario para cargar el siguiente prospecto rápido,
-      // sin obligar al vendedor a navegar entre pantallas.
       setNombreNegocio('');
       setTelefono('');
+      setPaisTelefono('CL');
       setNombreEncargado('');
       setRubro('');
       setSitioWeb('');
@@ -70,11 +80,20 @@ export default function NuevaDemo() {
         </label>
 
         <label>
+          País del teléfono
+          <select value={paisTelefono} onChange={(e) => setPaisTelefono(e.target.value)}>
+            {OPCIONES_PAIS.map((p) => (
+              <option key={p.valor} value={p.valor}>{p.etiqueta}</option>
+            ))}
+          </select>
+        </label>
+
+        <label>
           Teléfono (el que va a llamar/escribir)
           <input
             value={telefono}
             onChange={(e) => setTelefono(e.target.value)}
-            placeholder="56912345678"
+            placeholder="9 1234 5678"
             required
           />
         </label>
