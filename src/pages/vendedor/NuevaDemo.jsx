@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVendedorAuth } from '../../context/VendedorAuthContext';
 import { crearProspectoDemo } from '../../api/client';
+import './vendedor.css';
 
 const OPCIONES_RUBRO = [
   { valor: 'OPTICA', etiqueta: 'Óptica' },
@@ -13,12 +14,12 @@ const OPCIONES_RUBRO = [
 ];
 
 const OPCIONES_PAIS = [
-  { valor: 'CL', etiqueta: '🇨🇱 Chile (+56)' },
-  { valor: 'MX', etiqueta: '🇲🇽 México (+52)' },
-  { valor: 'AR', etiqueta: '🇦🇷 Argentina (+54)' },
-  { valor: 'PE', etiqueta: '🇵🇪 Perú (+51)' },
-  { valor: 'CO', etiqueta: '🇨🇴 Colombia (+57)' },
-  { valor: 'ES', etiqueta: '🇪🇸 España (+34)' },
+  { valor: 'CL', etiqueta: '🇨🇱 +56' },
+  { valor: 'MX', etiqueta: '🇲🇽 +52' },
+  { valor: 'AR', etiqueta: '🇦🇷 +54' },
+  { valor: 'PE', etiqueta: '🇵🇪 +51' },
+  { valor: 'CO', etiqueta: '🇨🇴 +57' },
+  { valor: 'ES', etiqueta: '🇪🇸 +34' },
 ];
 
 export default function NuevaDemo() {
@@ -67,77 +68,91 @@ export default function NuevaDemo() {
 
   return (
     <div className="pantalla-vendedor">
-      <h1>Nueva demo</h1>
-      <p className="texto-ayuda">
-        Carga los datos del negocio y dile al encargado que llame o escriba al{' '}
-        <strong>+56 9 2767 9838</strong> para probar la demo ahora mismo.
-      </p>
+      <div className="vendedor-inner">
+        <p className="vendedor-eyebrow">Demo comercial</p>
+        <h1>Cargar negocio</h1>
+        <p className="texto-ayuda">
+          Dile al encargado que llame o escriba al <strong>+56 9 2767 9838</strong> apenas termines — verá su propio negocio respondiendo, en vivo.
+        </p>
 
-      <form onSubmit={manejarSubmit} className="form-vendedor">
-        <label>
-          Nombre del negocio
-          <input value={nombreNegocio} onChange={(e) => setNombreNegocio(e.target.value)} required />
-        </label>
+        <form onSubmit={manejarSubmit} className="form-vendedor">
+          <div className="campo-seccion">
+            <p className="campo-seccion-titulo">Negocio</p>
 
-        <label>
-          País del teléfono
-          <select value={paisTelefono} onChange={(e) => setPaisTelefono(e.target.value)}>
-            {OPCIONES_PAIS.map((p) => (
-              <option key={p.valor} value={p.valor}>{p.etiqueta}</option>
-            ))}
-          </select>
-        </label>
+            <label>
+              Nombre del negocio
+              <input value={nombreNegocio} onChange={(e) => setNombreNegocio(e.target.value)} required />
+            </label>
 
-        <label>
-          Teléfono (el que va a llamar/escribir)
-          <input
-            value={telefono}
-            onChange={(e) => setTelefono(e.target.value)}
-            placeholder="9 1234 5678"
-            required
-          />
-        </label>
+            <label>
+              Rubro
+              <select value={rubro} onChange={(e) => setRubro(e.target.value)} required>
+                <option value="" disabled>Selecciona un rubro</option>
+                {OPCIONES_RUBRO.map((o) => (
+                  <option key={o.valor} value={o.valor}>{o.etiqueta}</option>
+                ))}
+              </select>
+            </label>
 
-        <label>
-          Nombre del encargado
-          <input value={nombreEncargado} onChange={(e) => setNombreEncargado(e.target.value)} required />
-        </label>
+            <label>
+              Sitio web (opcional)
+              <input
+                value={sitioWeb}
+                onChange={(e) => setSitioWeb(e.target.value)}
+                placeholder="https://..."
+              />
+            </label>
+          </div>
 
-        <label>
-          Rubro
-          <select value={rubro} onChange={(e) => setRubro(e.target.value)} required>
-            <option value="" disabled>Selecciona un rubro</option>
-            {OPCIONES_RUBRO.map((o) => (
-              <option key={o.valor} value={o.valor}>{o.etiqueta}</option>
-            ))}
-          </select>
-        </label>
+          <div className="campo-seccion">
+            <p className="campo-seccion-titulo">Contacto para la demo</p>
 
-        <label>
-          Sitio web (opcional)
-          <input
-            value={sitioWeb}
-            onChange={(e) => setSitioWeb(e.target.value)}
-            placeholder="https://..."
-          />
-        </label>
+            <label>
+              Teléfono (el que va a llamar/escribir)
+              <div className="telefono-grupo">
+                <select
+                  className="select-pais"
+                  value={paisTelefono}
+                  onChange={(e) => setPaisTelefono(e.target.value)}
+                >
+                  {OPCIONES_PAIS.map((p) => (
+                    <option key={p.valor} value={p.valor}>{p.etiqueta}</option>
+                  ))}
+                </select>
+                <input
+                  className="input-numero"
+                  value={telefono}
+                  onChange={(e) => setTelefono(e.target.value)}
+                  placeholder="9 1234 5678"
+                  required
+                />
+              </div>
+            </label>
 
-        {error && <p className="login-error">{error}</p>}
+            <label>
+              Nombre del encargado
+              <input value={nombreEncargado} onChange={(e) => setNombreEncargado(e.target.value)} required />
+            </label>
+          </div>
 
-        {resultado && (
-          <p className="mensaje-exito">
-            ✅ {resultado.mensaje} — ya puede llamar al número de demo.
-          </p>
-        )}
+          {error && <p className="login-error">{error}</p>}
 
-        <button type="submit" disabled={enviando}>
-          {enviando ? 'Creando demo…' : 'Crear demo'}
+          {resultado && (
+            <div className="aviso-exito-whatsapp">
+              <b>✅ {resultado.mensaje}</b>
+              Ya puede llamar al número de demo{resultado.productosCreados > 0 ? ` — cargamos ${resultado.productosCreados} productos desde su sitio web` : ''}.
+            </div>
+          )}
+
+          <button type="submit" className="cta-primaria" disabled={enviando}>
+            {enviando ? 'Creando demo…' : 'Crear demo'}
+          </button>
+        </form>
+
+        <button className="cta-secundaria" onClick={() => navigate('/vendedor/mis-demos')}>
+          Ver mis demos →
         </button>
-      </form>
-
-      <button className="boton-secundario" onClick={() => navigate('/vendedor/mis-demos')}>
-        Ver mis demos
-      </button>
+      </div>
     </div>
   );
 }
