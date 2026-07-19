@@ -1,0 +1,286 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --paper: #F0EEE2;
+  --card: #FAF8EF;
+  --ink: #16241F;
+  --teal: #2F6F62;
+  --teal-deep: #1F4E44;
+  --teal-soft: #E4EDE9;
+  --brass: #B8863B;
+  --brass-soft: #F3E7D2;
+  --line: #DAD4C0;
+  --muted: #6B7770;
+  --red: #A8493B;
+  --red-soft: #F3E1DC;
+}
+
+/* ---------- Shell compartido (login + pantallas internas) ---------- */
+.pantalla-login {
+  min-height: 100vh;
+  background: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.login-card {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 36px 32px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 24px 48px -12px rgba(0,0,0,0.4);
+}
+
+.login-brand {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.login-brand .accent { color: var(--brass); }
+
+.login-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 28px;
+}
+
+.login-card form label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+
+.login-card input {
+  width: 100%;
+  margin-top: 6px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.92rem;
+  font-family: 'Inter', sans-serif;
+  background: #fff;
+}
+.login-card input:focus {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+  border-color: var(--teal);
+}
+
+.login-card button,
+.cta-primaria {
+  width: 100%;
+  padding: 13px;
+  background: var(--teal-deep);
+  color: var(--paper);
+  border: none;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.login-card button:hover:not(:disabled),
+.cta-primaria:hover:not(:disabled) { background: var(--teal); }
+.login-card button:disabled,
+.cta-primaria:disabled { opacity: 0.6; cursor: default; }
+
+.login-error {
+  background: var(--red-soft);
+  color: var(--red);
+  font-size: 0.82rem;
+  padding: 9px 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+/* ---------- Pantallas internas del vendedor (post-login) ---------- */
+.pantalla-vendedor {
+  min-height: 100vh;
+  background: var(--paper);
+  padding: 32px 20px 60px;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--ink);
+}
+
+.vendedor-inner { max-width: 480px; margin: 0 auto; }
+
+.vendedor-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brass);
+  margin: 0 0 6px;
+}
+
+.pantalla-vendedor h1 {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 1.6rem;
+  margin: 0 0 10px;
+}
+
+.texto-ayuda {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin: 0 0 24px;
+}
+.texto-ayuda strong {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--ink);
+  background: var(--brass-soft);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* ---------- Formulario agrupado ---------- */
+.form-vendedor {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 22px 20px 26px;
+}
+
+.campo-seccion {
+  margin-bottom: 22px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+}
+.campo-seccion:last-of-type { border-bottom: none; padding-bottom: 0; margin-bottom: 20px; }
+
+.campo-seccion-titulo {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+
+.form-vendedor label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+.form-vendedor label:last-child { margin-bottom: 0; }
+
+.form-vendedor input,
+.form-vendedor select {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.92rem;
+  font-family: 'Inter', sans-serif;
+  background: #fff;
+  box-sizing: border-box;
+}
+.form-vendedor input:focus,
+.form-vendedor select:focus {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+  border-color: var(--teal);
+}
+
+/* Grupo teléfono: país + número como una sola píldora visual */
+.telefono-grupo {
+  display: flex;
+  gap: 8px;
+}
+.telefono-grupo .select-pais { flex: 0 0 132px; }
+.telefono-grupo .input-numero {
+  flex: 1;
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
+.cta-secundaria {
+  display: inline-block;
+  margin-top: 16px;
+  background: none;
+  border: none;
+  color: var(--teal-deep);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+/* ---------- Aviso de éxito estilo burbuja de WhatsApp ---------- */
+.aviso-exito-whatsapp {
+  background: #DCF3D5;
+  border: 1px solid #B9E0AE;
+  border-radius: 10px 10px 10px 2px;
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  color: #1F3D16;
+  margin-bottom: 18px;
+  line-height: 1.45;
+}
+.aviso-exito-whatsapp b { display: block; margin-bottom: 2px; }
+
+/* ---------- Listado de demos ---------- */
+.lista-demos {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tarjeta-demo {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+
+.tarjeta-demo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.tarjeta-demo-header strong {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 1.02rem;
+}
+
+.tarjeta-demo p {
+  margin: 3px 0;
+  font-size: 0.85rem;
+  color: #3A4842;
+}
+
+.badge-exito, .badge-pendiente {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 12px;
+  white-space: nowrap;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.badge-exito { background: var(--teal-soft); color: var(--teal-deep); }
+.badge-pendiente { background: var(--brass-soft); color: var(--brass); }
