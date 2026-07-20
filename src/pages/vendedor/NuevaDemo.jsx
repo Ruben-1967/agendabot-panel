@@ -96,11 +96,12 @@ export default function NuevaDemo() {
 
             <label>
               Sitio web (opcional)
-              <input
+             <input
                 value={sitioWeb}
                 onChange={(e) => setSitioWeb(e.target.value)}
-                placeholder="https://..."
+                placeholder="luxvision.cl"
               />
+
             </label>
           </div>
 
