@@ -4,7 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
  * Wrapper simple sobre fetch. Agrega el token JWT si existe y
  * lanza un error legible cuando la respuesta no es ok.
  */
-async function apiFetch(path, { method = 'GET', body, token } = {}) {
+async function apiFetch(path, { method = 'GET', body, token, tipoSesion = 'negocio' } = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
@@ -21,6 +21,12 @@ async function apiFetch(path, { method = 'GET', body, token } = {}) {
     data = await res.json();
   } catch {
     // respuesta sin cuerpo JSON
+  }
+
+  if (res.status === 401 && token) {
+    // Avisamos globalmente que esta sesión (vendedor o negocio) ya no es
+    // válida. Cada AuthContext decide si le corresponde reaccionar.
+    window.dispatchEvent(new CustomEvent('auth:unauthorized', { detail: { tipoSesion } }));
   }
 
   if (!res.ok) {
@@ -147,10 +153,10 @@ export function loginVendedor(email, password) {
   return apiFetch('/auth-vendedor/login', { method: 'POST', body: { email, password } });
 }
 export function crearProspectoDemo(token, data) {
-  return apiFetch('/demos/prospectos', { method: 'POST', body: data, token });
+  return apiFetch('/demos/prospectos', { method: 'POST', body: data, token, tipoSesion: 'vendedor' });
 }
 export function fetchProspectosDemo(token) {
-  return apiFetch('/demos/prospectos', { token });
+  return apiFetch('/demos/prospectos', { token, tipoSesion: 'vendedor' });
 }
 
 export { API_URL };

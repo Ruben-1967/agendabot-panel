@@ -33,6 +33,22 @@ export function VendedorAuthProvider({ children }) {
     }
   }, []);
 
+// Detecta cuando el backend responde 401 para una llamada de tipo
+  // "vendedor" (ver el evento disparado en api/client.js) y cierra la
+  // sesión automáticamente en vez de dejar que el vendedor vea un error
+  // crudo en consola.
+  useEffect(() => {
+    function manejarSesionVencida(evento) {
+      if (evento.detail?.tipoSesion !== 'vendedor') return;
+      setToken(null);
+      setVendedor(null);
+      localStorage.removeItem(STORAGE_KEY);
+      window.location.href = '/vendedor/login';
+    }
+    window.addEventListener('auth:unauthorized', manejarSesionVencida);
+    return () => window.removeEventListener('auth:unauthorized', manejarSesionVencida);
+  }, []);
+
   async function iniciarSesionVendedor(email, password) {
     const data = await loginVendedorRequest(email, password);
     setToken(data.token);
