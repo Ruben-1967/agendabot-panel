@@ -159,4 +159,8 @@ export function fetchProspectosDemo(token) {
   return apiFetch('/demos/prospectos', { token, tipoSesion: 'vendedor' });
 }
 
+export function eliminarProspectoDemo(token, id) {
+  return apiFetch(`/demos/prospectos/${id}`, { method: 'DELETE', token, tipoSesion: 'vendedor' });
+}
+
 export { API_URL };

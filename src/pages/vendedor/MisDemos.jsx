@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVendedorAuth } from '../../context/VendedorAuthContext';
-import { fetchProspectosDemo } from '../../api/client';
+import { fetchProspectosDemo, eliminarProspectoDemo } from '../../api/client';
 
 function formatearFecha(iso) {
   if (!iso) return '—';
@@ -17,13 +17,35 @@ export default function MisDemos() {
   const [demos, setDemos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
+  const [eliminandoId, setEliminandoId] = useState(null);
 
-  useEffect(() => {
+  function cargar() {
+    setCargando(true);
     fetchProspectosDemo(token)
       .then((data) => setDemos(data.demos || []))
       .catch((err) => setError(err.message || 'No se pudo cargar el listado'))
       .finally(() => setCargando(false));
-  }, [token]);
+  }
+
+  useEffect(() => { cargar(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function manejarEliminar(demo) {
+    const confirmado = window.confirm(
+      `¿Eliminar la demo de "${demo.nombreNegocio}" (${demo.telefono})? El teléfono queda libre de inmediato para una demo nueva — el historial se conserva internamente para reportes futuros.`
+    );
+    if (!confirmado) return;
+
+    setEliminandoId(demo.id);
+    setError('');
+    try {
+      await eliminarProspectoDemo(token, demo.id);
+      setDemos((prev) => prev.filter((d) => d.id !== demo.id));
+    } catch (err) {
+      setError(err.message || 'No se pudo eliminar la demo');
+    } finally {
+      setEliminandoId(null);
+    }
+  }
 
   return (
     <div className="pantalla-vendedor">
@@ -55,6 +77,13 @@ export default function MisDemos() {
               Cargada: {formatearFecha(d.creadoEn)}
               {d.yaProbo && ` · Última actividad: ${formatearFecha(d.ultimaActividadEn)}`}
             </p>
+            <button
+              className="btn-link btn-danger"
+              onClick={() => manejarEliminar(d)}
+              disabled={eliminandoId === d.id}
+            >
+              {eliminandoId === d.id ? 'Eliminando…' : 'Eliminar'}
+            </button>
           </li>
         ))}
       </ul>
