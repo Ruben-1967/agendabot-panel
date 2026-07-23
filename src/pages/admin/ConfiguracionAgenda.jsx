@@ -223,6 +223,13 @@ function Servicios({ servicios, token, onCambio, setError }) {
   const [duracionMinutos, setDuracionMinutos] = useState('');
   const [guardando, setGuardando] = useState(false);
 
+  // Edición inline: id del servicio que se está editando ahora mismo (null
+  // si ninguno), y sus valores en edición.
+  const [editandoId, setEditandoId] = useState(null);
+  const [nombreEdicion, setNombreEdicion] = useState('');
+  const [duracionEdicion, setDuracionEdicion] = useState('');
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
+
   async function manejarCrear(e) {
     e.preventDefault();
     if (!nombre.trim()) return;
@@ -259,6 +266,36 @@ function Servicios({ servicios, token, onCambio, setError }) {
     }
   }
 
+  function comenzarEdicion(servicio) {
+    setEditandoId(servicio.id);
+    setNombreEdicion(servicio.nombre);
+    setDuracionEdicion(servicio.duracionMinutos ?? '');
+  }
+
+  function cancelarEdicion() {
+    setEditandoId(null);
+    setNombreEdicion('');
+    setDuracionEdicion('');
+  }
+
+  async function guardarEdicion(servicio) {
+    if (!nombreEdicion.trim()) return;
+    setGuardandoEdicion(true);
+    setError('');
+    try {
+      await actualizarServicio(token, servicio.id, {
+        nombre: nombreEdicion.trim(),
+        duracionMinutos: duracionEdicion ? Number(duracionEdicion) : null,
+      });
+      cancelarEdicion();
+      await onCambio();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setGuardandoEdicion(false);
+    }
+  }
+
   return (
     <div>
       <form className="form-inline" onSubmit={manejarCrear}>
@@ -273,17 +310,52 @@ function Servicios({ servicios, token, onCambio, setError }) {
         <table className="tabla-simple">
           <thead><tr><th>Servicio</th><th>Duración</th><th>Estado</th><th></th></tr></thead>
           <tbody>
-            {servicios.map((s) => (
-              <tr key={s.id} className={!s.activo ? 'fila-inactiva' : ''}>
-                <td>{s.nombre}</td>
-                <td>{s.duracionMinutos ? `${s.duracionMinutos} min` : '—'}</td>
-                <td>{s.activo ? 'Activo' : 'Inactivo'}</td>
-                <td className="acciones">
-                  <button className="btn-link" onClick={() => alternarActivo(s)}>{s.activo ? 'Desactivar' : 'Activar'}</button>
-                  <button className="btn-link btn-danger" onClick={() => eliminar(s)}>Eliminar</button>
-                </td>
-              </tr>
-            ))}
+            {servicios.map((s) => {
+              const enEdicion = editandoId === s.id;
+              return (
+                <tr key={s.id} className={!s.activo ? 'fila-inactiva' : ''}>
+                  {enEdicion ? (
+                    <>
+                      <td>
+                        <input
+                          value={nombreEdicion}
+                          onChange={(e) => setNombreEdicion(e.target.value)}
+                          autoFocus
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          min="1"
+                          value={duracionEdicion}
+                          onChange={(e) => setDuracionEdicion(e.target.value)}
+                          placeholder="min"
+                          style={{ width: 70 }}
+                        />
+                      </td>
+                      <td>{s.activo ? 'Activo' : 'Inactivo'}</td>
+                      <td className="acciones">
+                        <button className="btn-link" onClick={() => guardarEdicion(s)} disabled={guardandoEdicion}>
+                          {guardandoEdicion ? 'Guardando…' : 'Guardar'}
+                        </button>
+                        <button className="btn-link" onClick={cancelarEdicion} disabled={guardandoEdicion}>Cancelar</button>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td>{s.nombre}</td>
+                      <td>{s.duracionMinutos ? `${s.duracionMinutos} min` : '—'}</td>
+                      <td>{s.activo ? 'Activo' : 'Inactivo'}</td>
+                      <td className="acciones">
+                        <button className="btn-link" onClick={() => comenzarEdicion(s)}>Editar</button>
+                        <button className="btn-link" onClick={() => alternarActivo(s)}>{s.activo ? 'Desactivar' : 'Activar'}</button>
+                        <button className="btn-link btn-danger" onClick={() => eliminar(s)}>Eliminar</button>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       )}
