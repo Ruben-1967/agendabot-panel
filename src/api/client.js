@@ -148,6 +148,27 @@ export function eliminarServicio(token, id) {
   return apiFetch(`/servicios/${id}`, { method: 'DELETE', token });
 }
 
+// ---------- Clientes / Pacientes (negocios reactivos) ----------
+export function fetchConfigClientes(token) {
+  return apiFetch('/clientes/config', { token });
+}
+export function fetchClientes(token) {
+  return apiFetch('/clientes', { token });
+}
+export function fetchCliente(token, id) {
+  return apiFetch(`/clientes/${id}`, { token });
+}
+export function crearCliente(token, data) {
+  return apiFetch('/clientes', { method: 'POST', body: data, token });
+}
+export function actualizarCliente(token, id, data) {
+  return apiFetch(`/clientes/${id}`, { method: 'PATCH', body: data, token });
+}
+export function registrarVenta(token, clienteId, data) {
+  return apiFetch(`/clientes/${clienteId}/ventas`, { method: 'POST', body: data, token });
+}
+
+
 // ---------- Vendedores (demos comerciales) ----------
 export function loginVendedor(email, password) {
   return apiFetch('/auth-vendedor/login', { method: 'POST', body: { email, password } });
