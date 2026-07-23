@@ -14,25 +14,77 @@ function formatearFecha(iso) {
   return new Date(iso).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+// Convierte "emitidaPor" -> "Emitida Por", "esfera" -> "Esfera"
+function formatearEtiqueta(clave) {
+  const conEspacios = clave.replace(/([A-Z])/g, ' $1');
+  return conEspacios.charAt(0).toUpperCase() + conEspacios.slice(1);
+}
+
+function obtenerValorAnidado(obj, path) {
+  return path.reduce((acc, key) => (acc && typeof acc === 'object' ? acc[key] : undefined), obj);
+}
+
+// Actualización inmutable de un valor anidado, dado un path tipo ['receta','od','esfera']
+function setValorAnidado(obj, path, valor) {
+  const copia = JSON.parse(JSON.stringify(obj || {}));
+  let actual = copia;
+  for (let i = 0; i < path.length - 1; i++) {
+    const clave = path[i];
+    if (typeof actual[clave] !== 'object' || actual[clave] === null) {
+      actual[clave] = {};
+    }
+    actual = actual[clave];
+  }
+  actual[path[path.length - 1]] = valor;
+  return copia;
+}
+
 // ------------------------------------------------------------
-// Formulario de ficha dinámica según el rubro (ej. receta óptica) — se
-// arma solo a partir de RubroTemplate.camposFicha, sin código distinto
-// por rubro.
+// Renderiza la ficha del rubro de forma RECURSIVA — respeta la estructura
+// anidada tal cual esté definida en RubroTemplate.camposFicha (ej. una
+// receta óptica con OD/OI agrupados, cada uno con sus propios campos, más
+// campos sueltos como fecha/diagnóstico). No asume un arreglo plano.
 // ------------------------------------------------------------
-function CamposFichaDinamicos({ camposFicha, valores, onCambio }) {
-  if (!camposFicha || camposFicha.length === 0) return null;
+function CamposFichaRecursivo({ schema, path, valores, onCambio }) {
+  if (!schema || typeof schema !== 'object') return null;
+
   return (
-    <div className="grilla-checkbox" style={{ marginTop: 10 }}>
-      {camposFicha.map((campo) => (
-        <label key={campo.clave} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {campo.etiqueta}
-          <input
-            value={valores[campo.clave] || ''}
-            onChange={(e) => onCambio(campo.clave, e.target.value)}
-          />
-        </label>
-      ))}
-    </div>
+    <>
+      {Object.entries(schema).map(([clave, definicion]) => {
+        const rutaActual = [...path, clave];
+        const rutaId = rutaActual.join('.');
+
+        // Sub-grupo anidado (ej. "od", "oi") — se muestra agrupado visualmente.
+        if (definicion && typeof definicion === 'object' && !Array.isArray(definicion)) {
+          return (
+            <fieldset key={rutaId} className="ficha-subgrupo" style={{ border: '1px solid #DAD4C0', borderRadius: 8, padding: 10, marginTop: 8 }}>
+              <legend style={{ fontSize: '.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                {formatearEtiqueta(clave)}
+              </legend>
+              <div className="grilla-checkbox">
+                <CamposFichaRecursivo schema={definicion} path={rutaActual} valores={valores} onCambio={onCambio} />
+              </div>
+            </fieldset>
+          );
+        }
+
+        // Campo hoja: "definicion" es el tipo de dato ("number" | "text" | "date").
+        const valorActual = obtenerValorAnidado(valores, rutaActual) ?? '';
+        const tipoInput = definicion === 'number' ? 'number' : definicion === 'date' ? 'date' : 'text';
+
+        return (
+          <label key={rutaId} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {formatearEtiqueta(clave)}
+            <input
+              type={tipoInput}
+              step={tipoInput === 'number' ? '0.25' : undefined}
+              value={valorActual}
+              onChange={(e) => onCambio(rutaActual, e.target.value)}
+            />
+          </label>
+        );
+      })}
+    </>
   );
 }
 
@@ -73,6 +125,10 @@ function DetalleCliente({ clienteId, token, camposFicha, categoriasProductoSuger
   }
 
   useEffect(() => { cargar(); }, [clienteId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function actualizarCampoFicha(path, valor) {
+    setFichaValores((prev) => setValorAnidado(prev, path, valor));
+  }
 
   async function guardarDatos(e) {
     e.preventDefault();
@@ -143,11 +199,7 @@ function DetalleCliente({ clienteId, token, camposFicha, categoriasProductoSuger
         </label>
 
         <p className="campo-seccion-titulo" style={{ marginTop: 10 }}>Ficha</p>
-        <CamposFichaDinamicos
-          camposFicha={camposFicha}
-          valores={fichaValores}
-          onCambio={(clave, valor) => setFichaValores((prev) => ({ ...prev, [clave]: valor }))}
-        />
+        <CamposFichaRecursivo schema={camposFicha} path={[]} valores={fichaValores} onCambio={actualizarCampoFicha} />
 
         <button type="submit" disabled={guardando} style={{ marginTop: 10 }}>
           {guardando ? 'Guardando…' : 'Guardar cambios'}
@@ -209,7 +261,7 @@ function DetalleCliente({ clienteId, token, camposFicha, categoriasProductoSuger
 export default function Clientes() {
   const { token } = useAuth();
   const [clientes, setClientes] = useState([]);
-  const [config, setConfig] = useState({ camposFicha: [], categoriasProductoSugeridas: [] });
+  const [config, setConfig] = useState({ camposFicha: {}, categoriasProductoSugeridas: [] });
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState(null);
