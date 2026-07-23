@@ -3,24 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="manifest" href="/manifest.json" id="link-manifest" />
-    <link rel="apple-touch-icon" href="/icon-192.png" id="link-apple-icon" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icon-vendedor-192.png" />
     <meta name="theme-color" content="#12203a" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Totemsystem · Panel</title>
-    <script>
-      // Se ejecuta de inmediato, ANTES de que cargue React — así el
-      // navegador ya ve el manifest/ícono correcto desde el primer
-      // instante, sin depender de un useEffect que corre después y puede
-      // llegar tarde para la decisión de instalación.
-      (function () {
-        var esVendedor = window.location.pathname.startsWith('/vendedor');
-        if (esVendedor) {
-          document.getElementById('link-manifest').setAttribute('href', '/manifest-vendedor.json');
-          document.getElementById('link-apple-icon').setAttribute('href', '/icon-vendedor-192.png');
-        }
-      })();
-    </script>
   </head>
   <body>
     <div id="root"></div>

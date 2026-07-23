@@ -1,15 +1,15 @@
 {
-  "name": "Totemsystem — Panel",
-  "short_name": "Totemsystem",
-  "description": "Panel de administración de Totemsystem",
-  "start_url": "/",
+  "name": "Totemsystem — Vendedores",
+  "short_name": "Totem Vendedor",
+  "description": "Panel de demos comerciales de Totemsystem",
+  "start_url": "/vendedor/login",
   "display": "standalone",
   "background_color": "#12203a",
   "theme_color": "#12203a",
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/icon-vendedor-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-vendedor-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-vendedor-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-vendedor-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
