@@ -501,12 +501,13 @@ export default function Campanas() {
 
   async function manejarCrear(e) {
     e.preventDefault();
-    if (!nombre || dias.length === 0 || !hora || !plantilla) return;
+    if (!nombre || dias.length === 0 || !hora || (esCatalogo && !plantilla)) return;
     setCreando(true);
     setError('');
     try {
       await crearCampana(token, {
-        nombre, diasSemana: dias, hora, plantillaWhatsapp: plantilla,
+        nombre, diasSemana: dias, hora,
+        ...(esCatalogo && { plantillaWhatsapp: plantilla }),
         segmentada,
         segmentoDias: segmentada ? Number(segmentoDias) : undefined,
         segmentoMontoMinimoClp: segmentada && segmentoMonto ? Number(segmentoMonto) : undefined,
@@ -547,7 +548,13 @@ export default function Campanas() {
         <input placeholder="Nombre (ej. Promoción del mes)" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
         <SelectorDias seleccionados={dias} onChange={setDias} />
         <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} required />
-        <input placeholder="Nombre exacto de la plantilla en Meta" value={plantilla} onChange={(e) => setPlantilla(e.target.value)} required />
+        {esCatalogo ? (
+          <input placeholder="Nombre exacto de la plantilla en Meta" value={plantilla} onChange={(e) => setPlantilla(e.target.value)} required />
+        ) : (
+          <p className="texto-muted" style={{ margin: '4px 0' }}>
+            Plantilla de WhatsApp: <code>campana_negocio_reactivo</code> (fija, aprobada por Meta)
+          </p>
+        )}
 
         <label className="checkbox-segmentacion">
           <input type="checkbox" checked={segmentada} onChange={(e) => setSegmentada(e.target.checked)} />
