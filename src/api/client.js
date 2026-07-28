@@ -59,7 +59,10 @@ export function eliminarProducto(token, id) {
   return apiFetch(`/productos/${id}`, { method: 'DELETE', token });
 }
 
-// ---------- Catálogo rotativo: campañas ----------
+// ---------- Campañas (catálogo rotativo Y negocios reactivos) ----------
+export function fetchConfigCampanas(token) {
+  return apiFetch('/campanas/config', { token });
+}
 export function fetchCampanas(token) {
   return apiFetch('/campanas', { token });
 }
@@ -81,13 +84,17 @@ export function enviarCampana(token, campanaId, envioId, productoIds, extra = {}
   });
 }
 
-// ---------- Catálogo rotativo: segmentación de clientes (para elegir destinatarios puntuales) ----------
+// ---------- Segmentación de clientes (para elegir destinatarios puntuales) ----------
+// Soporta ambos modos: productoId para catálogo rotativo, categoriaProducto
+// para negocios reactivos (Ahorróptica, etc.) — el backend decide cuál usar
+// según el modoOperacion de la empresa.
 export function fetchSegmentacionClientes(token, filtros = {}) {
   const params = new URLSearchParams();
   if (filtros.dias) params.set('dias', filtros.dias);
   if (filtros.montoMinimo) params.set('montoMinimo', filtros.montoMinimo);
   if (filtros.minPedidos) params.set('minPedidos', filtros.minPedidos);
   if (filtros.productoId) params.set('productoId', filtros.productoId);
+  if (filtros.categoriaProducto) params.set('categoriaProducto', filtros.categoriaProducto);
   if (filtros.diasSinComprar) params.set('diasSinComprar', filtros.diasSinComprar);
   const query = params.toString() ? `?${params.toString()}` : '';
   return apiFetch(`/clientes/segmentacion${query}`, { token });
