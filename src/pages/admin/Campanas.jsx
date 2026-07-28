@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
+  fetchConfigCampanas,
   fetchCampanas,
   crearCampana,
   prepararEnvioHoy,
   enviarCampana,
   fetchProductos,
+  fetchConfigClientes,
   fetchEstimadoEnvio,
   fetchSegmentacionClientes,
   comprarCreditos,
 } from '../../api/client';
 
 const NOMBRES_DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-const LIMITE_MENSAJE_DEL_DIA = 80;
+const LIMITE_MENSAJE_CATALOGO = 80;
+const LIMITE_MENSAJE_AGENDAMIENTO = 400;
 const MINIMO_CREDITOS_COMPRA = 50;
 
 function SelectorDias({ seleccionados, onChange }) {
@@ -40,15 +43,23 @@ function SelectorDias({ seleccionados, onChange }) {
   );
 }
 
-// NUEVO: bloque plegable para elegir destinatarios puntuales de este envío
+// Bloque plegable para elegir destinatarios puntuales de este envío
 // específico, en vez de usar la segmentación persistente de la campaña.
-function SelectorClientesPuntual({ token, productosActivos, seleccionClientes, onCambioSeleccion }) {
+// El filtro de "producto" cambia de forma según el modo de la empresa:
+// dropdown de Producto en catálogo rotativo, dropdown de categoría en
+// negocios reactivos (Ahorróptica, etc.)
+function SelectorClientesPuntual({
+  token, modoOperacion, productosActivos, categoriasProductoSugeridas,
+  seleccionClientes, onCambioSeleccion,
+}) {
   const [abierto, setAbierto] = useState(false);
   const [clientes, setClientes] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [filtros, setFiltros] = useState({
-    montoMinimo: '', minPedidos: '', productoId: '', diasSinComprar: '',
+    montoMinimo: '', minPedidos: '', productoId: '', categoriaProducto: '', diasSinComprar: '',
   });
+
+  const esCatalogo = modoOperacion === 'CATALOGO_ROTATIVO';
 
   async function buscar() {
     setCargando(true);
@@ -93,19 +104,31 @@ function SelectorClientesPuntual({ token, productosActivos, seleccionClientes, o
               onChange={(e) => setFiltros((f) => ({ ...f, montoMinimo: e.target.value }))}
             />
             <input
-              type="number" placeholder="Mín. de pedidos"
+              type="number" placeholder={esCatalogo ? 'Mín. de pedidos' : 'Mín. de compras/atenciones'}
               value={filtros.minPedidos}
               onChange={(e) => setFiltros((f) => ({ ...f, minPedidos: e.target.value }))}
             />
-            <select
-              value={filtros.productoId}
-              onChange={(e) => setFiltros((f) => ({ ...f, productoId: e.target.value }))}
-            >
-              <option value="">Cualquier producto</option>
-              {productosActivos.map((p) => (
-                <option key={p.id} value={p.id}>{p.nombre}</option>
-              ))}
-            </select>
+            {esCatalogo ? (
+              <select
+                value={filtros.productoId}
+                onChange={(e) => setFiltros((f) => ({ ...f, productoId: e.target.value }))}
+              >
+                <option value="">Cualquier producto</option>
+                {productosActivos.map((p) => (
+                  <option key={p.id} value={p.id}>{p.nombre}</option>
+                ))}
+              </select>
+            ) : (
+              <select
+                value={filtros.categoriaProducto}
+                onChange={(e) => setFiltros((f) => ({ ...f, categoriaProducto: e.target.value }))}
+              >
+                <option value="">Cualquier categoría</option>
+                {categoriasProductoSugeridas.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            )}
             <select
               value={filtros.diasSinComprar}
               onChange={(e) => setFiltros((f) => ({ ...f, diasSinComprar: e.target.value }))}
@@ -133,7 +156,7 @@ function SelectorClientesPuntual({ token, productosActivos, seleccionClientes, o
                     checked={seleccionClientes.includes(c.clienteId)}
                     onChange={() => alternarCliente(c.clienteId)}
                   />
-                  {c.nombre} — {c.numPedidos} pedidos, ${c.totalGastado.toLocaleString('es-CL')}
+                  {c.nombre} — {c.numPedidos} {esCatalogo ? 'pedidos' : 'compras/atenciones'}, ${c.totalGastado.toLocaleString('es-CL')}
                   {c.productoTopNombre ? ` · le gusta ${c.productoTopNombre}` : ''}
                 </label>
               ))}
@@ -154,7 +177,7 @@ function SelectorClientesPuntual({ token, productosActivos, seleccionClientes, o
   );
 }
 
-// NUEVO: aviso de saldo + compra rápida cuando no alcanza
+// Aviso de saldo + compra rápida cuando no alcanza
 function AvisoCreditos({ token, estimado, onCompraRealizada }) {
   const [cantidad, setCantidad] = useState(MINIMO_CREDITOS_COMPRA);
   const [comprando, setComprando] = useState(false);
@@ -207,7 +230,10 @@ function AvisoCreditos({ token, estimado, onCompraRealizada }) {
   );
 }
 
-function TarjetaCampana({ campana, productosActivos, token, onCambio }) {
+function TarjetaCampana({ campana, modoOperacion, productosActivos, categoriasProductoSugeridas, token, onCambio }) {
+  const esCatalogo = modoOperacion === 'CATALOGO_ROTATIVO';
+  const limiteMensaje = esCatalogo ? LIMITE_MENSAJE_CATALOGO : LIMITE_MENSAJE_AGENDAMIENTO;
+
   const [seleccion, setSeleccion] = useState([]);
   const [seleccionClientes, setSeleccionClientes] = useState([]);
   const [mensajeDelDia, setMensajeDelDia] = useState('');
@@ -251,12 +277,16 @@ function TarjetaCampana({ campana, productosActivos, token, onCambio }) {
   }
 
   async function enviar() {
-    if (seleccion.length === 0) {
+    if (esCatalogo && seleccion.length === 0) {
       setError('Elige al menos un producto para este envío.');
       return;
     }
-    if (mensajeDelDia.length > LIMITE_MENSAJE_DEL_DIA) {
-      setError(`El mensaje del día no puede superar los ${LIMITE_MENSAJE_DEL_DIA} caracteres.`);
+    if (!esCatalogo && !mensajeDelDia.trim()) {
+      setError('Escribe el mensaje de esta campaña antes de enviarla.');
+      return;
+    }
+    if (mensajeDelDia.length > limiteMensaje) {
+      setError(`El mensaje no puede superar los ${limiteMensaje} caracteres.`);
       return;
     }
     const audiencia = seleccionClientes.length > 0
@@ -265,13 +295,14 @@ function TarjetaCampana({ campana, productosActivos, token, onCambio }) {
     const costoTexto = estimado
       ? ` — costo estimado: $${estimado.costoEstimadoClp.toLocaleString('es-CL')} CLP (${estimado.clientesSuscritos} clientes)`
       : '';
-    if (!confirm(`¿Enviar "${campana.nombre}" con ${seleccion.length} producto(s) a ${audiencia}?${costoTexto}`)) return;
+    const detalleEnvio = esCatalogo ? `con ${seleccion.length} producto(s)` : '';
+    if (!confirm(`¿Enviar "${campana.nombre}" ${detalleEnvio} a ${audiencia}?${costoTexto}`)) return;
 
     setEnviando(true);
     setError('');
     try {
       const resultado = await enviarCampana(
-        token, campana.id, campana.envioDeHoy.id, seleccion,
+        token, campana.id, campana.envioDeHoy.id, esCatalogo ? seleccion : undefined,
         {
           clienteIds: seleccionClientes.length > 0 ? seleccionClientes : undefined,
           mensajeDelDia: mensajeDelDia || undefined,
@@ -299,6 +330,10 @@ function TarjetaCampana({ campana, productosActivos, token, onCambio }) {
     setSeleccion((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
+  const botonEnviarDeshabilitado = enviando
+    || (esCatalogo && productosActivos.length === 0)
+    || (estimado && estimado.saldoInsuficiente);
+
   return (
     <div className="tarjeta-campana">
       <div className="tarjeta-campana-head">
@@ -312,7 +347,12 @@ function TarjetaCampana({ campana, productosActivos, token, onCambio }) {
             <p className="texto-muted etiqueta-segmentada">
               🎯 Segmentada: compró en los últimos {campana.segmentoDias} días
               {campana.segmentoMontoMinimoClp ? `, gastó ≥ $${campana.segmentoMontoMinimoClp.toLocaleString('es-CL')}` : ''}
-              {campana.segmentoProductoIds?.length > 0 ? `, de ${campana.segmentoProductoIds.length} producto(s) específico(s)` : ''}
+              {esCatalogo && campana.segmentoProductoIds?.length > 0
+                ? `, de ${campana.segmentoProductoIds.length} producto(s) específico(s)`
+                : ''}
+              {!esCatalogo && campana.segmentoCategoriasProducto?.length > 0
+                ? `, de ${campana.segmentoCategoriasProducto.length} categoría(s) específica(s)`
+                : ''}
             </p>
           )}
         </div>
@@ -341,45 +381,54 @@ function TarjetaCampana({ campana, productosActivos, token, onCambio }) {
           <AvisoCreditos token={token} estimado={estimado} onCompraRealizada={recargarEstimado} />
 
           <div className="campo-mensaje-dia">
-            <label className="texto-muted">Mensaje del día (opcional)</label>
+            <label className="texto-muted">
+              {esCatalogo ? 'Mensaje del día (opcional)' : 'Mensaje de la campaña'}
+            </label>
             <textarea
-              maxLength={LIMITE_MENSAJE_DEL_DIA}
-              placeholder="ej. ¡Hoy tenemos algo especial para el Día del Café!"
+              maxLength={limiteMensaje}
+              placeholder={esCatalogo
+                ? 'ej. ¡Hoy tenemos algo especial para el Día del Café!'
+                : 'ej. Este mes tenemos 20% de descuento en armazones + cristales al comprar el mismo día. ¡Escríbenos para agendar tu examen!'}
               value={mensajeDelDia}
               onChange={(e) => setMensajeDelDia(e.target.value)}
+              rows={esCatalogo ? 2 : 4}
             />
             <p className="texto-muted" style={{ textAlign: 'right', fontSize: '0.8em' }}>
-              {mensajeDelDia.length} / {LIMITE_MENSAJE_DEL_DIA}
+              {mensajeDelDia.length} / {limiteMensaje}
             </p>
           </div>
 
           <SelectorClientesPuntual
             token={token}
+            modoOperacion={modoOperacion}
             productosActivos={productosActivos}
+            categoriasProductoSugeridas={categoriasProductoSugeridas}
             seleccionClientes={seleccionClientes}
             onCambioSeleccion={setSeleccionClientes}
           />
 
-          <p className="texto-muted">Elige qué productos van en el envío de hoy:</p>
-          <div className="grilla-checkbox">
-            {productosActivos.map((p) => (
-              <label key={p.id} className="checkbox-producto">
-                <input
-                  type="checkbox"
-                  checked={seleccion.includes(p.id)}
-                  onChange={() => alternarProducto(p.id)}
-                />
-                {p.nombre} — ${p.precio}
-              </label>
-            ))}
-          </div>
-          {productosActivos.length === 0 && (
-            <p className="mensaje-error">No tienes productos activos en tu catálogo todavía.</p>
+          {esCatalogo && (
+            <>
+              <p className="texto-muted">Elige qué productos van en el envío de hoy:</p>
+              <div className="grilla-checkbox">
+                {productosActivos.map((p) => (
+                  <label key={p.id} className="checkbox-producto">
+                    <input
+                      type="checkbox"
+                      checked={seleccion.includes(p.id)}
+                      onChange={() => alternarProducto(p.id)}
+                    />
+                    {p.nombre} — ${p.precio}
+                  </label>
+                ))}
+              </div>
+              {productosActivos.length === 0 && (
+                <p className="mensaje-error">No tienes productos activos en tu catálogo todavía.</p>
+              )}
+            </>
           )}
-          <button
-            onClick={enviar}
-            disabled={enviando || productosActivos.length === 0 || (estimado && estimado.saldoInsuficiente)}
-          >
+
+          <button onClick={enviar} disabled={botonEnviarDeshabilitado}>
             {enviando ? 'Enviando…' : 'Enviar'}
           </button>
         </div>
@@ -387,7 +436,8 @@ function TarjetaCampana({ campana, productosActivos, token, onCambio }) {
 
       {envio && envio.estado === 'ENVIADO' && (
         <p className="texto-muted">
-          Enviado a {envio.destinatariosCount} cliente(s), con {envio.productosOfrecidosJson?.length || 0} producto(s)
+          Enviado a {envio.destinatariosCount} cliente(s)
+          {esCatalogo && <>, con {envio.productosOfrecidosJson?.length || 0} producto(s)</>}
           {envio.costoEstimadoClp != null && <> — costo real: <b>${envio.costoEstimadoClp.toLocaleString('es-CL')} CLP</b></>}.
         </p>
       )}
@@ -399,8 +449,10 @@ function TarjetaCampana({ campana, productosActivos, token, onCambio }) {
 
 export default function Campanas() {
   const { token } = useAuth();
+  const [modoOperacion, setModoOperacion] = useState(null);
   const [campanas, setCampanas] = useState([]);
   const [productos, setProductos] = useState([]);
+  const [categoriasProductoSugeridas, setCategoriasProductoSugeridas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
@@ -414,15 +466,30 @@ export default function Campanas() {
   const [segmentoDias, setSegmentoDias] = useState(30);
   const [segmentoMonto, setSegmentoMonto] = useState('');
   const [segmentoProductos, setSegmentoProductos] = useState([]);
+  const [segmentoCategorias, setSegmentoCategorias] = useState([]);
+
+  const esCatalogo = modoOperacion === 'CATALOGO_ROTATIVO';
 
   async function cargar() {
     try {
-      const [dataCampanas, dataProductos] = await Promise.all([
-        fetchCampanas(token),
-        fetchProductos(token),
-      ]);
+      const config = await fetchConfigCampanas(token);
+      setModoOperacion(config.modoOperacion);
+
+      const promesas = [fetchCampanas(token)];
+      if (config.modoOperacion === 'CATALOGO_ROTATIVO') {
+        promesas.push(fetchProductos(token));
+      } else {
+        promesas.push(fetchConfigClientes(token));
+      }
+
+      const [dataCampanas, dataExtra] = await Promise.all(promesas);
       setCampanas(dataCampanas.campanas);
-      setProductos(dataProductos.productos);
+
+      if (config.modoOperacion === 'CATALOGO_ROTATIVO') {
+        setProductos(dataExtra.productos);
+      } else {
+        setCategoriasProductoSugeridas(dataExtra.categoriasProductoSugeridas || []);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -443,10 +510,12 @@ export default function Campanas() {
         segmentada,
         segmentoDias: segmentada ? Number(segmentoDias) : undefined,
         segmentoMontoMinimoClp: segmentada && segmentoMonto ? Number(segmentoMonto) : undefined,
-        segmentoProductoIds: segmentada ? segmentoProductos : undefined,
+        segmentoProductoIds: segmentada && esCatalogo ? segmentoProductos : undefined,
+        segmentoCategoriasProducto: segmentada && !esCatalogo ? segmentoCategorias : undefined,
       });
       setNombre(''); setPlantilla('');
-      setSegmentada(false); setSegmentoDias(30); setSegmentoMonto(''); setSegmentoProductos([]);
+      setSegmentada(false); setSegmentoDias(30); setSegmentoMonto('');
+      setSegmentoProductos([]); setSegmentoCategorias([]);
       await cargar();
     } catch (err) {
       setError(err.message);
@@ -459,18 +528,23 @@ export default function Campanas() {
     setSegmentoProductos((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
+  function alternarCategoriaSegmento(cat) {
+    setSegmentoCategorias((prev) => (prev.includes(cat) ? prev.filter((x) => x !== cat) : [...prev, cat]));
+  }
+
   const productosActivos = productos.filter((p) => p.activo);
 
   return (
     <div>
       <h1>Campañas de envío</h1>
       <p className="pagina-sub">
-        Configura cuándo se prepara cada envío. A la hora indicada, se crea un borrador — tú eliges
-        los productos de ese día y lo envías desde aquí.
+        {esCatalogo
+          ? 'Configura cuándo se prepara cada envío. A la hora indicada, se crea un borrador — tú eliges los productos de ese día y lo envías desde aquí.'
+          : 'Configura cuándo se prepara cada envío. A la hora indicada, se crea un borrador — tú escribes el mensaje de esa campaña y lo envías desde aquí.'}
       </p>
 
       <form className="form-campana" onSubmit={manejarCrear}>
-        <input placeholder="Nombre (ej. Panes de la mañana)" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+        <input placeholder="Nombre (ej. Promoción del mes)" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
         <SelectorDias seleccionados={dias} onChange={setDias} />
         <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} required />
         <input placeholder="Nombre exacto de la plantilla en Meta" value={plantilla} onChange={(e) => setPlantilla(e.target.value)} required />
@@ -500,21 +574,47 @@ export default function Campanas() {
               />
               CLP en ese período
             </label>
-            <p className="texto-muted" style={{ margin: '4px 0' }}>
-              Que hayan comprado alguno de estos productos (déjalo vacío para no filtrar por producto):
-            </p>
-            <div className="grilla-checkbox">
-              {productosActivos.map((p) => (
-                <label key={p.id} className="checkbox-producto">
-                  <input
-                    type="checkbox"
-                    checked={segmentoProductos.includes(p.id)}
-                    onChange={() => alternarProductoSegmento(p.id)}
-                  />
-                  {p.nombre}
-                </label>
-              ))}
-            </div>
+
+            {esCatalogo ? (
+              <>
+                <p className="texto-muted" style={{ margin: '4px 0' }}>
+                  Que hayan comprado alguno de estos productos (déjalo vacío para no filtrar por producto):
+                </p>
+                <div className="grilla-checkbox">
+                  {productosActivos.map((p) => (
+                    <label key={p.id} className="checkbox-producto">
+                      <input
+                        type="checkbox"
+                        checked={segmentoProductos.includes(p.id)}
+                        onChange={() => alternarProductoSegmento(p.id)}
+                      />
+                      {p.nombre}
+                    </label>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="texto-muted" style={{ margin: '4px 0' }}>
+                  Que hayan comprado alguna de estas categorías (déjalo vacío para no filtrar por categoría):
+                </p>
+                <div className="grilla-checkbox">
+                  {categoriasProductoSugeridas.map((cat) => (
+                    <label key={cat} className="checkbox-producto">
+                      <input
+                        type="checkbox"
+                        checked={segmentoCategorias.includes(cat)}
+                        onChange={() => alternarCategoriaSegmento(cat)}
+                      />
+                      {cat}
+                    </label>
+                  ))}
+                </div>
+                {categoriasProductoSugeridas.length === 0 && (
+                  <p className="texto-muted">Este rubro no tiene categorías de producto sugeridas configuradas.</p>
+                )}
+              </>
+            )}
           </div>
         )}
 
@@ -530,7 +630,15 @@ export default function Campanas() {
       ) : (
         <div className="lista-campanas">
           {campanas.map((c) => (
-            <TarjetaCampana key={c.id} campana={c} productosActivos={productosActivos} token={token} onCambio={cargar} />
+            <TarjetaCampana
+              key={c.id}
+              campana={c}
+              modoOperacion={modoOperacion}
+              productosActivos={productosActivos}
+              categoriasProductoSugeridas={categoriasProductoSugeridas}
+              token={token}
+              onCambio={cargar}
+            />
           ))}
         </div>
       )}
