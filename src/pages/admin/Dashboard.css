@@ -1,0 +1,212 @@
+.dashboard-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-container h2 {
+  margin-bottom: 24px;
+  font-size: 1.5rem;
+  color: #16241f;
+}
+
+/* Grid de tarjetas */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.tarjeta {
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.tarjeta-azul {
+  background: #e4ede9;
+  border-left: 4px solid #2f6f62;
+}
+
+.tarjeta-verde {
+  background: #d4edda;
+  border-left: 4px solid #28a745;
+}
+
+.tarjeta-ámbar {
+  background: #f3e7d2;
+  border-left: 4px solid #b8863b;
+}
+
+.tarjeta-púrpura {
+  background: #e6d5f5;
+  border-left: 4px solid #7c3aed;
+}
+
+.tarjeta-titulo {
+  font-size: 0.875rem;
+  color: #6b7770;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.tarjeta-valor {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #16241f;
+}
+
+/* Sección de agenda colapsable */
+.dashboard-agenda {
+  border: 1px solid #dad4c0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #faf8ef;
+}
+
+.agenda-header {
+  width: 100%;
+  padding: 16px;
+  background: #f0eee2;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #16241f;
+  transition: background 0.2s;
+}
+
+.agenda-header:hover {
+  background: #e8e5d8;
+}
+
+.agenda-titulo {
+  flex: 1;
+  text-align: left;
+}
+
+.agenda-toggle {
+  display: inline-block;
+  transition: transform 0.2s;
+  font-size: 0.875rem;
+  color: #6b7770;
+}
+
+.agenda-toggle.abierto {
+  transform: rotate(180deg);
+}
+
+.agenda-lista {
+  padding: 16px;
+}
+
+.agenda-lista ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.agenda-lista li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-bottom: 1px solid #dad4c0;
+  font-size: 0.9rem;
+}
+
+.agenda-lista li:last-child {
+  border-bottom: none;
+}
+
+.cita-hora {
+  font-weight: 600;
+  color: #2f6f62;
+  min-width: 60px;
+}
+
+.cita-cliente {
+  flex: 1;
+  color: #16241f;
+}
+
+.cita-estado {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.estado-confirmada {
+  background: #d4edda;
+  color: #155724;
+}
+
+.estado-pendiente {
+  background: #f3e7d2;
+  color: #8a6526;
+}
+
+.estado-cancelada {
+  background: #f3e1dc;
+  color: #a8493b;
+}
+
+.sin-citas {
+  text-align: center;
+  color: #6b7770;
+  padding: 20px;
+  margin: 0;
+  font-style: italic;
+}
+
+/* Loading y error */
+.dashboard-loading,
+.dashboard-error,
+.dashboard-empty {
+  padding: 40px;
+  text-align: center;
+  color: #6b7770;
+  font-size: 1.1rem;
+}
+
+.dashboard-error {
+  color: #a8493b;
+  background: #f3e1dc;
+  border: 1px solid #e0bdb4;
+  border-radius: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tarjeta-valor {
+    font-size: 2rem;
+  }
+
+  .agenda-lista li {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .cita-hora {
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}

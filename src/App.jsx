@@ -12,6 +12,7 @@ import Campanas from './pages/admin/Campanas';
 import PedidosHoy from './pages/admin/PedidosHoy';
 import ConfiguracionAgenda from './pages/admin/ConfiguracionAgenda';
 import InformacionNegocio from './pages/admin/InformacionNegocio';
+import Dashboard from './pages/admin/Dashboard';
 import Clientes from './pages/admin/Clientes';
 import LoginVendedor from './pages/vendedor/LoginVendedor';
 import NuevaDemo from './pages/vendedor/NuevaDemo';
@@ -39,7 +40,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Placeholder titulo="Dashboard" />} />
+        <Route index element={<Dashboard />} />
         <Route path="agenda" element={<Placeholder titulo="Agenda del día" />} />
         <Route path="configuracion-agenda" element={<ConfiguracionAgenda />} />
         <Route path="informacion-negocio" element={<InformacionNegocio />} />

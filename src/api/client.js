@@ -141,10 +141,16 @@ export function eliminarBloqueo(token, id) {
   return apiFetch(`/agenda/bloqueos/${id}`, { method: 'DELETE', token });
 }
 
+// ---------- Agenda: Dashboard ----------
+export function fetchDashboard(token, empresaId) {
+  return apiFetch(`/agenda/dashboard/${empresaId}`, { token });
+}
+
 // ---------- Servicios ----------
 export function fetchServicios(token) {
   return apiFetch('/servicios', { token });
 }
+
 export function crearServicio(token, data) {
   return apiFetch('/servicios', { method: 'POST', body: data, token });
 }
