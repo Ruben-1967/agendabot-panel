@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import './AgendaDia.css';
 
 export default function AgendaDia() {
+  const { usuario } = useAuth();
   const [citas, setCitas] = useState([]);
   const [filtro, setFiltro] = useState('todas');
   const [loading, setLoading] = useState(true);
@@ -11,12 +13,17 @@ export default function AgendaDia() {
 
   useEffect(() => {
     cargarAgenda();
-  }, []);
+  }, [usuario]);
 
   const cargarAgenda = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/agenda/dashboard/:empresaId', {
+      const empresaId = usuario?.empresaId;
+      if (!empresaId) {
+        throw new Error('No hay empresaId en la sesión');
+      }
+
+      const res = await fetch(`/api/agenda/dashboard/${empresaId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       if (!res.ok) throw new Error('Error al cargar agenda');
@@ -40,7 +47,7 @@ export default function AgendaDia() {
   const handleConfirmar = async () => {
     setAccionando(true);
     try {
-      const res = await fetch(`/api/citas/${citaSeleccionada.id}/estado`, {
+      const res = await fetch(`/api/agenda/citas/${citaSeleccionada.id}/estado`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -62,7 +69,7 @@ export default function AgendaDia() {
   const handleMarcarAsistencia = async () => {
     setAccionando(true);
     try {
-      const res = await fetch(`/api/citas/${citaSeleccionada.id}/estado`, {
+      const res = await fetch(`/api/agenda/citas/${citaSeleccionada.id}/estado`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -84,7 +91,7 @@ export default function AgendaDia() {
   const handleCancelar = async () => {
     setAccionando(true);
     try {
-      const res = await fetch(`/api/citas/${citaSeleccionada.id}/estado`, {
+      const res = await fetch(`/api/agenda/citas/${citaSeleccionada.id}/estado`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
