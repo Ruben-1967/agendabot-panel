@@ -16,6 +16,7 @@ import Clientes from './pages/admin/Clientes';
 import LoginVendedor from './pages/vendedor/LoginVendedor';
 import NuevaDemo from './pages/vendedor/NuevaDemo';
 import MisDemos from './pages/vendedor/MisDemos';
+import Dashboard from './pages/admin/Dashboard';
 
 function RaizSegunSesion() {
   const { usuario, cargandoSesion } = useAuth();
@@ -38,7 +39,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Placeholder titulo="Dashboard" />} />
+        <Route index element={<Dashboard />} />
         <Route path="agenda" element={<Placeholder titulo="Agenda del día" />} />
         <Route path="configuracion-agenda" element={<ConfiguracionAgenda />} />
         <Route path="informacion-negocio" element={<InformacionNegocio />} />
