@@ -191,4 +191,9 @@ export function eliminarProspectoDemo(token, id) {
   return apiFetch(`/demos/prospectos/${id}`, { method: 'DELETE', token, tipoSesion: 'vendedor' });
 }
 
+// ---------- Dashboard ----------
+export function fetchDashboard(token, empresaId) {
+  return apiFetch(`/agenda/dashboard/${empresaId}`, { token });
+}
+
 export { API_URL };
