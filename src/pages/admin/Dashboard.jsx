@@ -1,34 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { fetchDashboard } from '../../api/client';
+import apiFetch from '../../api/client';
 
 export default function Dashboard() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [expandedCita, setExpandedCita] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDashboard = async () => {
       try {
-        setLoading(true);
-        setError(null);
-        const result = await fetchDashboard(token, user.empresaId);
+        const result = await apiFetch(`/agenda/dashboard/${user.empresaId}`);
         setData(result);
-      } catch (err) {
-        console.error('Error fetching dashboard:', err);
-        setError(err.message || 'Error al cargar el dashboard');
+      } catch (error) {
+        console.error('Error fetching dashboard:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
-  }, [user.empresaId, token]);
+    fetchDashboard();
+  }, [user.empresaId]);
 
   if (loading) return <div className="p-6">Cargando...</div>;
-  if (error) return <div className="p-6 text-red-600">Error: {error}</div>;
-  if (!data) return <div className="p-6">No hay datos disponibles</div>;
+  if (!data) return <div className="p-6">Error al cargar el dashboard</div>;
 
   // Mapeo de colores por estado
   const estadoColores = {
@@ -104,13 +99,13 @@ export default function Dashboard() {
             Agenda de hoy
           </h2>
 
-          {data.agendaHoy && data.agendaHoy.length === 0 ? (
+          {data.agendaHoy.length === 0 ? (
             <p className="text-stone-500 text-center py-8">
               No hay citas agendadas para hoy
             </p>
           ) : (
             <div className="space-y-2">
-              {data.agendaHoy && data.agendaHoy.map((cita) => (
+              {data.agendaHoy.map((cita) => (
                 <div
                   key={cita.id}
                   className="border border-stone-200 rounded-lg overflow-hidden"
