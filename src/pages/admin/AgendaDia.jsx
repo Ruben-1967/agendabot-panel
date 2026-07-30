@@ -23,7 +23,7 @@ export default function AgendaDia() {
         throw new Error('No hay empresaId en la sesión');
       }
 
-      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/api/agenda/dashboard/${empresaId}`, {
+      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/agenda/dashboard/${empresaId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       if (!res.ok) throw new Error('Error al cargar agenda');
@@ -47,7 +47,7 @@ export default function AgendaDia() {
   const handleConfirmar = async () => {
     setAccionando(true);
     try {
-      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/api/agenda/citas/${citaSeleccionada.id}/estado`, {
+      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/agenda/citas/${citaSeleccionada.id}/estado`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -69,7 +69,7 @@ export default function AgendaDia() {
   const handleMarcarAsistencia = async () => {
     setAccionando(true);
     try {
-      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/api/agenda/citas/${citaSeleccionada.id}/estado`, {
+      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/agenda/citas/${citaSeleccionada.id}/estado`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ export default function AgendaDia() {
   const handleCancelar = async () => {
     setAccionando(true);
     try {
-      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/api/agenda/citas/${citaSeleccionada.id}/estado`, {
+      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/agenda/citas/${citaSeleccionada.id}/estado`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
