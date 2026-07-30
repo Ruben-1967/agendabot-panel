@@ -8,7 +8,6 @@ export default function Dashboard() {
   const [datos, setDatos] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
-  const [expandido, setExpandido] = useState(false);
 
   useEffect(() => {
     if (!token || !usuario?.empresaId) {
@@ -23,73 +22,81 @@ export default function Dashboard() {
       .finally(() => setCargando(false));
   }, [token, usuario?.empresaId]);
 
-  if (cargando) {
-    return <div className="dashboard-loading">Cargando dashboard…</div>;
-  }
-
   if (error) {
     return <div className="dashboard-error">Error: {error}</div>;
   }
 
-  if (!datos) {
-    return <div className="dashboard-empty">Sin datos disponibles</div>;
-  }
+  const datos_seguros = datos || {
+    citasHoy: 0,
+    confirmadas: 0,
+    listaEspera: 0,
+    asistencia30dias: 0,
+    agendaHoy: [],
+  };
 
   return (
     <div className="dashboard-container">
-      <h2>Dashboard</h2>
+      <div className="dashboard-header">
+        <h1>Hola, equipo {usuario?.empresa || 'Negocio'}</h1>
+        <p className="dashboard-header-sub">
+          Hoy · {usuario?.nombre || 'Sucursal'}
+        </p>
+      </div>
 
       {/* 4 tarjetas de resumen */}
       <div className="dashboard-grid">
-        <Tarjeta titulo="Citas hoy" valor={datos.citasHoy} color="azul" />
-        <Tarjeta titulo="Confirmadas" valor={datos.confirmadas} color="verde" />
-        <Tarjeta titulo="Lista de espera" valor={datos.listaEspera} color="ámbar" />
-        <Tarjeta
-          titulo="Asistencia 30 días"
-          valor={`${Math.round(datos.asistencia30dias)}%`}
-          color="púrpura"
-        />
+        <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
+          <span className="metric-label">Citas hoy</span>
+          <span className="metric-value">{datos_seguros.citasHoy}</span>
+        </div>
+
+        <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
+          <span className="metric-label">Confirmadas</span>
+          <span className="metric-value">{datos_seguros.confirmadas}</span>
+        </div>
+
+        <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
+          <span className="metric-label">Lista de espera</span>
+          <span className="metric-value">{datos_seguros.listaEspera}</span>
+        </div>
+
+        <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
+          <span className="metric-label">Asistencia (30 días)</span>
+          <span className="metric-value">{Math.round(datos_seguros.asistencia30dias)}%</span>
+        </div>
       </div>
 
-      {/* Lista colapsable de agenda del día */}
-      <div className="dashboard-agenda">
-        <button
-          className="agenda-header"
-          onClick={() => setExpandido(!expandido)}
-        >
-          <span className="agenda-titulo">Agenda del día</span>
-          <span className={`agenda-toggle ${expandido ? 'abierto' : ''}`}>▼</span>
-        </button>
+      {/* Agenda del día */}
+      <div className="agenda-section">
+        <div className="agenda-header-title">
+          <h2>Agenda de hoy</h2>
+        </div>
 
-        {expandido && (
-          <div className="agenda-lista">
-            {datos.agendaHoy && datos.agendaHoy.length > 0 ? (
-              <ul>
-                {datos.agendaHoy.map((cita) => (
-                  <li key={cita.id} className={`cita-${cita.estado.toLowerCase()}`}>
-                    <span className="cita-hora">{cita.hora}</span>
-                    <span className="cita-cliente">{cita.nombre}</span>
-                    <span className={`cita-estado estado-${cita.estado.toLowerCase()}`}>
-                      {cita.estado}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="sin-citas">Sin citas hoy</p>
-            )}
-          </div>
-        )}
+        <div className="agenda-list">
+          {datos_seguros.agendaHoy && datos_seguros.agendaHoy.length > 0 ? (
+            datos_seguros.agendaHoy.map((cita) => (
+              <div key={cita.id} className="agenda-item">
+                <div className="agenda-hora">{cita.hora}</div>
+                <div className="agenda-detalle">
+                  <div className="agenda-nombre">{cita.nombre}</div>
+                  <div className="agenda-servicio">
+                    {cita.servicio} · {cita.profesional}
+                  </div>
+                </div>
+                <div className={`agenda-badge estado-${cita.estado.toLowerCase()}`}>
+                  {cita.estado}
+                </div>
+              </div>
+            ))
+          ) : (
+            <>
+              <div className="agenda-item-empty"></div>
+              <div className="agenda-item-empty"></div>
+              <div className="agenda-item-empty"></div>
+            </>
+          )}
+        </div>
       </div>
-    </div>
-  );
-}
-
-function Tarjeta({ titulo, valor, color }) {
-  return (
-    <div className={`tarjeta tarjeta-${color}`}>
-      <p className="tarjeta-titulo">{titulo}</p>
-      <p className="tarjeta-valor">{valor}</p>
     </div>
   );
 }
