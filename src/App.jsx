@@ -47,7 +47,8 @@ function AppRoutes() {
         <Route path="configuracion-agenda" element={<ConfiguracionAgenda />} />
         <Route path="informacion-negocio" element={<InformacionNegocio />} />
         <Route path="clientes" element={<Clientes />} />
-        <Route path="chats" element={<Placeholder titulo="Chats en vivo" />} />
+        import ChatsEnVivo from './pages/admin/ChatsEnVivo';
+<Route path="chats" element={<ChatsEnVivo />} />
         <Route path="lista-espera" element={<ListaEspera />} />
         <Route path="productos" element={<Productos />} />
         <Route path="campanas" element={<Campanas />} />
