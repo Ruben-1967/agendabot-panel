@@ -2,25 +2,43 @@
   padding: 20px;
   max-width: 900px;
   margin: 0 auto;
-  background: #f5f5f5;
+  background: #f0ebe6;
   min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .agenda-header {
-  margin-bottom: 28px;
+  margin-bottom: 24px;
+  background: #2d5a52;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
 }
 
 .agenda-header h1 {
-  font-size: 1.8rem;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
+}
+
+.agenda-header h1 .highlight {
+  color: #d4a574;
+  font-weight: 700;
+}
+
+.agenda-header .fecha {
+  font-size: 0.85rem;
   margin: 0;
+  opacity: 0.9;
+  text-transform: lowercase;
+  letter-spacing: 0.3px;
 }
 
 /* Filtros */
 .filtros {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 20px;
   overflow-x: auto;
   padding-bottom: 8px;
@@ -28,59 +46,62 @@
 }
 
 .filtro-btn {
-  padding: 8px 14px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  padding: 8px 16px;
+  border: 2px solid #2d5a52;
+  background: transparent;
+  border-radius: 20px;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
-  font-weight: 500;
-  color: #666;
+  font-weight: 600;
+  color: #2d5a52;
+  text-transform: lowercase;
+  letter-spacing: 0.3px;
 }
 
 .filtro-btn:hover {
-  border-color: #389cf5;
-  color: #389cf5;
+  background: #2d5a52;
+  color: white;
 }
 
 .filtro-btn.activo {
-  background: #389cf5;
+  background: #2d5a52;
   color: white;
-  border-color: #389cf5;
+  border-color: #2d5a52;
 }
 
 /* Lista de citas */
 .citas-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .cita-card {
   background: white;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 16px;
+  border: 1px solid #e8ddd2;
+  border-radius: 6px;
+  padding: 14px 16px;
   display: flex;
-  gap: 16px;
+  gap: 14px;
   align-items: center;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .cita-card:hover {
-  box-shadow: 0 4px 12px rgba(56, 156, 245, 0.1);
-  border-color: #389cf5;
+  box-shadow: 0 2px 8px rgba(45, 90, 82, 0.12);
+  border-color: #2d5a52;
 }
 
 .cita-hora {
-  font-size: 1.4rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #389cf5;
-  min-width: 60px;
-  text-align: center;
+  color: #2d5a52;
+  min-width: 50px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .cita-info {
@@ -89,62 +110,56 @@
 }
 
 .cita-nombre {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: #1a1a1a;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.cita-servicio {
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.cita-profesional {
+.cita-detalle {
   font-size: 0.8rem;
-  color: #999;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Badges de estado */
 .badge {
-  padding: 6px 12px;
+  padding: 5px 12px;
   border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: lowercase;
   letter-spacing: 0.5px;
   white-space: nowrap;
 }
 
 .badge-confirmada {
-  background: #e6f7e6;
-  color: #2d7a4a;
+  background: #d4e8e3;
+  color: #2d5a52;
 }
 
 .badge-pendiente {
-  background: #fff3cd;
-  color: #997404;
+  background: #fde4c8;
+  color: #d4793e;
 }
 
 .badge-completada {
-  background: #d4edda;
-  color: #155724;
+  background: #d4e8d9;
+  color: #2d6b2b;
 }
 
 .badge-cancelada {
-  background: #f8d7da;
-  color: #721c24;
+  background: #fde8e8;
+  color: #c94e4e;
 }
 
 .badge-no-asistio {
-  background: #f5f5f5;
+  background: #f0f0f0;
   color: #666;
 }
 
@@ -152,15 +167,15 @@
 .citas-loading {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .shimmer {
-  height: 80px;
+  height: 70px;
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 @keyframes shimmer {
@@ -177,23 +192,23 @@
   text-align: center;
   padding: 40px 20px;
   color: #999;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 /* Error box */
 .error-box {
-  background: #ffe6e6;
-  border: 1px solid #ffcccc;
-  border-radius: 8px;
+  background: #fde8e8;
+  border: 1px solid #f5c4c4;
+  border-radius: 6px;
   padding: 20px;
-  color: #cc0000;
+  color: #c94e4e;
   text-align: center;
 }
 
 .error-box button {
   margin-top: 12px;
   padding: 8px 16px;
-  background: #cc0000;
+  background: #c94e4e;
   color: white;
   border: none;
   border-radius: 4px;
@@ -225,7 +240,7 @@
 }
 
 .bottom-sheet {
-  background: white;
+  background: #f0ebe6;
   border-radius: 16px 16px 0 0;
   max-height: 80vh;
   width: 100%;
@@ -248,28 +263,32 @@
 
 .sheet-header {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #eee;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #2d5a52;
+  color: white;
+  padding: 20px;
+  border-radius: 16px 16px 0 0;
   position: relative;
 }
 
-.sheet-handle {
-  width: 40px;
-  height: 4px;
-  background: #ddd;
-  border-radius: 2px;
+.sheet-header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sheet-hora {
+  font-size: 1.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .sheet-close {
-  position: absolute;
-  right: 16px;
-  top: 16px;
   background: none;
   border: none;
-  font-size: 1.5rem;
-  color: #999;
+  font-size: 1.4rem;
+  color: white;
   cursor: pointer;
   padding: 0;
   width: 32px;
@@ -277,46 +296,45 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0.8;
+  transition: opacity 0.2s;
 }
 
 .sheet-close:hover {
-  color: #1a1a1a;
+  opacity: 1;
 }
 
 .sheet-content {
   padding: 24px;
   flex: 1;
   overflow-y: auto;
+  background: white;
 }
 
 .sheet-content h2 {
-  font-size: 1.4rem;
-  font-weight: 600;
+  font-size: 1.3rem;
+  font-weight: 700;
   color: #1a1a1a;
   margin: 0 0 20px 0;
 }
 
-/* Detail grid */
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-bottom: 28px;
+/* Detail info */
+.detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e8ddd2;
 }
 
-@media (max-width: 480px) {
-  .detail-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.detail-item {
+.detail-row {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.detail-item .label {
+.detail-label {
   font-size: 0.75rem;
   color: #999;
   text-transform: uppercase;
@@ -324,15 +342,10 @@
   font-weight: 600;
 }
 
-.detail-item .value {
+.detail-value {
   font-size: 0.95rem;
   color: #1a1a1a;
   font-weight: 500;
-}
-
-.detail-item .value.badge {
-  display: inline-block;
-  width: fit-content;
 }
 
 /* Botones de accion */
@@ -340,20 +353,18 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
 }
 
 .btn {
   padding: 12px 16px;
   border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  text-transform: lowercase;
+  letter-spacing: 0.3px;
 }
 
 .btn:disabled {
@@ -362,48 +373,42 @@
 }
 
 .btn-primary {
-  background: #389cf5;
+  background: #2d5a52;
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #2982d0;
-}
-
-.btn-success {
-  background: #28a745;
-  color: white;
-}
-
-.btn-success:hover:not(:disabled) {
-  background: #218838;
-}
-
-.btn-danger {
-  background: #dc3545;
-  color: white;
-}
-
-.btn-danger:hover:not(:disabled) {
-  background: #c82333;
-}
-
-.btn-warning {
-  background: #ffc107;
-  color: #333;
-}
-
-.btn-warning:hover:not(:disabled) {
-  background: #e0a800;
+  background: #1f4038;
 }
 
 .btn-secondary {
-  background: #6c757d;
-  color: white;
+  background: white;
+  color: #1a1a1a;
+  border: 1px solid #2d5a52;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #5a6268;
+  background: #f9f7f4;
+}
+
+.btn-danger-outline {
+  background: white;
+  color: #c94e4e;
+  border: 1px solid #c94e4e;
+}
+
+.btn-danger-outline:hover:not(:disabled) {
+  background: #fef9f9;
+}
+
+.btn-warning {
+  background: #fde4c8;
+  color: #d4793e;
+  border: 1px solid #d4793e;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background: #fdd4a4;
 }
 
 /* Responsive */
@@ -412,34 +417,40 @@
     padding: 16px;
   }
 
+  .agenda-header {
+    padding: 16px;
+  }
+
   .agenda-header h1 {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
   }
 
   .cita-card {
-    padding: 12px;
+    padding: 12px 14px;
     gap: 12px;
   }
 
   .cita-hora {
-    font-size: 1.2rem;
-    min-width: 50px;
+    min-width: 45px;
   }
 
   .filtros {
-    gap: 8px;
+    gap: 10px;
   }
 
   .filtro-btn {
-    padding: 6px 12px;
-    font-size: 0.85rem;
+    padding: 6px 14px;
+    font-size: 0.8rem;
   }
 }
 
 @media (max-width: 480px) {
   .bottom-sheet {
     max-height: 90vh;
-    border-radius: 20px 20px 0 0;
+  }
+
+  .sheet-header {
+    padding: 16px;
   }
 
   .sheet-content {
@@ -447,13 +458,14 @@
   }
 
   .sheet-content h2 {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     margin-bottom: 16px;
   }
 
-  .detail-grid {
-    gap: 12px;
+  .detail-info {
+    gap: 10px;
     margin-bottom: 20px;
+    padding-bottom: 16px;
   }
 
   .btn {

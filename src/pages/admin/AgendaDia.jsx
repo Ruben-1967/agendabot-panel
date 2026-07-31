@@ -110,6 +110,30 @@ export default function AgendaDia() {
     }
   };
 
+  const handleReagendar = async () => {
+    // Abre modal para elegir nueva fecha/hora
+    // Por ahora, solo revertir a PENDIENTE
+    setAccionando(true);
+    try {
+      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/agenda/citas/${citaSeleccionada.id}/estado`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ estado: 'PENDIENTE' }),
+      });
+      if (res.ok) {
+        cargarAgenda();
+        setCitaSeleccionada(null);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAccionando(false);
+    }
+  };
+
   const handleReactivar = async () => {
     setAccionando(true);
     try {
@@ -151,20 +175,31 @@ export default function AgendaDia() {
 
   const getEstadoLabel = (estado) => {
     const labels = {
-      CONFIRMADA: 'Confirmada',
-      PENDIENTE: 'Pendiente',
-      COMPLETADA: 'Completada',
-      CANCELADA: 'Cancelada',
-      NO_ASISTIO: 'No asistió',
+      CONFIRMADA: 'confirmada',
+      PENDIENTE: 'pendiente',
+      COMPLETADA: 'completada',
+      CANCELADA: 'cancelada',
+      NO_ASISTIO: 'no asistió',
     };
     return labels[estado] || estado;
+  };
+
+  const obtenerFecha = () => {
+    const hoy = new Date();
+    const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const diaSemana = diasSemana[hoy.getDay()];
+    const dia = hoy.getDate();
+    const mes = meses[hoy.getMonth()];
+    return `${diaSemana} ${dia} de ${mes}`;
   };
 
   if (loading) {
     return (
       <div className="agenda-container">
         <div className="agenda-header">
-          <h1>Agenda del día</h1>
+          <h1>Agenda de <span className="highlight">hoy</span></h1>
+          <p className="fecha">{obtenerFecha()}</p>
         </div>
         <div className="citas-loading">
           <div className="shimmer"></div>
@@ -179,7 +214,8 @@ export default function AgendaDia() {
     return (
       <div className="agenda-container">
         <div className="agenda-header">
-          <h1>Agenda del día</h1>
+          <h1>Agenda de <span className="highlight">hoy</span></h1>
+          <p className="fecha">{obtenerFecha()}</p>
         </div>
         <div className="error-box">
           <p>{error}</p>
@@ -192,7 +228,8 @@ export default function AgendaDia() {
   return (
     <div className="agenda-container">
       <div className="agenda-header">
-        <h1>Agenda del día</h1>
+        <h1>Agenda de <span className="highlight">hoy</span></h1>
+        <p className="fecha">{obtenerFecha()}</p>
       </div>
 
       <div className="filtros">
@@ -200,25 +237,25 @@ export default function AgendaDia() {
           className={`filtro-btn ${filtro === 'todas' ? 'activo' : ''}`}
           onClick={() => setFiltro('todas')}
         >
-          Todas ({citas.length})
+          todas
         </button>
         <button
           className={`filtro-btn ${filtro === 'confirmadas' ? 'activo' : ''}`}
           onClick={() => setFiltro('confirmadas')}
         >
-          Confirmadas ({citas.filter((c) => c.estado === 'CONFIRMADA').length})
+          confirmadas
         </button>
         <button
           className={`filtro-btn ${filtro === 'pendientes' ? 'activo' : ''}`}
           onClick={() => setFiltro('pendientes')}
         >
-          Pendientes ({citas.filter((c) => c.estado === 'PENDIENTE').length})
+          pendientes
         </button>
         <button
           className={`filtro-btn ${filtro === 'canceladas' ? 'activo' : ''}`}
           onClick={() => setFiltro('canceladas')}
         >
-          Canceladas ({citas.filter((c) => c.estado === 'CANCELADA').length})
+          canceladas
         </button>
       </div>
 
@@ -237,8 +274,7 @@ export default function AgendaDia() {
               <div className="cita-hora">{cita.hora}</div>
               <div className="cita-info">
                 <div className="cita-nombre">{cita.nombre}</div>
-                <div className="cita-servicio">{cita.servicio}</div>
-                <div className="cita-profesional">👤 {cita.profesional}</div>
+                <div className="cita-detalle">{cita.profesional} · {cita.servicio}</div>
               </div>
               <div className={`badge ${getBadgeClass(cita.estado)}`}>
                 {getEstadoLabel(cita.estado)}
@@ -252,7 +288,12 @@ export default function AgendaDia() {
         <div className="bottom-sheet-overlay" onClick={() => setCitaSeleccionada(null)}>
           <div className="bottom-sheet" onClick={(e) => e.stopPropagation()}>
             <div className="sheet-header">
-              <div className="sheet-handle"></div>
+              <div className="sheet-header-content">
+                <div className="sheet-hora">{citaSeleccionada.hora}</div>
+                <div className={`badge ${getBadgeClass(citaSeleccionada.estado)}`}>
+                  {getEstadoLabel(citaSeleccionada.estado)}
+                </div>
+              </div>
               <button className="sheet-close" onClick={() => setCitaSeleccionada(null)}>
                 ✕
               </button>
@@ -261,64 +302,47 @@ export default function AgendaDia() {
             <div className="sheet-content">
               <h2>{citaSeleccionada.nombre}</h2>
 
-              <div className="detail-grid">
-                <div className="detail-item">
-                  <span className="label">Hora</span>
-                  <span className="value">{citaSeleccionada.hora}</span>
+              <div className="detail-info">
+                <div className="detail-row">
+                  <span className="detail-label">Teléfono</span>
+                  <span className="detail-value">{citaSeleccionada.telefono || '—'}</span>
                 </div>
-                <div className="detail-item">
-                  <span className="label">Servicio</span>
-                  <span className="value">{citaSeleccionada.servicio}</span>
+                <div className="detail-row">
+                  <span className="detail-label">Última compra</span>
+                  <span className="detail-value">—</span>
                 </div>
-                <div className="detail-item">
-                  <span className="label">Profesional</span>
-                  <span className="value">{citaSeleccionada.profesional}</span>
+                <div className="detail-row">
+                  <span className="detail-label">Observaciones</span>
+                  <span className="detail-value">—</span>
                 </div>
-                <div className="detail-item">
-                  <span className="label">Estado</span>
-                  <span className={`value badge ${getBadgeClass(citaSeleccionada.estado)}`}>
-                    {getEstadoLabel(citaSeleccionada.estado)}
-                  </span>
-                </div>
-                {citaSeleccionada.telefono && (
-                  <div className="detail-item">
-                    <span className="label">Teléfono</span>
-                    <span className="value">{citaSeleccionada.telefono}</span>
-                  </div>
-                )}
-                {citaSeleccionada.rut && (
-                  <div className="detail-item">
-                    <span className="label">RUT</span>
-                    <span className="value">{citaSeleccionada.rut}</span>
-                  </div>
-                )}
               </div>
 
               <div className="sheet-actions">
                 {citaSeleccionada.estado === 'PENDIENTE' && (
                   <button className="btn btn-primary" onClick={handleConfirmar} disabled={accionando}>
-                    Confirmar
-                  </button>
-                )}
-                {(citaSeleccionada.estado === 'CONFIRMADA' ||
-                  citaSeleccionada.estado === 'PENDIENTE') && (
-                  <button className="btn btn-success" onClick={handleMarcarAsistencia} disabled={accionando}>
-                    Marcar asistencia
+                    confirmar
                   </button>
                 )}
                 {citaSeleccionada.estado !== 'CANCELADA' && (
-                  <button className="btn btn-danger" onClick={handleCancelar} disabled={accionando}>
-                    Cancelar
+                  <button className="btn btn-secondary" onClick={handleMarcarAsistencia} disabled={accionando}>
+                    marcar asistencia
+                  </button>
+                )}
+                {citaSeleccionada.estado !== 'CANCELADA' && (
+                  <button className="btn btn-danger-outline" onClick={handleCancelar} disabled={accionando}>
+                    cancelar
                   </button>
                 )}
                 {citaSeleccionada.estado === 'CANCELADA' && (
-                  <button className="btn btn-warning" onClick={handleReactivar} disabled={accionando}>
-                    Reactivar
-                  </button>
+                  <>
+                    <button className="btn btn-secondary" onClick={handleReagendar} disabled={accionando}>
+                      reagendar
+                    </button>
+                    <button className="btn btn-warning" onClick={handleReactivar} disabled={accionando}>
+                      reactivar
+                    </button>
+                  </>
                 )}
-                <button className="btn btn-secondary" onClick={() => setCitaSeleccionada(null)}>
-                  Cerrar
-                </button>
               </div>
             </div>
           </div>
