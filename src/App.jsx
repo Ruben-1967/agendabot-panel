@@ -18,6 +18,7 @@ import AgendaDia from './pages/admin/AgendaDia';
 import LoginVendedor from './pages/vendedor/LoginVendedor';
 import NuevaDemo from './pages/vendedor/NuevaDemo';
 import MisDemos from './pages/vendedor/MisDemos';
+import ListaEspera from './pages/admin/ListaEspera';
 
 
 function RaizSegunSesion() {
@@ -47,7 +48,7 @@ function AppRoutes() {
         <Route path="informacion-negocio" element={<InformacionNegocio />} />
         <Route path="clientes" element={<Clientes />} />
         <Route path="chats" element={<Placeholder titulo="Chats en vivo" />} />
-        <Route path="lista-espera" element={<Placeholder titulo="Lista de espera" />} />
+        <Route path="lista-espera" element={<ListaEspera />} />
         <Route path="productos" element={<Productos />} />
         <Route path="campanas" element={<Campanas />} />
         <Route path="pedidos" element={<PedidosHoy />} />
