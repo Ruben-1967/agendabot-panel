@@ -1,0 +1,295 @@
+.lista-espera-container {
+  padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  background: #f0ebe6;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.lista-header {
+  background: #2d5a52;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.lista-header h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
+}
+
+.lista-header .fecha {
+  font-size: 0.85rem;
+  margin: 0;
+  opacity: 0.9;
+  text-transform: lowercase;
+  letter-spacing: 0.3px;
+}
+
+/* Filtros */
+.filtros {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.filtro-btn {
+  padding: 8px 16px;
+  border: 2px solid #2d5a52;
+  background: transparent;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-weight: 600;
+  color: #2d5a52;
+  text-transform: lowercase;
+  letter-spacing: 0.3px;
+}
+
+.filtro-btn:hover {
+  background: #2d5a52;
+  color: white;
+}
+
+.filtro-btn.activo {
+  background: #2d5a52;
+  color: white;
+  border-color: #2d5a52;
+}
+
+/* Lista de clientes */
+.lista-clientes {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cliente-card {
+  background: white;
+  border: 1px solid #e8ddd2;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  transition: all 0.2s ease;
+}
+
+.cliente-card:hover {
+  box-shadow: 0 2px 8px rgba(45, 90, 82, 0.12);
+  border-color: #2d5a52;
+}
+
+.cliente-numero {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2d5a52;
+  min-width: 40px;
+  text-align: center;
+}
+
+.cliente-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cliente-nombre {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.cliente-dias {
+  font-size: 0.75rem;
+  color: #d4793e;
+  font-weight: 700;
+  text-transform: lowercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+}
+
+.cliente-detalle {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.cliente-telefono {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* Acciones */
+.cliente-acciones {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn {
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: lowercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-agendar {
+  background: #2d5a52;
+  color: white;
+  border-color: #2d5a52;
+}
+
+.btn-agendar:hover:not(:disabled) {
+  background: #1f4038;
+}
+
+.btn-contactar {
+  background: #f5f1eb;
+  color: #666;
+  border-color: #d9cfc2;
+}
+
+.btn-contactar:hover:not(:disabled) {
+  background: #ebe3d7;
+}
+
+.btn-remover {
+  background: #fce8e8;
+  color: #c94e4e;
+  border-color: #f5c4c4;
+}
+
+.btn-remover:hover:not(:disabled) {
+  background: #f8d7da;
+}
+
+/* Loading */
+.lista-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.shimmer {
+  height: 100px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+  font-size: 1rem;
+}
+
+/* Error box */
+.error-box {
+  background: #ffe6e6;
+  border: 1px solid #ffcccc;
+  border-radius: 8px;
+  padding: 20px;
+  color: #cc0000;
+  text-align: center;
+}
+
+.error-box button {
+  margin-top: 12px;
+  padding: 8px 16px;
+  background: #cc0000;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .lista-espera-container {
+    padding: 16px;
+  }
+
+  .lista-header {
+    padding: 16px;
+  }
+
+  .lista-header h1 {
+    font-size: 1.4rem;
+  }
+
+  .cliente-card {
+    flex-direction: column;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .cliente-numero {
+    font-size: 1.4rem;
+    min-width: auto;
+    text-align: left;
+  }
+
+  .cliente-acciones {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .filtros {
+    gap: 8px;
+  }
+
+  .filtro-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .cliente-acciones {
+    gap: 4px;
+  }
+
+  .btn {
+    padding: 6px 8px;
+    font-size: 0.7rem;
+  }
+}
