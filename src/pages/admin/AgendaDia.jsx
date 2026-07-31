@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import './AgendaDia.css';
 
 export default function AgendaDia() {
-  const { usuario } = useAuth();
+  const { usuario, token } = useAuth();  // ← Obtener del contexto
   const [citas, setCitas] = useState([]);
   const [filtro, setFiltro] = useState('todas');
   const [loading, setLoading] = useState(true);
@@ -12,8 +12,8 @@ export default function AgendaDia() {
   const [accionando, setAccionando] = useState(false);
 
   useEffect(() => {
-    cargarAgenda();
-  }, [usuario]);
+    if (token) cargarAgenda();
+  }, [token]);
 
   const cargarAgenda = async () => {
     try {
@@ -24,7 +24,7 @@ export default function AgendaDia() {
       }
 
       const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/agenda/dashboard/${empresaId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${token}` },  // ← Usar token del contexto
       });
       if (!res.ok) throw new Error('Error al cargar agenda');
       const data = await res.json();
@@ -51,7 +51,7 @@ export default function AgendaDia() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ estado: 'CONFIRMADA' }),
       });
@@ -73,7 +73,7 @@ export default function AgendaDia() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ estado: 'COMPLETADA' }),
       });
@@ -95,7 +95,7 @@ export default function AgendaDia() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ estado: 'CANCELADA' }),
       });
@@ -173,7 +173,6 @@ export default function AgendaDia() {
         <h1>Agenda del día</h1>
       </div>
 
-      {/* Filtros */}
       <div className="filtros">
         <button
           className={`filtro-btn ${filtro === 'todas' ? 'activo' : ''}`}
@@ -201,7 +200,6 @@ export default function AgendaDia() {
         </button>
       </div>
 
-      {/* Lista de citas */}
       <div className="citas-list">
         {citasFiltradas.length === 0 ? (
           <div className="empty-state">
@@ -228,7 +226,6 @@ export default function AgendaDia() {
         )}
       </div>
 
-      {/* Bottom Sheet - Detalles de cita */}
       {citaSeleccionada && (
         <div className="bottom-sheet-overlay" onClick={() => setCitaSeleccionada(null)}>
           <div className="bottom-sheet" onClick={(e) => e.stopPropagation()}>
@@ -275,7 +272,6 @@ export default function AgendaDia() {
                 )}
               </div>
 
-              {/* Botones de acción */}
               <div className="sheet-actions">
                 {citaSeleccionada.estado === 'PENDIENTE' && (
                   <button className="btn btn-primary" onClick={handleConfirmar} disabled={accionando}>
