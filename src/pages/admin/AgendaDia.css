@@ -335,7 +335,7 @@
   width: fit-content;
 }
 
-/* Botones de acción */
+/* Botones de accion */
 .sheet-actions {
   display: flex;
   flex-direction: column;
@@ -386,6 +386,15 @@
 
 .btn-danger:hover:not(:disabled) {
   background: #c82333;
+}
+
+.btn-warning {
+  background: #ffc107;
+  color: #333;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background: #e0a800;
 }
 
 .btn-secondary {

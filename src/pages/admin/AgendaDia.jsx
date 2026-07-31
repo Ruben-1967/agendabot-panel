@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import './AgendaDia.css';
 
 export default function AgendaDia() {
-  const { usuario, token } = useAuth();  // ← Obtener del contexto
+  const { usuario, token } = useAuth();
   const [citas, setCitas] = useState([]);
   const [filtro, setFiltro] = useState('todas');
   const [loading, setLoading] = useState(true);
@@ -24,7 +24,7 @@ export default function AgendaDia() {
       }
 
       const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/agenda/dashboard/${empresaId}`, {
-        headers: { Authorization: `Bearer ${token}` },  // ← Usar token del contexto
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Error al cargar agenda');
       const data = await res.json();
@@ -98,6 +98,28 @@ export default function AgendaDia() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ estado: 'CANCELADA' }),
+      });
+      if (res.ok) {
+        cargarAgenda();
+        setCitaSeleccionada(null);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAccionando(false);
+    }
+  };
+
+  const handleReactivar = async () => {
+    setAccionando(true);
+    try {
+      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/agenda/citas/${citaSeleccionada.id}/estado`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ estado: 'PENDIENTE' }),
       });
       if (res.ok) {
         cargarAgenda();
@@ -287,6 +309,11 @@ export default function AgendaDia() {
                 {citaSeleccionada.estado !== 'CANCELADA' && (
                   <button className="btn btn-danger" onClick={handleCancelar} disabled={accionando}>
                     Cancelar
+                  </button>
+                )}
+                {citaSeleccionada.estado === 'CANCELADA' && (
+                  <button className="btn btn-warning" onClick={handleReactivar} disabled={accionando}>
+                    Reactivar
                   </button>
                 )}
                 <button className="btn btn-secondary" onClick={() => setCitaSeleccionada(null)}>
