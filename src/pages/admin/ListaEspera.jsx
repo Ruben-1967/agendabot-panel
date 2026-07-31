@@ -14,7 +14,7 @@ export default function ListaEspera() {
   useEffect(() => {
     if (token) {
       cargarListaEspera();
-      cargarServicios();
+      // cargarServicios(); // TODO: implementar después
     }
   }, [token]);
 
