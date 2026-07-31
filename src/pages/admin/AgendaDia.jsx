@@ -317,33 +317,31 @@ export default function AgendaDia() {
                 </div>
               </div>
 
-              <div className="sheet-actions">
-                {citaSeleccionada.estado === 'PENDIENTE' && (
-                  <button className="btn btn-primary" onClick={handleConfirmar} disabled={accionando}>
-                    confirmar
-                  </button>
-                )}
-                {citaSeleccionada.estado !== 'CANCELADA' && (
-                  <button className="btn btn-secondary" onClick={handleMarcarAsistencia} disabled={accionando}>
-                    marcar asistencia
-                  </button>
-                )}
-                {citaSeleccionada.estado !== 'CANCELADA' && (
-                  <button className="btn btn-danger-outline" onClick={handleCancelar} disabled={accionando}>
-                    cancelar
-                  </button>
-                )}
-                {citaSeleccionada.estado === 'CANCELADA' && (
-                  <>
-                    <button className="btn btn-secondary" onClick={handleReagendar} disabled={accionando}>
-                      reagendar
-                    </button>
-                    <button className="btn btn-warning" onClick={handleReactivar} disabled={accionando}>
-                      reactivar
-                    </button>
-                  </>
-                )}
-              </div>
+             <div className="sheet-actions">
+  {citaSeleccionada.estado === 'PENDIENTE' && (
+    <button className="btn btn-primary" onClick={handleConfirmar} disabled={accionando}>
+      confirmar
+    </button>
+  )}
+  <button className="btn btn-secondary" onClick={handleReagendar} disabled={accionando}>
+    reagendar
+  </button>
+  {citaSeleccionada.estado !== 'CANCELADA' && (
+    <button className="btn btn-secondary" onClick={handleMarcarAsistencia} disabled={accionando}>
+      marcar asistencia
+    </button>
+  )}
+  {citaSeleccionada.estado !== 'CANCELADA' && (
+    <button className="btn btn-danger-outline" onClick={handleCancelar} disabled={accionando}>
+      cancelar
+    </button>
+  )}
+  {citaSeleccionada.estado === 'CANCELADA' && (
+    <button className="btn btn-warning" onClick={handleReactivar} disabled={accionando}>
+      reactivar
+    </button>
+  )}
+</div>
             </div>
           </div>
         </div>
