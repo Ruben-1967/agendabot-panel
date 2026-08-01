@@ -32,70 +32,114 @@ export default function Dashboard() {
     listaEspera: 0,
     asistencia30dias: 0,
     agendaHoy: [],
+    listaEsperaItems: [],
   };
+
+  // Obtener fecha de hoy formateada
+  const hoy = new Date();
+  const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const fechaFormato = `${diasSemana[hoy.getDay()]} ${hoy.getDate()} ${meses[hoy.getMonth()]}`;
 
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h1>Hola, equipo {usuario?.empresa || 'Negocio'}</h1>
+        <h1>Hola, {usuario?.empresaNombre || 'equipo'}</h1>
         <p className="dashboard-header-sub">
-          Hoy · {usuario?.nombre || 'Sucursal'}
+          Hoy · {fechaFormato}
         </p>
       </div>
 
-      {/* 4 tarjetas de resumen */}
+      {/* 4 tarjetas KPI */}
       <div className="dashboard-grid">
         <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
           <span className="metric-label">Citas hoy</span>
           <span className="metric-value">{datos_seguros.citasHoy}</span>
+          <span className="metric-description">
+            {datos_seguros.confirmadas} confirmadas, {datos_seguros.citasHoy - datos_seguros.confirmadas} pendientes
+          </span>
         </div>
 
         <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
           <span className="metric-label">Confirmadas</span>
           <span className="metric-value">{datos_seguros.confirmadas}</span>
+          <span className="metric-description">
+            de {datos_seguros.citasHoy} citas agendadas
+          </span>
         </div>
 
         <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
           <span className="metric-label">Lista de espera</span>
           <span className="metric-value">{datos_seguros.listaEspera}</span>
+          <span className="metric-description">
+            clientes esperando cupo
+          </span>
         </div>
 
         <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
           <span className="metric-label">Asistencia (30 días)</span>
           <span className="metric-value">{Math.round(datos_seguros.asistencia30dias)}%</span>
+          <span className="metric-description">
+            {datos_seguros.citasHoy} de {Math.round(datos_seguros.citasHoy / (datos_seguros.asistencia30dias / 100))} citas asistidas
+          </span>
         </div>
       </div>
 
-      {/* Agenda del día */}
-      <div className="agenda-section">
-        <div className="agenda-header-title">
-          <h2>Agenda de hoy</h2>
-        </div>
+      {/* Layout principal: Agenda + Lista de Espera */}
+      <div className="dashboard-main">
+        {/* Agenda del día */}
+        <div className="agenda-section">
+          <div className="agenda-header">
+            <h2>Agenda de hoy</h2>
+            <a href="/admin/agenda">ver agenda completa →</a>
+          </div>
 
-        <div className="agenda-list">
-          {datos_seguros.agendaHoy && datos_seguros.agendaHoy.length > 0 ? (
-            datos_seguros.agendaHoy.map((cita) => (
-              <div key={cita.id} className="agenda-item">
-                <div className="agenda-hora">{cita.hora}</div>
-                <div className="agenda-detalle">
-                  <div className="agenda-nombre">{cita.nombre}</div>
-                  <div className="agenda-servicio">
-                    {cita.servicio} · {cita.profesional}
+          <div className="agenda-list">
+            {datos_seguros.agendaHoy && datos_seguros.agendaHoy.length > 0 ? (
+              datos_seguros.agendaHoy.map((cita) => (
+                <div key={cita.id} className={`agenda-item ${cita.estado.toLowerCase()}`}>
+                  <div className="agenda-hora">{cita.hora}</div>
+                  <div className="agenda-detalle">
+                    <div className="agenda-nombre">{cita.nombre}</div>
+                    <div className="agenda-servicio">
+                      {cita.servicio} · {cita.profesional || 'Atención general'}
+                    </div>
+                  </div>
+                  <div className={`agenda-badge badge-${cita.estado.toLowerCase()}`}>
+                    {cita.estado}
                   </div>
                 </div>
-                <div className={`agenda-badge estado-${cita.estado.toLowerCase()}`}>
-                  {cita.estado}
-                </div>
-              </div>
-            ))
-          ) : (
-            <>
-              <div className="agenda-item-empty"></div>
-              <div className="agenda-item-empty"></div>
-              <div className="agenda-item-empty"></div>
-            </>
-          )}
+              ))
+            ) : (
+              <>
+                <div className="agenda-item-empty"></div>
+                <div className="agenda-item-empty"></div>
+                <div className="agenda-item-empty"></div>
+              </>
+            )}
+          </div>
         </div>
+
+        {/* Lista de Espera */}
+        {datos_seguros.listaEsperaItems && datos_seguros.listaEsperaItems.length > 0 && (
+          <div className="espera-section">
+            <div className="espera-header">
+              <h2>Lista de espera</h2>
+            </div>
+
+            <div className="espera-list">
+              {datos_seguros.listaEsperaItems.map((item, idx) => (
+                <div key={item.id} className="espera-item">
+                  <div className="espera-numero">{idx + 1}</div>
+                  <div className="espera-detalle">
+                    <div className="espera-nombre">{item.nombre}</div>
+                    <div className="espera-servicio">{item.servicio}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
