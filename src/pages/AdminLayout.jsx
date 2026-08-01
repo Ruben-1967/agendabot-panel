@@ -25,6 +25,8 @@ export default function AdminLayout() {
               <NavLink to="/admin/configuracion-agenda">Configuración de agenda</NavLink>
               <NavLink to="/admin/informacion-negocio">Información del negocio</NavLink>
               <NavLink to="/admin/clientes">Pacientes / Clientes</NavLink>
+              {/* <NavLink to="/admin/campanas">Campañas</NavLink> */}
+              {/* <NavLink to="/admin/chats">Chats en vivo</NavLink> */}
               <NavLink to="/admin/lista-espera">Lista de espera</NavLink>
             </>
           )}
