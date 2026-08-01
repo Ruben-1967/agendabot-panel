@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { VendedorAuthProvider } from './context/VendedorAuthContext';
@@ -15,17 +16,22 @@ import InformacionNegocio from './pages/admin/InformacionNegocio';
 import Dashboard from './pages/admin/Dashboard';
 import Clientes from './pages/admin/Clientes';
 import AgendaDia from './pages/admin/AgendaDia';
+import ListaEspera from './pages/admin/ListaEspera';
 import LoginVendedor from './pages/vendedor/LoginVendedor';
 import NuevaDemo from './pages/vendedor/NuevaDemo';
 import MisDemos from './pages/vendedor/MisDemos';
-import ListaEspera from './pages/admin/ListaEspera';
-
 
 function RaizSegunSesion() {
   const { usuario, cargandoSesion } = useAuth();
-  if (cargandoSesion) return <div className="pantalla-carga">Cargando sesión…</div>;
-  if (!usuario) return <Navigate to="/login" replace />;
-  return <Navigate to={usuario.rol === 'PROFESIONAL' ? '/profesional' : '/admin'} replace />;
+  const { vendedor, cargandoSesionVendedor } = useAuth();
+
+  if (cargandoSesion || cargandoSesionVendedor) {
+    return <div className="pantalla-carga">Cargando...</div>;
+  }
+
+  if (usuario) return <Navigate to="/admin" replace />;
+  if (vendedor) return <Navigate to="/vendedor/mis-demos" replace />;
+  return <Navigate to="/login" replace />;
 }
 
 function AppRoutes() {
@@ -47,8 +53,6 @@ function AppRoutes() {
         <Route path="configuracion-agenda" element={<ConfiguracionAgenda />} />
         <Route path="informacion-negocio" element={<InformacionNegocio />} />
         <Route path="clientes" element={<Clientes />} />
-        import ChatsEnVivo from './pages/admin/ChatsEnVivo';
-<Route path="chats" element={<ChatsEnVivo />} />
         <Route path="lista-espera" element={<ListaEspera />} />
         <Route path="productos" element={<Productos />} />
         <Route path="campanas" element={<Campanas />} />
@@ -67,11 +71,6 @@ function AppRoutes() {
         <Route path="disponibilidad" element={<Placeholder titulo="Mi disponibilidad" />} />
       </Route>
 
-      {/* ------------------------------------------------------------
-          Módulo de vendedores (demos comerciales). Autenticación y
-          sesión completamente independientes del panel de negocios
-          (ver VendedorAuthContext) — no comparten localStorage ni rol.
-      ------------------------------------------------------------ */}
       <Route path="/vendedor/login" element={<LoginVendedor />} />
       <Route
         path="/vendedor/nueva-demo"
