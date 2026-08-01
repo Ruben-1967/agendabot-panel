@@ -1,200 +1,106 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import './ChatsEnVivo.css';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { VendedorAuthProvider } from './context/VendedorAuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRouteVendedor from './components/ProtectedRouteVendedor';
+import Login from './pages/Login';
+import AdminLayout from './pages/AdminLayout';
+import ProfesionalLayout from './pages/ProfesionalLayout';
+import Placeholder from './pages/Placeholder';
+import Productos from './pages/admin/Productos';
+import Campanas from './pages/admin/Campanas';
+import PedidosHoy from './pages/admin/PedidosHoy';
+import ConfiguracionAgenda from './pages/admin/ConfiguracionAgenda';
+import InformacionNegocio from './pages/admin/InformacionNegocio';
+import Dashboard from './pages/admin/Dashboard';
+import Clientes from './pages/admin/Clientes';
+import AgendaDia from './pages/admin/AgendaDia';
+import LoginVendedor from './pages/vendedor/LoginVendedor';
+import NuevaDemo from './pages/vendedor/NuevaDemo';
+import MisDemos from './pages/vendedor/MisDemos';
+import ListaEspera from './pages/admin/ListaEspera';
 
-export default function ChatsEnVivo() {
-  const { usuario, token } = useAuth();
-  const [conversaciones, setConversaciones] = useState([]);
-  const [conversacionSeleccionada, setConversacionSeleccionada] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [nuevoMensaje, setNuevoMensaje] = useState('');
-  const [enviando, setEnviando] = useState(false);
 
-  useEffect(() => {
-    if (token) cargarConversaciones();
-  }, [token]);
+function RaizSegunSesion() {
+  const { usuario, cargandoSesion } = useAuth();
+  if (cargandoSesion) return <div className="pantalla-carga">Cargando sesión…</div>;
+  if (!usuario) return <Navigate to="/login" replace />;
+  return <Navigate to={usuario.rol === 'PROFESIONAL' ? '/profesional' : '/admin'} replace />;
+}
 
-  const cargarConversaciones = async () => {
-    try {
-      setLoading(true);
-      const empresaId = usuario?.empresaId;
-      if (!empresaId) throw new Error('No hay empresaId');
-
-      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/conversaciones/${empresaId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) throw new Error('Error cargando conversaciones');
-      const data = await res.json();
-      setConversaciones(data.conversaciones || []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const cargarConversacion = async (conversacionId) => {
-    try {
-      const empresaId = usuario?.empresaId;
-      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/conversaciones/${empresaId}/${conversacionId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) throw new Error('Error cargando conversacion');
-      const data = await res.json();
-      setConversacionSeleccionada(data.conversacion);
-    } catch (err) {
-      console.error('Error:', err);
-    }
-  };
-
-  const handleEnviarMensaje = async (e) => {
-    e.preventDefault();
-    if (!nuevoMensaje.trim() || !conversacionSeleccionada) return;
-
-    setEnviando(true);
-    try {
-      const empresaId = usuario?.empresaId;
-      const res = await fetch(
-        `https://agendabot-backend-bbw5.onrender.com/conversaciones/${empresaId}/${conversacionSeleccionada.id}/mensaje`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ contenido: nuevoMensaje }),
-        }
-      );
-
-      if (res.ok) {
-        setNuevoMensaje('');
-        await cargarConversacion(conversacionSeleccionada.id);
-        await cargarConversaciones();
-      }
-    } catch (err) {
-      console.error('Error:', err);
-    } finally {
-      setEnviando(false);
-    }
-  };
-
-  const obtenerFecha = () => {
-    const hoy = new Date();
-    const diasSemana = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
-    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-    const diaSemana = diasSemana[hoy.getDay()];
-    const dia = hoy.getDate();
-    const mes = meses[hoy.getMonth()];
-    return `${diaSemana} ${dia} de ${mes}`;
-  };
-
-  const formatearHora = (timestamp) => {
-    const fecha = new Date(timestamp);
-    return fecha.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
-  };
-
-  if (loading) {
-    return (
-      <div className="chats-container">
-        <div className="chats-header">
-          <h1>Chats en vivo</h1>
-          <p className="fecha">{obtenerFecha()}</p>
-        </div>
-        <div className="loading">Cargando chats...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="chats-container">
-        <div className="chats-header">
-          <h1>Chats en vivo</h1>
-        </div>
-        <div className="error-box">
-          <p>{error}</p>
-          <button onClick={cargarConversaciones}>Reintentar</button>
-        </div>
-      </div>
-    );
-  }
-
+function AppRoutes() {
   return (
-    <div className="chats-container">
-      <div className="chats-header">
-        <h1>Chats en vivo</h1>
-        <p className="fecha">{obtenerFecha()}</p>
-      </div>
+    <Routes>
+      <Route path="/" element={<RaizSegunSesion />} />
+      <Route path="/login" element={<Login />} />
 
-      <div className="chats-split">
-        {/* LISTA DE CONVERSACIONES */}
-        <div className="chats-lista">
-          {conversaciones.length === 0 ? (
-            <div className="empty-state">No hay chats</div>
-          ) : (
-            conversaciones.map((conv) => (
-              <div
-                key={conv.id}
-                className={`chat-item ${conversacionSeleccionada?.id === conv.id ? 'activo' : ''}`}
-                onClick={() => cargarConversacion(conv.id)}
-              >
-                <div className="chat-item-header">
-                  <div className="chat-nombre">{conv.clienteNombre}</div>
-                  <div className="chat-hora">{formatearHora(conv.ultimoMensajeTimestamp)}</div>
-                </div>
-                <div className="chat-preview">{conv.ultimoMensaje}</div>
-              </div>
-            ))
-          )}
-        </div>
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute rolesPermitidos={['ADMIN', 'RECEPCION']}>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Dashboard />} />
+        <Route path="agenda" element={<AgendaDia />} />
+        <Route path="configuracion-agenda" element={<ConfiguracionAgenda />} />
+        <Route path="informacion-negocio" element={<InformacionNegocio />} />
+        <Route path="clientes" element={<Clientes />} />
+        import ChatsEnVivo from './pages/admin/ChatsEnVivo';
+<Route path="chats" element={<ChatsEnVivo />} />
+        <Route path="lista-espera" element={<ListaEspera />} />
+        <Route path="productos" element={<Productos />} />
+        <Route path="campanas" element={<Campanas />} />
+        <Route path="pedidos" element={<PedidosHoy />} />
+      </Route>
 
-        {/* CHAT EXPANDIDO */}
-        <div className="chat-expandido">
-          {conversacionSeleccionada ? (
-            <>
-              <div className="chat-expandido-header">
-                <h2>{conversacionSeleccionada.clienteNombre}</h2>
-                <span className="status-online">● En linea</span>
-              </div>
+      <Route
+        path="/profesional"
+        element={
+          <ProtectedRoute rolesPermitidos={['PROFESIONAL']}>
+            <ProfesionalLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Placeholder titulo="Mi agenda" />} />
+        <Route path="disponibilidad" element={<Placeholder titulo="Mi disponibilidad" />} />
+      </Route>
 
-              <div className="mensajes-container">
-                {conversacionSeleccionada.mensajes.map((msg, idx) => (
-                  <div key={idx} className={`mensaje mensaje-${msg.rol}`}>
-                    <div className="mensaje-contenido">{msg.contenido}</div>
-                    <div className="mensaje-timestamp">{formatearHora(msg.timestamp)}</div>
-                  </div>
-                ))}
-              </div>
+      {/* ------------------------------------------------------------
+          Módulo de vendedores (demos comerciales). Autenticación y
+          sesión completamente independientes del panel de negocios
+          (ver VendedorAuthContext) — no comparten localStorage ni rol.
+      ------------------------------------------------------------ */}
+      <Route path="/vendedor/login" element={<LoginVendedor />} />
+      <Route
+        path="/vendedor/nueva-demo"
+        element={
+          <ProtectedRouteVendedor>
+            <NuevaDemo />
+          </ProtectedRouteVendedor>
+        }
+      />
+      <Route
+        path="/vendedor/mis-demos"
+        element={
+          <ProtectedRouteVendedor>
+            <MisDemos />
+          </ProtectedRouteVendedor>
+        }
+      />
 
-              <form onSubmit={handleEnviarMensaje} className="mensaje-input-form">
-                <input
-                  type="text"
-                  className="mensaje-input"
-                  placeholder="Escribe tu respuesta..."
-                  value={nuevoMensaje}
-                  onChange={(e) => setNuevoMensaje(e.target.value)}
-                  disabled={enviando}
-                />
-                <button type="submit" className="btn-enviar" disabled={enviando}>
-                  Enviar
-                </button>
-              </form>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
 
-              <div className="mensaje-botones">
-                <button className="btn-plantilla">plantilla rapida</button>
-                <button className="btn-agendar">agendar cita</button>
-              </div>
-            </>
-          ) : (
-            <div className="chat-vacio">
-              <p>Selecciona un chat para comenzar</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+export default function App() {
+  return (
+    <AuthProvider>
+      <VendedorAuthProvider>
+        <AppRoutes />
+      </VendedorAuthProvider>
+    </AuthProvider>
   );
 }
