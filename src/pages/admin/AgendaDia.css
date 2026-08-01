@@ -443,7 +443,7 @@
     gap: 0;
   }
 
- /* MOBILE: BOTTOM-SHEET CERRADO POR DEFECTO */
+  /* MOBILE: BOTTOM-SHEET CERRADO POR DEFECTO */
   .agenda-detalle {
     position: fixed !important;
     bottom: 0;
@@ -471,11 +471,6 @@
   /* MOBILE: BOTTOM-SHEET ABIERTO */
   .agenda-layout.detalle-abierto .agenda-detalle.mostrado {
     transform: translateY(0) !important;
-  }
-
-  /* Scroll solo en el contenido, no en los botones */
-  .agenda-detalle > div:not(.sheet-actions) {
-    overflow-y: auto;
   }
 
   .cita-card {
