@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import CalendarPickerModal from '../../components/CalendarPickerModal';
 import './AgendaDia.css';
 
 export default function AgendaDia() {
@@ -10,6 +11,10 @@ export default function AgendaDia() {
   const [error, setError] = useState(null);
   const [citaSeleccionada, setCitaSeleccionada] = useState(null);
   const [accionando, setAccionando] = useState(false);
+  
+  // NUEVO: States para CalendarPickerModal
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [citaAReagendar, setCitaAReagendar] = useState(null);
 
   useEffect(() => {
     if (token) cargarAgenda();
@@ -22,7 +27,6 @@ export default function AgendaDia() {
       if (!empresaId) {
         throw new Error('No hay empresaId en la sesión');
       }
-
       const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/agenda/dashboard/${empresaId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -53,42 +57,20 @@ export default function AgendaDia() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ estado: 'CONFIRMADA' }),
+        body: JSON.stringify({ nuevoEstado: 'CONFIRMADA' }),
       });
-      if (res.ok) {
-        cargarAgenda();
-        setCitaSeleccionada(null);
-      }
+      if (!res.ok) throw new Error('Error confirmando cita');
+      await cargarAgenda();
+      setCitaSeleccionada(null);
     } catch (err) {
-      console.error(err);
-    } finally {
-      setAccionando(false);
-    }
-  };
-
-  const handleMarcarAsistencia = async () => {
-    setAccionando(true);
-    try {
-      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/agenda/citas/${citaSeleccionada.id}/estado`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ estado: 'COMPLETADA' }),
-      });
-      if (res.ok) {
-        cargarAgenda();
-        setCitaSeleccionada(null);
-      }
-    } catch (err) {
-      console.error(err);
+      alert(err.message);
     } finally {
       setAccionando(false);
     }
   };
 
   const handleCancelar = async () => {
+    if (!window.confirm('¿Confirmas que deseas cancelar esta cita?')) return;
     setAccionando(true);
     try {
       const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/agenda/citas/${citaSeleccionada.id}/estado`, {
@@ -97,96 +79,62 @@ export default function AgendaDia() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ estado: 'CANCELADA' }),
+        body: JSON.stringify({ nuevoEstado: 'CANCELADA' }),
       });
-      if (res.ok) {
-        cargarAgenda();
-        setCitaSeleccionada(null);
-      }
+      if (!res.ok) throw new Error('Error cancelando cita');
+      await cargarAgenda();
+      setCitaSeleccionada(null);
     } catch (err) {
-      console.error(err);
+      alert(err.message);
     } finally {
       setAccionando(false);
     }
   };
 
+  // MODIFICADO: Abre el modal en lugar de llamar al endpoint directo
   const handleReagendar = async () => {
-    // Abre modal para elegir nueva fecha/hora
-    // Por ahora, solo revertir a PENDIENTE
+    if (!citaSeleccionada) return;
+    setCitaAReagendar(citaSeleccionada);
+    setModalAbierto(true);
+  };
+
+  // NUEVO: Confirma el reagendamiento desde el modal
+  const handleConfirmarReagendamiento = async (selection) => {
+    if (!citaAReagendar) return;
+    
     setAccionando(true);
     try {
-      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/agenda/citas/${citaSeleccionada.id}/estado`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ estado: 'PENDIENTE' }),
-      });
-      if (res.ok) {
-        cargarAgenda();
-        setCitaSeleccionada(null);
-      }
+      const res = await fetch(
+        `https://agendabot-backend-bbw5.onrender.com/agenda/citas/${citaAReagendar.id}/reagendar`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            nuevaFecha: selection.fecha,
+            nuevaHora: selection.hora,
+            profesionalId: selection.profesionalId,
+          }),
+        }
+      );
+      if (!res.ok) throw new Error('Error reagendando cita');
+      await cargarAgenda();
+      setCitaSeleccionada(null);
+      setCitaAReagendar(null);
+      setModalAbierto(false);
+      alert('Cita reagendada correctamente');
     } catch (err) {
-      console.error(err);
+      alert(err.message);
     } finally {
       setAccionando(false);
     }
-  };
-
-  const handleReactivar = async () => {
-    setAccionando(true);
-    try {
-      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/agenda/citas/${citaSeleccionada.id}/estado`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ estado: 'PENDIENTE' }),
-      });
-      if (res.ok) {
-        cargarAgenda();
-        setCitaSeleccionada(null);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setAccionando(false);
-    }
-  };
-
-  const getBadgeClass = (estado) => {
-    switch (estado) {
-      case 'CONFIRMADA':
-        return 'badge-confirmada';
-      case 'PENDIENTE':
-        return 'badge-pendiente';
-      case 'COMPLETADA':
-        return 'badge-completada';
-      case 'CANCELADA':
-        return 'badge-cancelada';
-      case 'NO_ASISTIO':
-        return 'badge-no-asistio';
-      default:
-        return '';
-    }
-  };
-
-  const getEstadoLabel = (estado) => {
-    const labels = {
-      CONFIRMADA: 'confirmada',
-      PENDIENTE: 'pendiente',
-      COMPLETADA: 'completada',
-      CANCELADA: 'cancelada',
-      NO_ASISTIO: 'no asistió',
-    };
-    return labels[estado] || estado;
   };
 
   const obtenerFecha = () => {
     const hoy = new Date();
-    const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const diasSemana = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
     const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
     const diaSemana = diasSemana[hoy.getDay()];
     const dia = hoy.getDate();
@@ -198,14 +146,10 @@ export default function AgendaDia() {
     return (
       <div className="agenda-container">
         <div className="agenda-header">
-          <h1>Agenda de <span className="highlight">hoy</span></h1>
+          <h1>Agenda del dia</h1>
           <p className="fecha">{obtenerFecha()}</p>
         </div>
-        <div className="citas-loading">
-          <div className="shimmer"></div>
-          <div className="shimmer"></div>
-          <div className="shimmer"></div>
-        </div>
+        <div className="loading">Cargando agenda...</div>
       </div>
     );
   }
@@ -214,7 +158,7 @@ export default function AgendaDia() {
     return (
       <div className="agenda-container">
         <div className="agenda-header">
-          <h1>Agenda de <span className="highlight">hoy</span></h1>
+          <h1>Agenda del dia</h1>
           <p className="fecha">{obtenerFecha()}</p>
         </div>
         <div className="error-box">
@@ -228,7 +172,7 @@ export default function AgendaDia() {
   return (
     <div className="agenda-container">
       <div className="agenda-header">
-        <h1>Agenda de <span className="highlight">hoy</span></h1>
+        <h1>Agenda del dia</h1>
         <p className="fecha">{obtenerFecha()}</p>
       </div>
 
@@ -237,115 +181,134 @@ export default function AgendaDia() {
           className={`filtro-btn ${filtro === 'todas' ? 'activo' : ''}`}
           onClick={() => setFiltro('todas')}
         >
-          todas
-        </button>
-        <button
-          className={`filtro-btn ${filtro === 'confirmadas' ? 'activo' : ''}`}
-          onClick={() => setFiltro('confirmadas')}
-        >
-          confirmadas
+          Todas ({citas.length})
         </button>
         <button
           className={`filtro-btn ${filtro === 'pendientes' ? 'activo' : ''}`}
           onClick={() => setFiltro('pendientes')}
         >
-          pendientes
+          Pendientes ({citas.filter((c) => c.estado === 'PENDIENTE').length})
+        </button>
+        <button
+          className={`filtro-btn ${filtro === 'confirmadas' ? 'activo' : ''}`}
+          onClick={() => setFiltro('confirmadas')}
+        >
+          Confirmadas ({citas.filter((c) => c.estado === 'CONFIRMADA').length})
         </button>
         <button
           className={`filtro-btn ${filtro === 'canceladas' ? 'activo' : ''}`}
           onClick={() => setFiltro('canceladas')}
         >
-          canceladas
+          Canceladas ({citas.filter((c) => c.estado === 'CANCELADA').length})
         </button>
       </div>
 
-      <div className="citas-list">
-        {citasFiltradas.length === 0 ? (
-          <div className="empty-state">
-            <p>No hay citas en esta categoría</p>
-          </div>
-        ) : (
-          citasFiltradas.map((cita) => (
-            <div
-              key={cita.id}
-              className="cita-card"
-              onClick={() => setCitaSeleccionada(cita)}
-            >
-              <div className="cita-hora">{cita.hora}</div>
-              <div className="cita-info">
-                <div className="cita-nombre">{cita.nombre}</div>
-                <div className="cita-detalle">{cita.profesional} · {cita.servicio}</div>
+      <div className="agenda-split">
+        <div className="citas-lista">
+          {citasFiltradas.length === 0 ? (
+            <div className="empty-state">No hay citas con este filtro</div>
+          ) : (
+            citasFiltradas.map((cita) => (
+              <div
+                key={cita.id}
+                className={`cita-item ${citaSeleccionada?.id === cita.id ? 'activo' : ''}`}
+                onClick={() => setCitaSeleccionada(cita)}
+              >
+                <div className="cita-hora">{cita.hora}</div>
+                <div className="cita-info">
+                  <div className="cita-cliente">{cita.clienteNombre}</div>
+                  <div className="cita-servicio">{cita.servicioNombre || 'Servicio general'}</div>
+                </div>
+                <div className={`cita-estado ${cita.estado.toLowerCase()}`}>
+                  {cita.estado}
+                </div>
               </div>
-              <div className={`badge ${getBadgeClass(cita.estado)}`}>
-                {getEstadoLabel(cita.estado)}
+            ))
+          )}
+        </div>
+
+        <div className="cita-detalle">
+          {citaSeleccionada ? (
+            <>
+              <div className="detalle-header">
+                <h2>{citaSeleccionada.clienteNombre}</h2>
               </div>
+
+              <div className="detalle-info">
+                <div className="info-grupo">
+                  <label>Fecha y Hora</label>
+                  <p>{citaSeleccionada.fechaCompleta} - {citaSeleccionada.hora}</p>
+                </div>
+
+                <div className="info-grupo">
+                  <label>Servicio</label>
+                  <p>{citaSeleccionada.servicioNombre || 'No especificado'}</p>
+                </div>
+
+                <div className="info-grupo">
+                  <label>Teléfono</label>
+                  <p>{citaSeleccionada.telefonoCliente || 'No registrado'}</p>
+                </div>
+
+                <div className="info-grupo">
+                  <label>Estado</label>
+                  <p className={`estado-badge ${citaSeleccionada.estado.toLowerCase()}`}>
+                    {citaSeleccionada.estado}
+                  </p>
+                </div>
+              </div>
+
+              <div className="detalle-botones">
+                {citaSeleccionada.estado === 'PENDIENTE' && (
+                  <button
+                    className="btn-confirmar"
+                    onClick={handleConfirmar}
+                    disabled={accionando}
+                  >
+                    Confirmar cita
+                  </button>
+                )}
+
+                {citaSeleccionada.estado !== 'CANCELADA' && (
+                  <>
+                    <button
+                      className="btn-reagendar"
+                      onClick={handleReagendar}
+                      disabled={accionando}
+                    >
+                      Reagendar
+                    </button>
+
+                    <button
+                      className="btn-cancelar"
+                      onClick={handleCancelar}
+                      disabled={accionando}
+                    >
+                      Cancelar cita
+                    </button>
+                  </>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="detalle-vacio">
+              <p>Selecciona una cita para ver detalles</p>
             </div>
-          ))
-        )}
+          )}
+        </div>
       </div>
 
-      {citaSeleccionada && (
-        <div className="bottom-sheet-overlay" onClick={() => setCitaSeleccionada(null)}>
-          <div className="bottom-sheet" onClick={(e) => e.stopPropagation()}>
-            <div className="sheet-header">
-              <div className="sheet-header-content">
-                <div className="sheet-hora">{citaSeleccionada.hora}</div>
-                <div className={`badge ${getBadgeClass(citaSeleccionada.estado)}`}>
-                  {getEstadoLabel(citaSeleccionada.estado)}
-                </div>
-              </div>
-              <button className="sheet-close" onClick={() => setCitaSeleccionada(null)}>
-                ✕
-              </button>
-            </div>
-
-            <div className="sheet-content">
-              <h2>{citaSeleccionada.nombre}</h2>
-
-              <div className="detail-info">
-                <div className="detail-row">
-                  <span className="detail-label">Teléfono</span>
-                  <span className="detail-value">{citaSeleccionada.telefono || '—'}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Última compra</span>
-                  <span className="detail-value">—</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Observaciones</span>
-                  <span className="detail-value">—</span>
-                </div>
-              </div>
-
-             <div className="sheet-actions">
-  {citaSeleccionada.estado === 'PENDIENTE' && (
-    <button className="btn btn-primary" onClick={handleConfirmar} disabled={accionando}>
-      confirmar
-    </button>
-  )}
-  <button className="btn btn-secondary" onClick={handleReagendar} disabled={accionando}>
-    reagendar
-  </button>
-  {citaSeleccionada.estado !== 'CANCELADA' && (
-    <button className="btn btn-secondary" onClick={handleMarcarAsistencia} disabled={accionando}>
-      marcar asistencia
-    </button>
-  )}
-  {citaSeleccionada.estado !== 'CANCELADA' && (
-    <button className="btn btn-danger-outline" onClick={handleCancelar} disabled={accionando}>
-      cancelar
-    </button>
-  )}
-  {citaSeleccionada.estado === 'CANCELADA' && (
-    <button className="btn btn-warning" onClick={handleReactivar} disabled={accionando}>
-      reactivar
-    </button>
-  )}
-</div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* NUEVO: CalendarPickerModal */}
+      <CalendarPickerModal
+        isOpen={modalAbierto}
+        onClose={() => {
+          setModalAbierto(false);
+          setCitaAReagendar(null);
+        }}
+        onConfirm={handleConfirmarReagendamiento}
+        recursoId={citaAReagendar?.recursoAgendableId}
+        token={token}
+      />
     </div>
   );
 }

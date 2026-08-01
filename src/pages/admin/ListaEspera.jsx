@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import CalendarPickerModal from '../../components/CalendarPickerModal';
 import './ListaEspera.css';
 
 export default function ListaEspera() {
@@ -11,10 +12,13 @@ export default function ListaEspera() {
   const [error, setError] = useState(null);
   const [accionando, setAccionando] = useState(false);
 
+  // NUEVO: States para CalendarPickerModal
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [pacienteAgendar, setPacienteAgendar] = useState(null);
+
   useEffect(() => {
     if (token) {
       cargarListaEspera();
-      // cargarServicios(); // TODO: implementar después
     }
   }, [token]);
 
@@ -25,11 +29,12 @@ export default function ListaEspera() {
       if (!empresaId) {
         throw new Error('No hay empresaId en la sesión');
       }
-
-      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/lista-espera/${empresaId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
+      const res = await fetch(
+        `https://agendabot-backend-bbw5.onrender.com/lista-espera/${empresaId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       if (!res.ok) throw new Error('Error al cargar lista de espera');
       const data = await res.json();
       setListaEspera(data.listaEspera || []);
@@ -40,77 +45,100 @@ export default function ListaEspera() {
     }
   };
 
-  const cargarServicios = async () => {
-    try {
-      const empresaId = usuario?.empresaId;
-      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/servicios/${empresaId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+  const filtrada = listaEspera.filter((item) => {
+    if (filtroServicio === 'todos') return true;
+    return item.preferenciaRecursoId === filtroServicio;
+  });
 
-      if (res.ok) {
-        const data = await res.json();
-        setServicios(data || []);
-      }
+  // MODIFICADO: Abre el modal en lugar de agendar directo
+  const handleAgendar = async (listaEsperaItem) => {
+    setPacienteAgendar(listaEsperaItem);
+    setModalAbierto(true);
+  };
+
+  // NUEVO: Confirma el agendamiento desde el modal
+  const handleConfirmarAgendamiento = async (selection) => {
+    if (!pacienteAgendar) return;
+
+    setAccionando(true);
+    try {
+      const res = await fetch(
+        `https://agendabot-backend-bbw5.onrender.com/lista-espera/${pacienteAgendar.id}/agendar`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            fecha: selection.fecha,
+            hora: selection.hora,
+            profesionalId: selection.profesionalId,
+          }),
+        }
+      );
+
+      if (!res.ok) throw new Error('Error agendando paciente');
+      await cargarListaEspera();
+      setPacienteAgendar(null);
+      setModalAbierto(false);
+      alert('Paciente agendado correctamente');
     } catch (err) {
-      console.error('Error cargando servicios:', err);
+      alert(err.message);
+    } finally {
+      setAccionando(false);
+    }
+  };
+
+  const handleCancelar = async (id) => {
+    if (!window.confirm('¿Cancelar este paciente de la lista de espera?')) return;
+    setAccionando(true);
+    try {
+      const res = await fetch(
+        `https://agendabot-backend-bbw5.onrender.com/lista-espera/${id}`,
+        {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (!res.ok) throw new Error('Error cancelando');
+      await cargarListaEspera();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setAccionando(false);
     }
   };
 
   const obtenerFecha = () => {
     const hoy = new Date();
-    const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const diasSemana = [
+      'domingo',
+      'lunes',
+      'martes',
+      'miercoles',
+      'jueves',
+      'viernes',
+      'sabado',
+    ];
+    const meses = [
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
+    ];
     const diaSemana = diasSemana[hoy.getDay()];
     const dia = hoy.getDate();
     const mes = meses[hoy.getMonth()];
     return `${diaSemana} ${dia} de ${mes}`;
-  };
-
-  const calcularDiasEsperando = (fechaCreacion) => {
-    const hoy = new Date();
-    const creacion = new Date(fechaCreacion);
-    const diffMs = hoy - creacion;
-    const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    return diffDias;
-  };
-
-  const clientesFiltrados = listaEspera.filter((cliente) => {
-    if (filtroServicio === 'todos') return true;
-    // Aquí se compararía con el servicio, pero por ahora usa preferencia
-    return true;
-  });
-
-  const handleAgendar = async (listaEsperaId, clienteNombre) => {
-    // Abre modal o redirige a AgendaDia con cliente preseleccionado
-    console.log('Agendar:', clienteNombre);
-    // Por ahora solo log, implementar después
-  };
-
-  const handleContactar = async (telefono, clienteNombre) => {
-    // Abre WhatsApp
-    window.open(`https://wa.me/${telefono.replace(/\D/g, '')}?text=Hola%20${clienteNombre}%20te%20contactamos%20de%20Ahorróptica`, '_blank');
-  };
-
-  const handleRemover = async (listaEsperaId) => {
-    if (!window.confirm('¿Remover cliente de la lista de espera?')) return;
-
-    setAccionando(true);
-    try {
-      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/lista-espera/${listaEsperaId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (res.ok) {
-        cargarListaEspera();
-      } else {
-        alert('Error al remover cliente');
-      }
-    } catch (err) {
-      console.error('Error:', err);
-    } finally {
-      setAccionando(false);
-    }
   };
 
   if (loading) {
@@ -120,11 +148,7 @@ export default function ListaEspera() {
           <h1>Lista de espera</h1>
           <p className="fecha">{obtenerFecha()}</p>
         </div>
-        <div className="lista-loading">
-          <div className="shimmer"></div>
-          <div className="shimmer"></div>
-          <div className="shimmer"></div>
-        </div>
+        <div className="loading">Cargando lista de espera...</div>
       </div>
     );
   }
@@ -151,71 +175,76 @@ export default function ListaEspera() {
         <p className="fecha">{obtenerFecha()}</p>
       </div>
 
-      <div className="filtros">
-        <button
-          className={`filtro-btn ${filtroServicio === 'todos' ? 'activo' : ''}`}
-          onClick={() => setFiltroServicio('todos')}
-        >
-          todos
-        </button>
-        {servicios.map((servicio) => (
-          <button
-            key={servicio.id}
-            className={`filtro-btn ${filtroServicio === servicio.id ? 'activo' : ''}`}
-            onClick={() => setFiltroServicio(servicio.id)}
-          >
-            {servicio.nombre}
-          </button>
-        ))}
+      <div className="lista-tabla">
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Preferencia</th>
+              <th>Estado</th>
+              <th>Agregado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtrada.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="empty-row">
+                  No hay pacientes en lista de espera
+                </td>
+              </tr>
+            ) : (
+              filtrada.map((item) => (
+                <tr key={item.id}>
+                  <td className="cliente-nombre">
+                    <strong>{item.clienteNombre}</strong>
+                    <div className="cliente-telefono">{item.clienteTelefono}</div>
+                  </td>
+                  <td>{item.preferenciaFranja || 'Cualquier horario'}</td>
+                  <td>
+                    <span className={`estado-badge ${item.estado.toLowerCase()}`}>
+                      {item.estado}
+                    </span>
+                  </td>
+                  <td>{item.agregadoEn}</td>
+                  <td className="acciones-cell">
+                    {item.estado === 'ESPERANDO' && (
+                      <>
+                        <button
+                          className="btn-agendar"
+                          onClick={() => handleAgendar(item)}
+                          disabled={accionando}
+                        >
+                          Agendar
+                        </button>
+                        <button
+                          className="btn-cancelar"
+                          onClick={() => handleCancelar(item.id)}
+                          disabled={accionando}
+                        >
+                          Cancelar
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
-      <div className="lista-clientes">
-        {clientesFiltrados.length === 0 ? (
-          <div className="empty-state">
-            <p>No hay clientes en lista de espera</p>
-          </div>
-        ) : (
-          clientesFiltrados.map((cliente, index) => {
-            const diasEsperando = calcularDiasEsperando(cliente.creadoEn);
-            return (
-              <div key={cliente.id} className="cliente-card">
-                <div className="cliente-numero">{index + 1}</div>
-                <div className="cliente-info">
-                  <div className="cliente-nombre">{cliente.cliente.nombre}</div>
-                  <div className="cliente-dias">
-                    {diasEsperando} {diasEsperando === 1 ? 'día' : 'días'} esperando
-                  </div>
-                  <div className="cliente-detalle">Preferencia: {cliente.preferenciaFranja || 'Cualquier día'}</div>
-                  <div className="cliente-telefono">📞 {cliente.cliente.telefono || '—'}</div>
-                </div>
-                <div className="cliente-acciones">
-                  <button
-                    className="btn btn-agendar"
-                    onClick={() => handleAgendar(cliente.id, cliente.cliente.nombre)}
-                    disabled={accionando}
-                  >
-                    agendar
-                  </button>
-                  <button
-                    className="btn btn-contactar"
-                    onClick={() => handleContactar(cliente.cliente.telefono, cliente.cliente.nombre)}
-                    disabled={accionando}
-                  >
-                    contactar
-                  </button>
-                  <button
-                    className="btn btn-remover"
-                    onClick={() => handleRemover(cliente.id)}
-                    disabled={accionando}
-                  >
-                    remover
-                  </button>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
+      {/* NUEVO: CalendarPickerModal */}
+      <CalendarPickerModal
+        isOpen={modalAbierto}
+        onClose={() => {
+          setModalAbierto(false);
+          setPacienteAgendar(null);
+        }}
+        onConfirm={handleConfirmarAgendamiento}
+        recursoId={pacienteAgendar?.preferenciaRecursoId}
+        token={token}
+      />
     </div>
   );
 }
