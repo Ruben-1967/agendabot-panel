@@ -1,11 +1,11 @@
-.lista-espera-container {
+.clientes-container {
   padding: 20px;
   background: #f0ebe6;
   min-height: 100vh;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.lista-espera-header {
+.clientes-header {
   margin-bottom: 24px;
   background: #2d5a52;
   color: white;
@@ -13,14 +13,14 @@
   border-radius: 8px;
 }
 
-.lista-espera-header h1 {
+.clientes-header h1 {
   font-size: 1.6rem;
   font-weight: 700;
   margin: 0 0 8px 0;
   letter-spacing: -0.5px;
 }
 
-.lista-espera-header h1 .highlight {
+.clientes-header h1 .highlight {
   color: #d4a574;
   font-weight: 700;
 }
@@ -61,18 +61,18 @@
   border-color: #2d5a52;
 }
 
-.lista-espera-layout {
+.clientes-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
 
-.espera-lista {
+.clientes-lista {
   display: flex;
   flex-direction: column;
 }
 
-.espera-detalle {
+.cliente-detalle {
   background: white;
   border: 1px solid #e8ddd2;
   border-radius: 6px;
@@ -84,13 +84,13 @@
   top: 20px;
 }
 
-.espera-list {
+.clientes-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.espera-card {
+.cliente-card {
   background: white;
   border: 1px solid #e8ddd2;
   border-radius: 6px;
@@ -100,42 +100,39 @@
   align-items: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  position: relative;
 }
 
-.espera-card:hover {
+.cliente-card:hover {
   box-shadow: 0 2px 8px rgba(45, 90, 82, 0.12);
   border-color: #2d5a52;
 }
 
-.espera-card.activo {
+.cliente-card.activo {
   border-color: #2d5a52;
   background: #fafaf8;
   box-shadow: 0 2px 8px rgba(45, 90, 82, 0.12);
 }
 
-.espera-numero {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #2d5a52;
-  min-width: 35px;
-  text-align: center;
-  background: #d4e8e3;
+.cliente-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
+  background: #d4a574;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 0.9rem;
   flex-shrink: 0;
 }
 
-.espera-info {
+.cliente-info {
   flex: 1;
   min-width: 0;
 }
 
-.espera-nombre {
+.cliente-nombre {
   font-size: 0.95rem;
   font-weight: 600;
   color: #1a1a1a;
@@ -145,7 +142,7 @@
   text-overflow: ellipsis;
 }
 
-.espera-preferencia {
+.cliente-detalle-small {
   font-size: 0.8rem;
   color: #666;
   white-space: nowrap;
@@ -162,16 +159,6 @@
   letter-spacing: 0.5px;
   white-space: nowrap;
   display: inline-block;
-}
-
-.badge-pendiente {
-  background: #fde4c8;
-  color: #d4793e;
-}
-
-.badge-contactado {
-  background: #d4e8e3;
-  color: #2d5a52;
 }
 
 .detalle-header {
@@ -289,7 +276,7 @@
   border-radius: 6px;
 }
 
-.espera-loading {
+.clientes-loading {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -347,33 +334,33 @@
   display: none;
 }
 
-.lista-espera-layout.detalle-abierto .mobile-overlay {
+.clientes-layout.detalle-abierto .mobile-overlay {
   display: block;
 }
 
 @media (max-width: 1200px) {
-  .lista-espera-layout {
+  .clientes-layout {
     grid-template-columns: 1fr;
     gap: 16px;
   }
 
-  .espera-detalle {
+  .cliente-detalle {
     position: static;
     margin-top: 20px;
   }
 }
 
 @media (max-width: 768px) {
-  .lista-espera-container {
+  .clientes-container {
     padding: 16px;
   }
 
-  .lista-espera-header {
+  .clientes-header {
     padding: 16px;
     margin-bottom: 16px;
   }
 
-  .lista-espera-header h1 {
+  .clientes-header h1 {
     font-size: 1.4rem;
   }
 
@@ -387,12 +374,12 @@
     font-size: 0.75rem;
   }
 
-  .lista-espera-layout {
+  .clientes-layout {
     grid-template-columns: 1fr;
     gap: 0;
   }
 
-  .espera-detalle {
+  .cliente-detalle {
     position: fixed !important;
     bottom: 0;
     left: 0;
@@ -416,26 +403,26 @@
     margin-top: 0 !important;
   }
 
-  .lista-espera-layout.detalle-abierto .espera-detalle.mostrado {
+  .clientes-layout.detalle-abierto .cliente-detalle.mostrado {
     transform: translateY(0) !important;
   }
 
-  .espera-card {
+  .cliente-card {
     padding: 12px 14px;
     gap: 12px;
   }
 
-  .espera-numero {
+  .cliente-avatar {
     width: 36px;
     height: 36px;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
   }
 
-  .espera-nombre {
+  .cliente-nombre {
     font-size: 0.9rem;
   }
 
-  .espera-preferencia {
+  .cliente-detalle-small {
     font-size: 0.75rem;
   }
 
@@ -476,16 +463,16 @@
 }
 
 @media (max-width: 480px) {
-  .lista-espera-container {
+  .clientes-container {
     padding: 12px;
   }
 
-  .lista-espera-header {
+  .clientes-header {
     padding: 12px;
     margin-bottom: 12px;
   }
 
-  .lista-espera-header h1 {
+  .clientes-header h1 {
     font-size: 1.1rem;
   }
 
@@ -494,17 +481,17 @@
     font-size: 0.7rem;
   }
 
-  .espera-numero {
+  .cliente-avatar {
     width: 32px;
     height: 32px;
+    font-size: 0.75rem;
+  }
+
+  .cliente-nombre {
     font-size: 0.85rem;
   }
 
-  .espera-nombre {
-    font-size: 0.85rem;
-  }
-
-  .espera-preferencia {
+  .cliente-detalle-small {
     font-size: 0.7rem;
   }
 
@@ -513,7 +500,7 @@
     font-size: 0.75rem;
   }
 
-  .espera-detalle {
+  .cliente-detalle {
     height: 85vh;
     max-height: 85vh;
     padding: 12px;
