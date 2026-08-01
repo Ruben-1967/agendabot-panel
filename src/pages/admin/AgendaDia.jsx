@@ -170,7 +170,7 @@ export default function AgendaDia() {
   // Obtener fecha de hoy formateada
   const obtenerFecha = () => {
     const hoy = new Date();
-    const diasSemana = ['domingo', 'lunes', 'martes', 'miÃ©rcoles', 'jueves', 'viernes', 'sÃ¡bado'];
+    const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
     const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
     const diaSemana = diasSemana[hoy.getDay()];
     const dia = hoy.getDate();
@@ -195,7 +195,7 @@ export default function AgendaDia() {
     return (
       <div className="agenda-container">
         <div className="agenda-header">
-          <h1>Agenda del <span className="highlight">dÃ­a</span></h1>
+          <h1>Agenda del <span className="highlight">día</span></h1>
           <p className="fecha">{obtenerFecha()}</p>
         </div>
         <div className="citas-loading">
