@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import CalendarPickerModal from '../../components/CalendarPickerModal';
 import './AgendaDia.css';
@@ -26,7 +26,7 @@ export default function AgendaDia() {
       setError(null);
       const empresaId = usuario?.empresaId;
       if (!empresaId) {
-        throw new Error('No hay empresaId en la sesión');
+        throw new Error('No hay empresaId en la sesiÃ³n');
       }
       
       const res = await fetch(
@@ -51,9 +51,17 @@ export default function AgendaDia() {
   };
 
   // Filtrar citas por estado
-  const citasFiltradas = citas.filter((c) => {
+ const citasFiltradas = citas.filter((c) => {
     if (filtro === 'todas') return true;
-    return c.estado === filtro.toUpperCase();
+    
+    const estadoMap = {
+      'confirmadas': 'CONFIRMADA',
+      'pendientes': 'PENDIENTE',
+      'completadas': 'COMPLETADA',
+      'canceladas': 'CANCELADA',
+    };
+    
+    return c.estado === estadoMap[filtro];
   });
 
   // Contar por estado
@@ -99,20 +107,20 @@ export default function AgendaDia() {
     await cambiarEstado('CONFIRMADA');
   };
 
-  // Completar cita (marcar como asistió)
+  // Completar cita (marcar como asistiÃ³)
   const handleCompletar = async () => {
     await cambiarEstado('COMPLETADA');
   };
 
   // Cancelar cita
   const handleCancelar = async () => {
-    if (!window.confirm('¿Confirmas que deseas cancelar esta cita?')) return;
+    if (!window.confirm('Â¿Confirmas que deseas cancelar esta cita?')) return;
     await cambiarEstado('CANCELADA');
   };
 
-  // Marcar como no asistió
+  // Marcar como no asistiÃ³
   const handleNoAsistio = async () => {
-    if (!window.confirm('¿Marcar como no asistió?')) return;
+    if (!window.confirm('Â¿Marcar como no asistiÃ³?')) return;
     await cambiarEstado('NO_ASISTIO');
   };
 
@@ -162,7 +170,7 @@ export default function AgendaDia() {
   // Obtener fecha de hoy formateada
   const obtenerFecha = () => {
     const hoy = new Date();
-    const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const diasSemana = ['domingo', 'lunes', 'martes', 'miÃ©rcoles', 'jueves', 'viernes', 'sÃ¡bado'];
     const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
     const diaSemana = diasSemana[hoy.getDay()];
     const dia = hoy.getDate();
@@ -187,7 +195,7 @@ export default function AgendaDia() {
     return (
       <div className="agenda-container">
         <div className="agenda-header">
-          <h1>Agenda del <span className="highlight">día</span></h1>
+          <h1>Agenda del <span className="highlight">dÃ­a</span></h1>
           <p className="fecha">{obtenerFecha()}</p>
         </div>
         <div className="citas-loading">
@@ -204,7 +212,7 @@ export default function AgendaDia() {
     return (
       <div className="agenda-container">
         <div className="agenda-header">
-          <h1>Agenda del <span className="highlight">día</span></h1>
+          <h1>Agenda del <span className="highlight">dÃ­a</span></h1>
           <p className="fecha">{obtenerFecha()}</p>
         </div>
         <div className="error-box">
@@ -218,7 +226,7 @@ export default function AgendaDia() {
   return (
     <div className="agenda-container">
       <div className="agenda-header">
-        <h1>Agenda del <span className="highlight">día</span></h1>
+        <h1>Agenda del <span className="highlight">dÃ­a</span></h1>
         <p className="fecha">{obtenerFecha()}</p>
       </div>
 
@@ -256,7 +264,7 @@ export default function AgendaDia() {
         </button>
       </div>
 
-      {/* Layout 2-col (desktop) / 1-col (móvil) */}
+      {/* Layout 2-col (desktop) / 1-col (mÃ³vil) */}
 <div className={`agenda-layout ${citaSeleccionada ? 'detalle-abierto' : ''}`}>
   {citaSeleccionada && <div className="mobile-overlay" onClick={() => setCitaSeleccionada(null)} />}
   {/* LISTA IZQUIERDA */}
@@ -276,7 +284,7 @@ export default function AgendaDia() {
                   <div className="cita-hora">{cita.hora}</div>
                   <div className="cita-info">
                     <div className="cita-nombre">{cita.nombre}</div>
-                    <div className="cita-detalle">{cita.profesional || 'Sin asignar'} · {cita.servicio}</div>
+                    <div className="cita-detalle">{cita.profesional || 'Sin asignar'} Â· {cita.servicio}</div>
                   </div>
                   <div className={`badge badge-${getClaseEstado(cita.estado)}`}>
                     {cita.estado.toLowerCase()}
@@ -312,7 +320,7 @@ export default function AgendaDia() {
                 </div>
 
                 <div className="detail-row">
-                  <span className="detail-label">Teléfono</span>
+                  <span className="detail-label">TelÃ©fono</span>
                   <span className="detail-value">{citaSeleccionada.telefono || 'No registrado'}</span>
                 </div>
 
@@ -329,7 +337,7 @@ export default function AgendaDia() {
                 </div>
               </div>
 
-              {/* Botones de acción */}
+              {/* Botones de acciÃ³n */}
               <div className="sheet-actions">
                 {citaSeleccionada.estado === 'PENDIENTE' && (
                   <button
@@ -337,7 +345,7 @@ export default function AgendaDia() {
                     onClick={handleConfirmar}
                     disabled={accionando}
                   >
-                    ✓ Confirmar cita
+                    âœ“ Confirmar cita
                   </button>
                 )}
 
@@ -348,14 +356,14 @@ export default function AgendaDia() {
                       onClick={handleCompletar}
                       disabled={accionando}
                     >
-                      ✓ Marcar como completada
+                      âœ“ Marcar como completada
                     </button>
                     <button
                       className="btn btn-warning"
                       onClick={handleNoAsistio}
                       disabled={accionando}
                     >
-                      ✗ No asistió
+                      âœ— No asistiÃ³
                     </button>
                   </>
                 )}
@@ -367,7 +375,7 @@ export default function AgendaDia() {
                       onClick={handleReagendar}
                       disabled={accionando}
                     >
-                      ↻ Reagendar para otro día
+                      â†» Reagendar para otro dÃ­a
                     </button>
 
                     <button
@@ -375,7 +383,7 @@ export default function AgendaDia() {
                       onClick={handleCancelar}
                       disabled={accionando}
                     >
-                      ✕ Cancelar cita
+                      âœ• Cancelar cita
                     </button>
                   </>
                 )}
@@ -403,3 +411,4 @@ export default function AgendaDia() {
     </div>
   );
 }
+
