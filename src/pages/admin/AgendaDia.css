@@ -1,8 +1,9 @@
+$content = @'
 .agenda-container {
   padding: 20px;
   background: #f0ebe6;
   min-height: 100vh;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .agenda-header {
@@ -33,9 +34,6 @@
   letter-spacing: 0.3px;
 }
 
-/* ============================================================
-   FILTROS
-   ============================================================ */
 .filtros {
   display: flex;
   gap: 12px;
@@ -72,9 +70,6 @@
   border-color: #2d5a52;
 }
 
-/* ============================================================
-   LAYOUT 2-COL DESKTOP
-   ============================================================ */
 .agenda-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -98,9 +93,6 @@
   top: 20px;
 }
 
-/* ============================================================
-   LISTA DE CITAS
-   ============================================================ */
 .citas-list {
   display: flex;
   flex-direction: column;
@@ -162,9 +154,6 @@
   text-overflow: ellipsis;
 }
 
-/* ============================================================
-   BADGES DE ESTADO
-   ============================================================ */
 .badge {
   padding: 5px 12px;
   border-radius: 12px;
@@ -201,9 +190,6 @@
   color: #666;
 }
 
-/* ============================================================
-   PANEL DE DETALLE
-   ============================================================ */
 .detalle-header {
   margin-bottom: 20px;
   padding-bottom: 16px;
@@ -246,9 +232,6 @@
   font-weight: 500;
 }
 
-/* ============================================================
-   BOTONES DE ACCIÓN
-   ============================================================ */
 .sheet-actions {
   display: flex;
   flex-direction: column;
@@ -312,9 +295,6 @@
   background: #fdd4a4;
 }
 
-/* ============================================================
-   ESTADOS VACÍO / CARGANDO / ERROR
-   ============================================================ */
 .detalle-vacio {
   display: flex;
   align-items: center;
@@ -382,7 +362,6 @@
   background: #b03e3e;
 }
 
-/* Overlay móvil */
 .mobile-overlay {
   position: fixed;
   top: 0;
@@ -398,9 +377,6 @@
   display: block;
 }
 
-/* ============================================================
-   RESPONSIVE — TABLET + MÓVIL
-   ============================================================ */
 @media (max-width: 1200px) {
   .agenda-layout {
     grid-template-columns: 1fr;
@@ -437,13 +413,11 @@
     font-size: 0.75rem;
   }
 
-  /* MOBILE: LAYOUT 1 COLUMNA */
   .agenda-layout {
     grid-template-columns: 1fr;
     gap: 0;
   }
 
- /* MOBILE: BOTTOM-SHEET CERRADO POR DEFECTO */
   .agenda-detalle {
     position: fixed !important;
     bottom: 0;
@@ -468,14 +442,8 @@
     margin-top: 0 !important;
   }
 
-  /* MOBILE: BOTTOM-SHEET ABIERTO */
   .agenda-layout.detalle-abierto .agenda-detalle.mostrado {
     transform: translateY(0) !important;
-  }
-
-  /* Scroll solo en el contenido, no en los botones */
-  .agenda-detalle > div:not(.sheet-actions) {
-    overflow-y: auto;
   }
 
   .cita-card {
@@ -532,7 +500,6 @@
   }
 }
 
-/* Extra-small devices */
 @media (max-width: 480px) {
   .agenda-container {
     padding: 12px;
@@ -584,3 +551,6 @@
     font-size: 1rem;
   }
 }
+'@
+
+[System.IO.File]::WriteAllText("src/pages/admin/AgendaDia.css", $content, [System.Text.Encoding]::UTF8)
