@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import './ConfiguracionAgenda.css';
 import { useAuth } from '../../context/AuthContext';
 import {
   fetchAgenda,

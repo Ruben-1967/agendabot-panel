@@ -1,0 +1,263 @@
+/* ConfiguracionAgenda.css — Estilos responsivos para móvil */
+
+/* Desktop — por defecto está bien */
+
+@media (max-width: 768px) {
+  /* Bloque de formularios (datos del negocio) */
+  .form-campana {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .form-campana label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-campana input,
+  .form-campana select,
+  .form-campana textarea {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 1rem;
+    border: 1px solid #d0c9be;
+    border-radius: 4px;
+    font-family: inherit;
+  }
+
+  .form-campana button {
+    width: 100%;
+    padding: 12px 16px;
+    background: #2d5a52;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+
+  /* Formulario inline (crear bloqueo, crear servicio) */
+  .form-inline {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .form-inline input,
+  .form-inline select {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 1rem;
+    border: 1px solid #d0c9be;
+    border-radius: 4px;
+  }
+
+  .form-inline button {
+    width: 100%;
+    padding: 12px 16px;
+    background: #2d5a52;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* Labels con campos segmento (Desde, Hasta) */
+  .campo-segmento {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .campo-segmento input {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 1rem;
+    border: 1px solid #d0c9be;
+    border-radius: 4px;
+  }
+
+  /* Horario semanal — cada día en su propia sección */
+  .fila-horario-dia {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: white;
+    border: 1px solid #e8ddd2;
+    border-radius: 6px;
+  }
+
+  .fila-horario-dia-nombre {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    text-transform: capitalize;
+  }
+
+  .fila-horario-dia-bloques {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Bloques de horario (input hora inicio + "a" + input hora fin) */
+  .bloque-horario {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .bloque-horario input {
+    flex: 1;
+    min-width: 100px;
+    padding: 8px 10px;
+    font-size: 0.95rem;
+    border: 1px solid #d0c9be;
+    border-radius: 4px;
+  }
+
+  .bloque-horario span {
+    font-size: 0.9rem;
+    color: #666;
+  }
+
+  .bloque-horario .btn-link {
+    flex-shrink: 0;
+    color: #c94e4e;
+    font-size: 0.8rem;
+  }
+
+  /* Botones link */
+  .btn-link {
+    background: none;
+    border: none;
+    color: #2d5a52;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0;
+  }
+
+  .btn-link.btn-danger {
+    color: #c94e4e;
+  }
+
+  .btn-link:hover {
+    opacity: 0.8;
+  }
+
+  /* Tablas — responsive */
+  .tabla-simple {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+  }
+
+  .tabla-simple thead {
+    background: #f9f7f4;
+    border-bottom: 2px solid #d0c9be;
+  }
+
+  .tabla-simple th {
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #666;
+  }
+
+  .tabla-simple td {
+    padding: 12px;
+    border-bottom: 1px solid #e8ddd2;
+    font-size: 0.9rem;
+  }
+
+  .tabla-simple .acciones {
+    white-space: nowrap;
+  }
+
+  .tabla-simple .acciones button {
+    display: inline-block;
+    margin-right: 8px;
+    margin-bottom: 4px;
+    font-size: 0.8rem;
+  }
+
+  .tabla-simple .fila-inactiva {
+    opacity: 0.6;
+  }
+
+  /* Inputs en celdas de tabla (edición inline) */
+  .tabla-simple input {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 0.9rem;
+    border: 1px solid #d0c9be;
+    border-radius: 4px;
+  }
+
+  /* Texto muted */
+  .texto-muted {
+    color: #999;
+    font-size: 0.9rem;
+  }
+
+  /* Mensaje de error */
+  .mensaje-error {
+    background: #fde8e8;
+    border: 1px solid #f5c4c4;
+    border-radius: 6px;
+    padding: 12px 14px;
+    color: #c94e4e;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+  }
+
+  /* Subtítulos de secciones */
+  .subtitulo {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 24px 0 12px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Pantallas muy pequeñas */
+  .form-campana,
+  .form-inline {
+    gap: 10px;
+  }
+
+  .form-campana input,
+  .form-campana button,
+  .form-inline input,
+  .form-inline button {
+    font-size: 16px; /* Evita zoom automático en iOS */
+  }
+
+  .fila-horario-dia {
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+
+  .tabla-simple th,
+  .tabla-simple td {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+
+  .subtitulo {
+    font-size: 1.1rem;
+    margin: 20px 0 10px 0;
+  }
+}
