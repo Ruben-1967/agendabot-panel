@@ -175,7 +175,7 @@
     color: #666;
   }
 
-  /* Filas como tarjetas en móvil */
+  /* Filas como tarjetas en móvil — mantener datos en fila, botones en fila 2 */
   .tabla-simple tbody {
     display: flex;
     flex-direction: column;
@@ -183,44 +183,56 @@
   }
 
   .tabla-simple tr {
-    display: block;
+    display: flex;
+    gap: 8px;
     background: white;
     border: 1px solid #e8ddd2;
     border-radius: 6px;
     padding: 12px;
     margin-bottom: 0;
+    flex-wrap: wrap;
   }
 
   .tabla-simple td {
-    display: block;
-    padding: 6px 0;
+    padding: 0;
     border-bottom: none;
     font-size: 0.9rem;
     word-break: break-word;
+    flex: 1;
+    min-width: 60px;
   }
 
-  /* Última celda (acciones) con layout especial */
+  /* Primera celda (nombre servicio) — más ancha */
+  .tabla-simple tr td:first-child {
+    flex: 2;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  /* Última celda (acciones) — full width, botones en fila */
   .tabla-simple td.acciones {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
+    flex-direction: row;
+    gap: 12px;
+    padding-top: 0;
+    border-top: none;
+    margin-top: 0;
+    flex-basis: 100%;
     padding-top: 8px;
     border-top: 1px solid #e8ddd2;
-    margin-top: 4px;
   }
 
   .tabla-simple .acciones button {
-    display: block;
-    width: 100%;
-    padding: 8px 12px;
-    text-align: left;
+    display: inline-block;
+    padding: 6px 10px;
     background: transparent;
     border: none;
     color: #2d5a52;
     text-decoration: underline;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     margin: 0;
+    white-space: nowrap;
   }
 
   .tabla-simple .acciones .btn-danger {
