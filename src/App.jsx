@@ -20,7 +20,7 @@ import ListaEspera from './pages/admin/ListaEspera';
 import LoginVendedor from './pages/vendedor/LoginVendedor';
 import NuevaDemo from './pages/vendedor/NuevaDemo';
 import MisDemos from './pages/vendedor/MisDemos';
-import ChatsEnVivo from './pages/admin/ChatsEnVivo';
+//import ChatsEnVivo from './pages/admin/ChatsEnVivo';
 
 function RaizSegunSesion() {
   const { usuario, cargandoSesion } = useAuth();
@@ -54,7 +54,7 @@ function AppRoutes() {
         <Route path="configuracion-agenda" element={<ConfiguracionAgenda />} />
         <Route path="informacion-negocio" element={<InformacionNegocio />} />
         <Route path="clientes" element={<Clientes />} />
-        <Route path="chats" element={<ChatsEnVivo />} />
+        //<Route path="chats" element={<ChatsEnVivo />} />
         <Route path="lista-espera" element={<ListaEspera />} />
         <Route path="productos" element={<Productos />} />
         <Route path="campanas" element={<Campanas />} />
