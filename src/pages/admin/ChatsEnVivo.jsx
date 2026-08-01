@@ -12,20 +12,30 @@ export default function ChatsEnVivo() {
   const [enviando, setEnviando] = useState(false);
 
   useEffect(() => {
-    if (token) cargarConversaciones();
+    if (token) {
+      cargarConversaciones();
+    }
   }, [token]);
 
   const cargarConversaciones = async () => {
     try {
       setLoading(true);
       const empresaId = usuario?.empresaId;
-      if (!empresaId) throw new Error('No hay empresaId');
+      if (!empresaId) {
+        throw new Error('No hay empresaId');
+      }
 
-      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/conversaciones/${empresaId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `https://agendabot-backend-bbw5.onrender.com/conversaciones/${empresaId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-      if (!res.ok) throw new Error('Error cargando conversaciones');
+      if (!res.ok) {
+        throw new Error('Error cargando conversaciones');
+      }
+
       const data = await res.json();
       setConversaciones(data.conversaciones || []);
     } catch (err) {
@@ -38,11 +48,17 @@ export default function ChatsEnVivo() {
   const cargarConversacion = async (conversacionId) => {
     try {
       const empresaId = usuario?.empresaId;
-      const res = await fetch(`https://agendabot-backend-bbw5.onrender.com/conversaciones/${empresaId}/${conversacionId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `https://agendabot-backend-bbw5.onrender.com/conversaciones/${empresaId}/${conversacionId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-      if (!res.ok) throw new Error('Error cargando conversación');
+      if (!res.ok) {
+        throw new Error('Error cargando conversacion');
+      }
+
       const data = await res.json();
       setConversacionSeleccionada(data.conversacion);
     } catch (err) {
@@ -52,7 +68,9 @@ export default function ChatsEnVivo() {
 
   const handleEnviarMensaje = async (e) => {
     e.preventDefault();
-    if (!nuevoMensaje.trim() || !conversacionSeleccionada) return;
+    if (!nuevoMensaje.trim() || !conversacionSeleccionada) {
+      return;
+    }
 
     setEnviando(true);
     try {
@@ -83,8 +101,29 @@ export default function ChatsEnVivo() {
 
   const obtenerFecha = () => {
     const hoy = new Date();
-    const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const diasSemana = [
+      'domingo',
+      'lunes',
+      'martes',
+      'miercoles',
+      'jueves',
+      'viernes',
+      'sabado',
+    ];
+    const meses = [
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
+    ];
     const diaSemana = diasSemana[hoy.getDay()];
     const dia = hoy.getDate();
     const mes = meses[hoy.getMonth()];
@@ -92,8 +131,12 @@ export default function ChatsEnVivo() {
   };
 
   const formatearHora = (timestamp) => {
+    if (!timestamp) return '';
     const fecha = new Date(timestamp);
-    return fecha.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+    return fecha.toLocaleTimeString('es-CL', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   if (loading) {
@@ -130,7 +173,6 @@ export default function ChatsEnVivo() {
       </div>
 
       <div className="chats-split">
-        {/* LISTA DE CONVERSACIONES */}
         <div className="chats-lista">
           {conversaciones.length === 0 ? (
             <div className="empty-state">No hay chats</div>
@@ -138,12 +180,16 @@ export default function ChatsEnVivo() {
             conversaciones.map((conv) => (
               <div
                 key={conv.id}
-                className={`chat-item ${conversacionSeleccionada?.id === conv.id ? 'activo' : ''}`}
+                className={`chat-item ${
+                  conversacionSeleccionada?.id === conv.id ? 'activo' : ''
+                }`}
                 onClick={() => cargarConversacion(conv.id)}
               >
                 <div className="chat-item-header">
                   <div className="chat-nombre">{conv.clienteNombre}</div>
-                  <div className="chat-hora">{formatearHora(conv.ultimoMensajeTimestamp)}</div>
+                  <div className="chat-hora">
+                    {formatearHora(conv.ultimoMensajeTimestamp)}
+                  </div>
                 </div>
                 <div className="chat-preview">{conv.ultimoMensaje}</div>
               </div>
@@ -151,22 +197,24 @@ export default function ChatsEnVivo() {
           )}
         </div>
 
-        {/* CHAT EXPANDIDO */}
         <div className="chat-expandido">
           {conversacionSeleccionada ? (
             <>
               <div className="chat-expandido-header">
                 <h2>{conversacionSeleccionada.clienteNombre}</h2>
-                <span className="status-online">🟢 En línea</span>
+                <span className="status-online">● En linea</span>
               </div>
 
               <div className="mensajes-container">
-                {conversacionSeleccionada.mensajes.map((msg, idx) => (
-                  <div key={idx} className={`mensaje mensaje-${msg.rol}`}>
-                    <div className="mensaje-contenido">{msg.contenido}</div>
-                    <div className="mensaje-timestamp">{formatearHora(msg.timestamp)}</div>
-                  </div>
-                ))}
+                {conversacionSeleccionada.mensajes &&
+                  conversacionSeleccionada.mensajes.map((msg, idx) => (
+                    <div key={idx} className={`mensaje mensaje-${msg.rol}`}>
+                      <div className="mensaje-contenido">{msg.contenido}</div>
+                      <div className="mensaje-timestamp">
+                        {formatearHora(msg.timestamp)}
+                      </div>
+                    </div>
+                  ))}
               </div>
 
               <form onSubmit={handleEnviarMensaje} className="mensaje-input-form">
@@ -184,7 +232,7 @@ export default function ChatsEnVivo() {
               </form>
 
               <div className="mensaje-botones">
-                <button className="btn-plantilla">plantilla rápida</button>
+                <button className="btn-plantilla">plantilla rapida</button>
                 <button className="btn-agendar">agendar cita</button>
               </div>
             </>
