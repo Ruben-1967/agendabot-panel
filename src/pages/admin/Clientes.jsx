@@ -14,7 +14,6 @@ function formatearFecha(iso) {
   return new Date(iso).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-// Convierte "emitidaPor" -> "Emitida Por", "esfera" -> "Esfera"
 function formatearEtiqueta(clave) {
   const conEspacios = clave.replace(/([A-Z])/g, ' $1');
   return conEspacios.charAt(0).toUpperCase() + conEspacios.slice(1);
@@ -24,7 +23,6 @@ function obtenerValorAnidado(obj, path) {
   return path.reduce((acc, key) => (acc && typeof acc === 'object' ? acc[key] : undefined), obj);
 }
 
-// Actualización inmutable de un valor anidado, dado un path tipo ['receta','od','esfera']
 function setValorAnidado(obj, path, valor) {
   const copia = JSON.parse(JSON.stringify(obj || {}));
   let actual = copia;
@@ -39,12 +37,6 @@ function setValorAnidado(obj, path, valor) {
   return copia;
 }
 
-// ------------------------------------------------------------
-// Renderiza la ficha del rubro de forma RECURSIVA — respeta la estructura
-// anidada tal cual esté definida en RubroTemplate.camposFicha (ej. una
-// receta óptica con OD/OI agrupados, cada uno con sus propios campos, más
-// campos sueltos como fecha/diagnóstico). No asume un arreglo plano.
-// ------------------------------------------------------------
 function CamposFichaRecursivo({ schema, path, valores, onCambio }) {
   if (!schema || typeof schema !== 'object') return null;
 
@@ -54,7 +46,6 @@ function CamposFichaRecursivo({ schema, path, valores, onCambio }) {
         const rutaActual = [...path, clave];
         const rutaId = rutaActual.join('.');
 
-        // Sub-grupo anidado (ej. "od", "oi") — se muestra agrupado visualmente.
         if (definicion && typeof definicion === 'object' && !Array.isArray(definicion)) {
           return (
             <fieldset key={rutaId} className="ficha-subgrupo" style={{ border: '1px solid #DAD4C0', borderRadius: 8, padding: 10, marginTop: 8 }}>
@@ -68,7 +59,6 @@ function CamposFichaRecursivo({ schema, path, valores, onCambio }) {
           );
         }
 
-        // Campo hoja: "definicion" es el tipo de dato ("number" | "text" | "date").
         const valorActual = obtenerValorAnidado(valores, rutaActual) ?? '';
         const tipoInput = definicion === 'number' ? 'number' : definicion === 'date' ? 'date' : 'text';
 
@@ -88,10 +78,6 @@ function CamposFichaRecursivo({ schema, path, valores, onCambio }) {
   );
 }
 
-// ------------------------------------------------------------
-// Detalle de un cliente: editar datos + ficha + historial de ventas +
-// registrar una venta nueva.
-// ------------------------------------------------------------
 function DetalleCliente({ clienteId, token, camposFicha, categoriasProductoSugeridas, onCerrar, onCambio }) {
   const [cliente, setCliente] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -255,9 +241,6 @@ function DetalleCliente({ clienteId, token, camposFicha, categoriasProductoSuger
   );
 }
 
-// ------------------------------------------------------------
-// Página principal
-// ------------------------------------------------------------
 export default function Clientes() {
   const { token } = useAuth();
   const [clientes, setClientes] = useState([]);
@@ -353,6 +336,262 @@ export default function Clientes() {
           onCambio={cargar}
         />
       )}
+
+      <style>{`
+        h1 {
+          font-size: 1.8rem;
+          font-weight: 700;
+          color: #1a1a1a;
+          margin: 0 0 8px 0;
+        }
+        .pagina-sub {
+          font-size: 0.95rem;
+          color: #6b7770;
+          margin: 0 0 24px 0;
+          line-height: 1.5;
+        }
+        .mensaje-error {
+          background: #fde8e8;
+          border: 1px solid #f5c4c4;
+          border-radius: 6px;
+          padding: 12px 16px;
+          color: #c94e4e;
+          font-size: 0.9rem;
+          margin-bottom: 16px;
+        }
+        .texto-muted {
+          color: #999;
+          font-size: 0.9rem;
+        }
+        .form-inline {
+          display: flex;
+          gap: 8px;
+          margin-bottom: 20px;
+          flex-wrap: wrap;
+          align-items: flex-end;
+        }
+        .form-inline input,
+        .form-inline select {
+          padding: 10px 12px;
+          border: 1px solid #d4ccc0;
+          border-radius: 4px;
+          font-size: 0.9rem;
+          font-family: inherit;
+          flex: 1;
+          min-width: 150px;
+        }
+        .form-inline input:focus,
+        .form-inline select:focus {
+          outline: none;
+          border-color: #2f6f62;
+          box-shadow: 0 0 0 3px rgba(47, 111, 98, 0.1);
+        }
+        .form-inline button {
+          padding: 10px 16px;
+          background: #2f6f62;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          font-size: 0.9rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s ease;
+        }
+        .form-inline button:hover:not(:disabled) {
+          background: #1f4e44;
+        }
+        .form-inline button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .tabla-simple {
+          width: 100%;
+          border-collapse: collapse;
+          background: white;
+          border: 1px solid #dad4c0;
+          border-radius: 6px;
+          overflow: hidden;
+          margin-bottom: 20px;
+        }
+        .tabla-simple thead {
+          background: #f0eee2;
+          border-bottom: 1px solid #dad4c0;
+        }
+        .tabla-simple th {
+          padding: 12px 16px;
+          text-align: left;
+          font-size: 0.75rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          color: #6b7770;
+        }
+        .tabla-simple td {
+          padding: 12px 16px;
+          border-bottom: 1px solid #f0eee2;
+          font-size: 0.9rem;
+          color: #1a1a1a;
+        }
+        .tabla-simple tbody tr:last-child td {
+          border-bottom: none;
+        }
+        .tabla-simple tbody tr:hover {
+          background: #faf8ef;
+        }
+        .tabla-simple .acciones {
+          text-align: right;
+        }
+        .tabla-simple .btn-link {
+          padding: 6px 12px;
+          background: transparent;
+          color: #2f6f62;
+          border: 1px solid #2f6f62;
+          border-radius: 4px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .tabla-simple .btn-link:hover {
+          background: #2f6f62;
+          color: white;
+        }
+        .panel-segmentacion-puntual {
+          background: white;
+          border: 1px solid #dad4c0;
+          border-radius: 6px;
+          padding: 20px;
+          margin-top: 24px;
+        }
+        .panel-segmentacion-puntual h3 {
+          font-size: 1.2rem;
+          font-weight: 700;
+          color: #1a1a1a;
+          margin: 0 0 16px 0;
+        }
+        .panel-segmentacion-puntual .link-toggle {
+          padding: 6px 12px;
+          background: transparent;
+          color: #2f6f62;
+          border: 1px solid #2f6f62;
+          border-radius: 4px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .panel-segmentacion-puntual .link-toggle:hover {
+          background: #2f6f62;
+          color: white;
+        }
+        .form-campana {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .form-campana label {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: #1a1a1a;
+        }
+        .form-campana input,
+        .form-campana select,
+        .form-campana textarea {
+          padding: 10px 12px;
+          border: 1px solid #d4ccc0;
+          border-radius: 4px;
+          font-size: 0.9rem;
+          font-family: inherit;
+        }
+        .form-campana input:focus,
+        .form-campana select:focus,
+        .form-campana textarea:focus {
+          outline: none;
+          border-color: #2f6f62;
+          box-shadow: 0 0 0 3px rgba(47, 111, 98, 0.1);
+        }
+        .form-campana button {
+          padding: 10px 16px;
+          background: #2f6f62;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          font-size: 0.9rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s ease;
+        }
+        .form-campana button:hover:not(:disabled) {
+          background: #1f4e44;
+        }
+        .form-campana button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .campo-seccion-titulo {
+          font-size: 0.95rem;
+          font-weight: 700;
+          color: #1a1a1a;
+          margin: 20px 0 12px 0;
+          text-transform: none;
+        }
+        .ficha-subgrupo {
+          border: 1px solid #dad4c0 !important;
+          border-radius: 4px !important;
+          padding: 12px !important;
+          margin-top: 8px !important;
+          background: #faf8ef;
+        }
+        .ficha-subgrupo legend {
+          font-size: 0.75rem !important;
+          font-weight: 700 !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.04em !important;
+          color: #6b7770 !important;
+          padding: 0 8px !important;
+        }
+        .grilla-checkbox {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          margin-top: 8px;
+        }
+        .grilla-checkbox label {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          font-size: 0.85rem;
+          font-weight: 600;
+        }
+        .grilla-checkbox input {
+          padding: 8px 10px;
+          border: 1px solid #d4ccc0;
+          border-radius: 4px;
+          font-size: 0.9rem;
+        }
+        .grilla-checkbox input:focus {
+          outline: none;
+          border-color: #2f6f62;
+          box-shadow: 0 0 0 3px rgba(47, 111, 98, 0.1);
+        }
+        @media (max-width: 768px) {
+          h1 { font-size: 1.4rem; }
+          .pagina-sub { font-size: 0.9rem; }
+          .form-inline { flex-direction: column; gap: 10px; }
+          .form-inline input, .form-inline select, .form-inline button { width: 100%; min-width: auto; }
+          .tabla-simple { font-size: 0.8rem; }
+          .tabla-simple th, .tabla-simple td { padding: 10px 12px; }
+          .tabla-simple .acciones { text-align: left; }
+          .panel-segmentacion-puntual { padding: 16px; margin-top: 20px; }
+          .panel-segmentacion-puntual h3 { font-size: 1rem; }
+          .form-campana { gap: 12px; }
+          .grilla-checkbox { grid-template-columns: 1fr; }
+          .campo-seccion-titulo { margin-top: 16px; margin-bottom: 10px; }
+        }
+      `}</style>
     </div>
   );
 }
