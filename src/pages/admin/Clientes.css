@@ -1,0 +1,341 @@
+/* ========== PÁGINA PRINCIPAL ========== */
+h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+}
+
+.pagina-sub {
+  font-size: 0.95rem;
+  color: #6b7770;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+/* ========== MENSAJES ========== */
+.mensaje-error {
+  background: #fde8e8;
+  border: 1px solid #f5c4c4;
+  border-radius: 6px;
+  padding: 12px 16px;
+  color: #c94e4e;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.texto-muted {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+/* ========== FORMULARIOS INLINE ========== */
+.form-inline {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.form-inline input,
+.form-inline select {
+  padding: 10px 12px;
+  border: 1px solid #d4ccc0;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  flex: 1;
+  min-width: 150px;
+}
+
+.form-inline input:focus,
+.form-inline select:focus {
+  outline: none;
+  border-color: #2f6f62;
+  box-shadow: 0 0 0 3px rgba(47, 111, 98, 0.1);
+}
+
+.form-inline button {
+  padding: 10px 16px;
+  background: #2f6f62;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.form-inline button:hover:not(:disabled) {
+  background: #1f4e44;
+}
+
+.form-inline button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========== TABLA SIMPLE ========== */
+.tabla-simple {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border: 1px solid #dad4c0;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.tabla-simple thead {
+  background: #f0eee2;
+  border-bottom: 1px solid #dad4c0;
+}
+
+.tabla-simple th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b7770;
+}
+
+.tabla-simple td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0eee2;
+  font-size: 0.9rem;
+  color: #1a1a1a;
+}
+
+.tabla-simple tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tabla-simple tbody tr:hover {
+  background: #faf8ef;
+}
+
+.tabla-simple .acciones {
+  text-align: right;
+}
+
+.tabla-simple .btn-link {
+  padding: 6px 12px;
+  background: transparent;
+  color: #2f6f62;
+  border: 1px solid #2f6f62;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tabla-simple .btn-link:hover {
+  background: #2f6f62;
+  color: white;
+}
+
+/* ========== PANEL DE DETALLE ========== */
+.panel-segmentacion-puntual {
+  background: white;
+  border: 1px solid #dad4c0;
+  border-radius: 6px;
+  padding: 20px;
+  margin-top: 24px;
+}
+
+.panel-segmentacion-puntual h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 16px 0;
+}
+
+.panel-segmentacion-puntual .link-toggle {
+  padding: 6px 12px;
+  background: transparent;
+  color: #2f6f62;
+  border: 1px solid #2f6f62;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.panel-segmentacion-puntual .link-toggle:hover {
+  background: #2f6f62;
+  color: white;
+}
+
+/* ========== FORMULARIO CAMPAÑA ========== */
+.form-campana {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-campana label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.form-campana input,
+.form-campana select,
+.form-campana textarea {
+  padding: 10px 12px;
+  border: 1px solid #d4ccc0;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.form-campana input:focus,
+.form-campana select:focus,
+.form-campana textarea:focus {
+  outline: none;
+  border-color: #2f6f62;
+  box-shadow: 0 0 0 3px rgba(47, 111, 98, 0.1);
+}
+
+.form-campana button {
+  padding: 10px 16px;
+  background: #2f6f62;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.form-campana button:hover:not(:disabled) {
+  background: #1f4e44;
+}
+
+.form-campana button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========== SECCIONES DENTRO DEL DETALLE ========== */
+.campo-seccion-titulo {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 20px 0 12px 0;
+  text-transform: none;
+}
+
+/* ========== FICHA RECURSIVA ========== */
+.ficha-subgrupo {
+  border: 1px solid #dad4c0 !important;
+  border-radius: 4px !important;
+  padding: 12px !important;
+  margin-top: 8px !important;
+  background: #faf8ef;
+}
+
+.ficha-subgrupo legend {
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  color: #6b7770 !important;
+  padding: 0 8px !important;
+}
+
+.grilla-checkbox {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.grilla-checkbox label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.grilla-checkbox input {
+  padding: 8px 10px;
+  border: 1px solid #d4ccc0;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.grilla-checkbox input:focus {
+  outline: none;
+  border-color: #2f6f62;
+  box-shadow: 0 0 0 3px rgba(47, 111, 98, 0.1);
+}
+
+/* ========== RESPONSIVE MÓVIL ========== */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.4rem;
+  }
+
+  .pagina-sub {
+    font-size: 0.9rem;
+  }
+
+  .form-inline {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .form-inline input,
+  .form-inline select,
+  .form-inline button {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .tabla-simple {
+    font-size: 0.8rem;
+  }
+
+  .tabla-simple th,
+  .tabla-simple td {
+    padding: 10px 12px;
+  }
+
+  .tabla-simple .acciones {
+    text-align: left;
+  }
+
+  .panel-segmentacion-puntual {
+    padding: 16px;
+    margin-top: 20px;
+  }
+
+  .panel-segmentacion-puntual h3 {
+    font-size: 1rem;
+  }
+
+  .form-campana {
+    gap: 12px;
+  }
+
+  .grilla-checkbox {
+    grid-template-columns: 1fr;
+  }
+
+  .campo-seccion-titulo {
+    margin-top: 16px;
+    margin-bottom: 10px;
+  }
+}
