@@ -1,36 +1,30 @@
 .lista-espera-container {
   padding: 20px;
-  max-width: 900px;
-  margin: 0 auto;
   background: #f0ebe6;
   min-height: 100vh;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.lista-header {
+.lista-espera-header {
+  margin-bottom: 24px;
   background: #2d5a52;
   color: white;
   padding: 20px;
   border-radius: 8px;
-  margin-bottom: 24px;
 }
 
-.lista-header h1 {
+.lista-espera-header h1 {
   font-size: 1.6rem;
   font-weight: 700;
   margin: 0 0 8px 0;
   letter-spacing: -0.5px;
 }
 
-.lista-header .fecha {
-  font-size: 0.85rem;
-  margin: 0;
-  opacity: 0.9;
-  text-transform: lowercase;
-  letter-spacing: 0.3px;
+.lista-espera-header h1 .highlight {
+  color: #d4a574;
+  font-weight: 700;
 }
 
-/* Filtros */
 .filtros {
   display: flex;
   gap: 12px;
@@ -53,6 +47,7 @@
   color: #2d5a52;
   text-transform: lowercase;
   letter-spacing: 0.3px;
+  flex-shrink: 0;
 }
 
 .filtro-btn:hover {
@@ -66,87 +61,178 @@
   border-color: #2d5a52;
 }
 
-/* Lista de clientes */
-.lista-clientes {
+.lista-espera-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.espera-lista {
   display: flex;
   flex-direction: column;
-  gap: 16px;
 }
 
-.cliente-card {
+.espera-detalle {
   background: white;
   border: 1px solid #e8ddd2;
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: 6px;
+  padding: 20px;
   display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  transition: all 0.2s ease;
+  flex-direction: column;
+  height: fit-content;
+  position: sticky;
+  top: 20px;
 }
 
-.cliente-card:hover {
+.espera-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.espera-card {
+  background: white;
+  border: 1px solid #e8ddd2;
+  border-radius: 6px;
+  padding: 14px 16px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.espera-card:hover {
   box-shadow: 0 2px 8px rgba(45, 90, 82, 0.12);
   border-color: #2d5a52;
 }
 
-.cliente-numero {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #2d5a52;
-  min-width: 40px;
-  text-align: center;
+.espera-card.activo {
+  border-color: #2d5a52;
+  background: #fafaf8;
+  box-shadow: 0 2px 8px rgba(45, 90, 82, 0.12);
 }
 
-.cliente-info {
+.espera-numero {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2d5a52;
+  min-width: 35px;
+  text-align: center;
+  background: #d4e8e3;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.espera-info {
   flex: 1;
   min-width: 0;
 }
 
-.cliente-nombre {
+.espera-nombre {
   font-size: 0.95rem;
   font-weight: 600;
   color: #1a1a1a;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.cliente-dias {
-  font-size: 0.75rem;
-  color: #d4793e;
+.espera-preferencia {
+  font-size: 0.8rem;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge {
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: lowercase;
-  letter-spacing: 0.3px;
-  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  display: inline-block;
 }
 
-.cliente-detalle {
-  font-size: 0.8rem;
-  color: #666;
-  margin-bottom: 4px;
+.badge-pendiente {
+  background: #fde4c8;
+  color: #d4793e;
 }
 
-.cliente-telefono {
-  font-size: 0.8rem;
-  color: #666;
+.badge-contactado {
+  background: #d4e8e3;
+  color: #2d5a52;
 }
 
-/* Acciones */
-.cliente-acciones {
+.detalle-header {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e8ddd2;
+}
+
+.detalle-header h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.detail-info {
   display: flex;
-  gap: 8px;
-  flex-shrink: 0;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e8ddd2;
+}
+
+.detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.detail-value {
+  font-size: 0.95rem;
+  color: #1a1a1a;
+  font-weight: 500;
+}
+
+.sheet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
 }
 
 .btn {
-  padding: 8px 12px;
-  border: 1px solid transparent;
+  padding: 12px 16px;
+  border: none;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   text-transform: lowercase;
   letter-spacing: 0.3px;
-  white-space: nowrap;
 }
 
 .btn:disabled {
@@ -154,49 +240,67 @@
   cursor: not-allowed;
 }
 
-.btn-agendar {
+.btn-primary {
   background: #2d5a52;
   color: white;
-  border-color: #2d5a52;
 }
 
-.btn-agendar:hover:not(:disabled) {
+.btn-primary:hover:not(:disabled) {
   background: #1f4038;
 }
 
-.btn-contactar {
-  background: #f5f1eb;
-  color: #666;
-  border-color: #d9cfc2;
+.btn-secondary {
+  background: white;
+  color: #1a1a1a;
+  border: 1px solid #2d5a52;
 }
 
-.btn-contactar:hover:not(:disabled) {
-  background: #ebe3d7;
+.btn-secondary:hover:not(:disabled) {
+  background: #f9f7f4;
 }
 
-.btn-remover {
-  background: #fce8e8;
+.btn-danger-outline {
+  background: white;
   color: #c94e4e;
-  border-color: #f5c4c4;
+  border: 1px solid #c94e4e;
 }
 
-.btn-remover:hover:not(:disabled) {
-  background: #f8d7da;
+.btn-danger-outline:hover:not(:disabled) {
+  background: #fef9f9;
 }
 
-/* Loading */
-.lista-loading {
+.detalle-vacio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #999;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+  font-size: 0.95rem;
+  background: white;
+  border: 1px solid #e8ddd2;
+  border-radius: 6px;
+}
+
+.espera-loading {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
 .shimmer {
-  height: 100px;
+  height: 70px;
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 @keyframes shimmer {
@@ -208,28 +312,19 @@
   }
 }
 
-/* Empty state */
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: #999;
-  font-size: 1rem;
-}
-
-/* Error box */
 .error-box {
-  background: #ffe6e6;
-  border: 1px solid #ffcccc;
-  border-radius: 8px;
+  background: #fde8e8;
+  border: 1px solid #f5c4c4;
+  border-radius: 6px;
   padding: 20px;
-  color: #cc0000;
+  color: #c94e4e;
   text-align: center;
 }
 
 .error-box button {
   margin-top: 12px;
   padding: 8px 16px;
-  background: #cc0000;
+  background: #c94e4e;
   color: white;
   border: none;
   border-radius: 4px;
@@ -237,59 +332,194 @@
   font-weight: 600;
 }
 
-/* Responsive */
+.error-box button:hover {
+  background: #b03e3e;
+}
+
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  display: none;
+}
+
+.lista-espera-layout.detalle-abierto .mobile-overlay {
+  display: block;
+}
+
+@media (max-width: 1200px) {
+  .lista-espera-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .espera-detalle {
+    position: static;
+    margin-top: 20px;
+  }
+}
+
 @media (max-width: 768px) {
   .lista-espera-container {
     padding: 16px;
   }
 
-  .lista-header {
+  .lista-espera-header {
     padding: 16px;
+    margin-bottom: 16px;
   }
 
-  .lista-header h1 {
+  .lista-espera-header h1 {
     font-size: 1.4rem;
-  }
-
-  .cliente-card {
-    flex-direction: column;
-    padding: 12px;
-    gap: 12px;
-  }
-
-  .cliente-numero {
-    font-size: 1.4rem;
-    min-width: auto;
-    text-align: left;
-  }
-
-  .cliente-acciones {
-    width: 100%;
-    flex-direction: column;
-  }
-
-  .btn {
-    width: 100%;
-    text-align: center;
   }
 
   .filtros {
     gap: 8px;
+    margin-bottom: 16px;
   }
 
   .filtro-btn {
     padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+
+  .lista-espera-layout {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .espera-detalle {
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto !important;
+    height: 85vh;
+    max-height: 85vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: white;
+    border-radius: 16px 16px 0 0;
+    border: 1px solid #e8ddd2;
+    border-bottom: none;
+    z-index: 1000;
+    padding: 16px;
+    transform: translateY(100%) !important;
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    margin-top: 0 !important;
+  }
+
+  .lista-espera-layout.detalle-abierto .espera-detalle.mostrado {
+    transform: translateY(0) !important;
+  }
+
+  .espera-card {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+
+  .espera-numero {
+    width: 36px;
+    height: 36px;
+    font-size: 0.95rem;
+  }
+
+  .espera-nombre {
+    font-size: 0.9rem;
+  }
+
+  .espera-preferencia {
+    font-size: 0.75rem;
+  }
+
+  .btn {
+    padding: 10px 12px;
     font-size: 0.8rem;
+  }
+
+  .detail-info {
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+  }
+
+  .detalle-header {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+  }
+
+  .detalle-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .detail-label {
+    font-size: 0.7rem;
+  }
+
+  .detail-value {
+    font-size: 0.9rem;
+  }
+
+  .sheet-actions {
+    gap: 6px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #e8ddd2;
   }
 }
 
 @media (max-width: 480px) {
-  .cliente-acciones {
-    gap: 4px;
+  .lista-espera-container {
+    padding: 12px;
+  }
+
+  .lista-espera-header {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .lista-espera-header h1 {
+    font-size: 1.1rem;
+  }
+
+  .filtro-btn {
+    padding: 5px 10px;
+    font-size: 0.7rem;
+  }
+
+  .espera-numero {
+    width: 32px;
+    height: 32px;
+    font-size: 0.85rem;
+  }
+
+  .espera-nombre {
+    font-size: 0.85rem;
+  }
+
+  .espera-preferencia {
+    font-size: 0.7rem;
   }
 
   .btn {
-    padding: 6px 8px;
-    font-size: 0.7rem;
+    padding: 8px 10px;
+    font-size: 0.75rem;
+  }
+
+  .espera-detalle {
+    height: 85vh;
+    max-height: 85vh;
+    padding: 12px;
+  }
+
+  .detalle-header h2 {
+    font-size: 1rem;
   }
 }

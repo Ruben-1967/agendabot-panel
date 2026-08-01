@@ -1,10 +1,8 @@
 .agenda-container {
   padding: 20px;
-  max-width: 900px;
-  margin: 0 auto;
   background: #f0ebe6;
   min-height: 100vh;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .agenda-header {
@@ -35,7 +33,6 @@
   letter-spacing: 0.3px;
 }
 
-/* Filtros */
 .filtros {
   display: flex;
   gap: 12px;
@@ -58,6 +55,7 @@
   color: #2d5a52;
   text-transform: lowercase;
   letter-spacing: 0.3px;
+  flex-shrink: 0;
 }
 
 .filtro-btn:hover {
@@ -71,7 +69,29 @@
   border-color: #2d5a52;
 }
 
-/* Lista de citas */
+.agenda-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.agenda-lista {
+  display: flex;
+  flex-direction: column;
+}
+
+.agenda-detalle {
+  background: white;
+  border: 1px solid #e8ddd2;
+  border-radius: 6px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+}
+
 .citas-list {
   display: flex;
   flex-direction: column;
@@ -93,6 +113,12 @@
 .cita-card:hover {
   box-shadow: 0 2px 8px rgba(45, 90, 82, 0.12);
   border-color: #2d5a52;
+}
+
+.cita-card.activa {
+  border-color: #2d5a52;
+  background: #fafaf8;
+  box-shadow: 0 2px 8px rgba(45, 90, 82, 0.12);
 }
 
 .cita-hora {
@@ -127,7 +153,6 @@
   text-overflow: ellipsis;
 }
 
-/* Badges de estado */
 .badge {
   padding: 5px 12px;
   border-radius: 12px;
@@ -136,6 +161,7 @@
   text-transform: lowercase;
   letter-spacing: 0.5px;
   white-space: nowrap;
+  display: inline-block;
 }
 
 .badge-confirmada {
@@ -163,166 +189,23 @@
   color: #666;
 }
 
-/* Loading state */
-.citas-loading {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.detalle-header {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e8ddd2;
 }
 
-.shimmer {
-  height: 70px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
-  border-radius: 6px;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-/* Empty state */
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
-  color: #999;
-  font-size: 0.95rem;
-}
-
-/* Error box */
-.error-box {
-  background: #fde8e8;
-  border: 1px solid #f5c4c4;
-  border-radius: 6px;
-  padding: 20px;
-  color: #c94e4e;
-  text-align: center;
-}
-
-.error-box button {
-  margin-top: 12px;
-  padding: 8px 16px;
-  background: #c94e4e;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-/* Bottom Sheet */
-.bottom-sheet-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: flex-end;
-  z-index: 1000;
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.bottom-sheet {
-  background: #f0ebe6;
-  border-radius: 16px 16px 0 0;
-  max-height: 80vh;
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-.sheet-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  background: #2d5a52;
-  color: white;
-  padding: 20px;
-  border-radius: 16px 16px 0 0;
-  position: relative;
-}
-
-.sheet-header-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.sheet-hora {
-  font-size: 1.8rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.sheet-close {
-  background: none;
-  border: none;
-  font-size: 1.4rem;
-  color: white;
-  cursor: pointer;
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.8;
-  transition: opacity 0.2s;
-}
-
-.sheet-close:hover {
-  opacity: 1;
-}
-
-.sheet-content {
-  padding: 24px;
-  flex: 1;
-  overflow-y: auto;
-  background: white;
-}
-
-.sheet-content h2 {
+.detalle-header h2 {
   font-size: 1.3rem;
   font-weight: 700;
   color: #1a1a1a;
-  margin: 0 0 20px 0;
+  margin: 0;
 }
 
-/* Detail info */
 .detail-info {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   margin-bottom: 24px;
   padding-bottom: 20px;
   border-bottom: 1px solid #e8ddd2;
@@ -348,11 +231,11 @@
   font-weight: 500;
 }
 
-/* Botones de accion */
 .sheet-actions {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-top: auto;
 }
 
 .btn {
@@ -411,7 +294,100 @@
   background: #fdd4a4;
 }
 
-/* Responsive */
+.detalle-vacio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #999;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+  font-size: 0.95rem;
+  background: white;
+  border: 1px solid #e8ddd2;
+  border-radius: 6px;
+}
+
+.citas-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shimmer {
+  height: 70px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 6px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.error-box {
+  background: #fde8e8;
+  border: 1px solid #f5c4c4;
+  border-radius: 6px;
+  padding: 20px;
+  color: #c94e4e;
+  text-align: center;
+}
+
+.error-box button {
+  margin-top: 12px;
+  padding: 8px 16px;
+  background: #c94e4e;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.error-box button:hover {
+  background: #b03e3e;
+}
+
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  display: none;
+}
+
+.agenda-layout.detalle-abierto .mobile-overlay {
+  display: block;
+}
+
+@media (max-width: 1200px) {
+  .agenda-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .agenda-detalle {
+    position: static;
+    margin-top: 20px;
+  }
+}
+
 @media (max-width: 768px) {
   .agenda-container {
     padding: 16px;
@@ -419,10 +395,54 @@
 
   .agenda-header {
     padding: 16px;
+    margin-bottom: 16px;
   }
 
   .agenda-header h1 {
     font-size: 1.4rem;
+  }
+
+  .filtros {
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .filtro-btn {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+
+  .agenda-layout {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .agenda-detalle {
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto !important;
+    height: 85vh;
+    max-height: 85vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: white;
+    border-radius: 16px 16px 0 0;
+    border: 1px solid #e8ddd2;
+    border-bottom: none;
+    z-index: 1000;
+    padding: 16px;
+    transform: translateY(100%) !important;
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    margin-top: 0 !important;
+  }
+
+  .agenda-layout.detalle-abierto .agenda-detalle.mostrado {
+    transform: translateY(0) !important;
   }
 
   .cita-card {
@@ -432,44 +452,101 @@
 
   .cita-hora {
     min-width: 45px;
+    font-size: 1rem;
   }
 
-  .filtros {
-    gap: 10px;
+  .cita-nombre {
+    font-size: 0.9rem;
   }
 
-  .filtro-btn {
-    padding: 6px 14px;
+  .cita-detalle {
+    font-size: 0.75rem;
+  }
+
+  .btn {
+    padding: 10px 12px;
     font-size: 0.8rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .bottom-sheet {
-    max-height: 90vh;
-  }
-
-  .sheet-header {
-    padding: 16px;
-  }
-
-  .sheet-content {
-    padding: 20px;
-  }
-
-  .sheet-content h2 {
-    font-size: 1.1rem;
-    margin-bottom: 16px;
   }
 
   .detail-info {
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     padding-bottom: 16px;
   }
 
-  .btn {
-    padding: 10px 14px;
+  .detalle-header {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+  }
+
+  .detalle-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .detail-label {
+    font-size: 0.7rem;
+  }
+
+  .detail-value {
+    font-size: 0.9rem;
+  }
+
+  .sheet-actions {
+    gap: 6px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #e8ddd2;
+  }
+}
+
+@media (max-width: 480px) {
+  .agenda-container {
+    padding: 12px;
+  }
+
+  .agenda-header {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .agenda-header h1 {
+    font-size: 1.1rem;
+  }
+
+  .agenda-header .fecha {
+    font-size: 0.75rem;
+  }
+
+  .filtro-btn {
+    padding: 5px 10px;
+    font-size: 0.7rem;
+  }
+
+  .cita-hora {
+    min-width: 40px;
+    font-size: 0.9rem;
+  }
+
+  .cita-nombre {
     font-size: 0.85rem;
+  }
+
+  .cita-detalle {
+    font-size: 0.7rem;
+  }
+
+  .btn {
+    padding: 8px 10px;
+    font-size: 0.75rem;
+  }
+
+  .agenda-detalle {
+    height: 85vh;
+    max-height: 85vh;
+    padding: 12px;
+  }
+
+  .detalle-header h2 {
+    font-size: 1rem;
   }
 }
