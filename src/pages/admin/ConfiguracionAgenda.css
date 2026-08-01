@@ -155,7 +155,7 @@
     opacity: 0.8;
   }
 
-  /* Tablas — responsive */
+  /* Tablas — responsive como tarjetas */
   .tabla-simple {
     width: 100%;
     border-collapse: collapse;
@@ -175,21 +175,56 @@
     color: #666;
   }
 
-  .tabla-simple td {
-    padding: 12px;
-    border-bottom: 1px solid #e8ddd2;
-    font-size: 0.9rem;
+  /* Filas como tarjetas en móvil */
+  .tabla-simple tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
 
-  .tabla-simple .acciones {
-    white-space: nowrap;
+  .tabla-simple tr {
+    display: block;
+    background: white;
+    border: 1px solid #e8ddd2;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 0;
+  }
+
+  .tabla-simple td {
+    display: block;
+    padding: 6px 0;
+    border-bottom: none;
+    font-size: 0.9rem;
+    word-break: break-word;
+  }
+
+  /* Última celda (acciones) con layout especial */
+  .tabla-simple td.acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 8px;
+    border-top: 1px solid #e8ddd2;
+    margin-top: 4px;
   }
 
   .tabla-simple .acciones button {
-    display: inline-block;
-    margin-right: 8px;
-    margin-bottom: 4px;
-    font-size: 0.8rem;
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: #2d5a52;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.85rem;
+    margin: 0;
+  }
+
+  .tabla-simple .acciones .btn-danger {
+    color: #c94e4e;
   }
 
   .tabla-simple .fila-inactiva {
@@ -250,10 +285,17 @@
     margin-bottom: 16px;
   }
 
-  .tabla-simple th,
+  .tabla-simple tr {
+    padding: 10px;
+  }
+
   .tabla-simple td {
-    padding: 8px 10px;
     font-size: 0.85rem;
+  }
+
+  .tabla-simple .acciones button {
+    padding: 6px 10px;
+    font-size: 0.8rem;
   }
 
   .subtitulo {
