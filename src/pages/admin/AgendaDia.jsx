@@ -257,13 +257,14 @@ export default function AgendaDia() {
       </div>
 
       {/* Layout 2-col (desktop) / 1-col (móvil) */}
-      <div className="agenda-layout">
-        {/* LISTA IZQUIERDA */}
-        <div className="agenda-lista">
-          {citasFiltradas.length === 0 ? (
-            <div className="empty-state">
-              <p>No hay citas con este filtro</p>
-            </div>
+<div className={`agenda-layout ${citaSeleccionada ? 'detalle-abierto' : ''}`}>
+  {citaSeleccionada && <div className="mobile-overlay" onClick={() => setCitaSeleccionada(null)} />}
+  {/* LISTA IZQUIERDA */}
+  <div className="agenda-lista">
+    {citasFiltradas.length === 0 ? (
+      <div className="empty-state">
+        <p>No hay citas con este filtro</p>
+      </div>
           ) : (
             <div className="citas-list">
               {citasFiltradas.map((cita) => (
@@ -287,7 +288,7 @@ export default function AgendaDia() {
         </div>
 
         {/* PANEL DERECHO */}
-        <div className="agenda-detalle">
+       <div className={`agenda-detalle ${citaSeleccionada ? 'mostrado' : ''}`}>
           {citaSeleccionada ? (
             <>
               <div className="detalle-header">
