@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.vite_api_url || 'http://localhost:3000';
 
 /**
  * Wrapper simple sobre fetch. Agrega el token JWT si existe y
