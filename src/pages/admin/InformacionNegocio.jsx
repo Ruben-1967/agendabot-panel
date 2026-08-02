@@ -13,6 +13,7 @@ export default function InformacionNegocio() {
   const [notaAgendamiento, setNotaAgendamiento] = useState('');
   const [informacionAdicional, setInformacionAdicional] = useState('');
   const [requiereRut, setRequiereRut] = useState(false);
+  const [tonoComunicacion, setTonoComunicacion] = useState('Neutral');
 
   useEffect(() => {
     fetchInfoNegocio(token)
@@ -21,6 +22,7 @@ export default function InformacionNegocio() {
         setNotaAgendamiento(data.notaAgendamiento || '');
         setInformacionAdicional(data.informacionAdicional || '');
         setRequiereRut(!!data.requiereRut);
+        setTonoComunicacion(data.tonoComunicacion || 'Neutral');
       })
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
@@ -32,7 +34,7 @@ export default function InformacionNegocio() {
     setError('');
     setGuardadoOk(false);
     try {
-      await actualizarInfoNegocio(token, { direccion, notaAgendamiento, informacionAdicional, requiereRut });
+      await actualizarInfoNegocio(token, { direccion, notaAgendamiento, informacionAdicional, requiereRut, tonoComunicacion });
       setGuardadoOk(true);
     } catch (err) {
       setError(err.message);
@@ -85,6 +87,16 @@ export default function InformacionNegocio() {
         <label className="checkbox-segmentacion" style={{ padding: '4px 0' }}>
           <input type="checkbox" checked={requiereRut} onChange={(e) => setRequiereRut(e.target.checked)} />
           Exigir RUT del cliente antes de agendar una cita
+        </label>
+        
+        <label>
+          Tono de comunicación
+          <select value={tonoComunicacion} onChange={(e) => setTonoComunicacion(e.target.value)}>
+            <option value="Formal">Formal — profesional y respetuoso</option>
+            <option value="Neutral">Neutral — equilibrado (recomendado)</option>
+            <option value="Informal">Informal — conversacional y cercano</option>
+          </select>
+          <span className="texto-ayuda">El bot interpretará tu información adicional (precios, promociones) con este tono.</span>
         </label>
 
         <button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar cambios'}</button>
