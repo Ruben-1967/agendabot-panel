@@ -8,10 +8,17 @@ import {
   actualizarCliente,
   registrarVenta,
 } from '../../api/client';
+import './Clientes.css';
 
 function formatearFecha(iso) {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function formatearFechaCorta(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return `${d.getDate()} ${['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][d.getMonth()]}`;
 }
 
 function formatearEtiqueta(clave) {
@@ -48,11 +55,9 @@ function CamposFichaRecursivo({ schema, path, valores, onCambio }) {
 
         if (definicion && typeof definicion === 'object' && !Array.isArray(definicion)) {
           return (
-            <fieldset key={rutaId} className="ficha-subgrupo" style={{ border: '1px solid #DAD4C0', borderRadius: 8, padding: 10, marginTop: 8 }}>
-              <legend style={{ fontSize: '.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em' }}>
-                {formatearEtiqueta(clave)}
-              </legend>
-              <div className="grilla-checkbox">
+            <fieldset key={rutaId} className="ficha-subgrupo">
+              <legend>{formatearEtiqueta(clave)}</legend>
+              <div className="ficha-campos">
                 <CamposFichaRecursivo schema={definicion} path={rutaActual} valores={valores} onCambio={onCambio} />
               </div>
             </fieldset>
@@ -63,7 +68,7 @@ function CamposFichaRecursivo({ schema, path, valores, onCambio }) {
         const tipoInput = definicion === 'number' ? 'number' : definicion === 'date' ? 'date' : 'text';
 
         return (
-          <label key={rutaId} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label key={rutaId} className="ficha-field">
             {formatearEtiqueta(clave)}
             <input
               type={tipoInput}
@@ -78,11 +83,19 @@ function CamposFichaRecursivo({ schema, path, valores, onCambio }) {
   );
 }
 
-function DetalleCliente({ clienteId, token, camposFicha, categoriasProductoSugeridas, onCerrar, onCambio }) {
+function DetalleCliente({
+  clienteId,
+  token,
+  camposFicha,
+  categoriasProductoSugeridas,
+  onCerrar,
+  onCambio,
+}) {
   const [cliente, setCliente] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
+  const [tabActiva, setTabActiva] = useState('datos');
 
   const [nombre, setNombre] = useState('');
   const [rut, setRut] = useState('');
@@ -110,7 +123,9 @@ function DetalleCliente({ clienteId, token, camposFicha, categoriasProductoSuger
       .finally(() => setCargando(false));
   }
 
-  useEffect(() => { cargar(); }, [clienteId]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    cargar();
+  }, [clienteId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function actualizarCampoFicha(path, valor) {
     setFichaValores((prev) => setValorAnidado(prev, path, valor));
@@ -121,7 +136,13 @@ function DetalleCliente({ clienteId, token, camposFicha, categoriasProductoSuger
     setGuardando(true);
     setError('');
     try {
-      await actualizarCliente(token, clienteId, { nombre, rut, telefono, email, fichaJson: fichaValores });
+      await actualizarCliente(token, clienteId, {
+        nombre,
+        rut,
+        telefono,
+        email,
+        fichaJson: fichaValores,
+      });
       cargar();
       onCambio();
     } catch (err) {
@@ -154,88 +175,153 @@ function DetalleCliente({ clienteId, token, camposFicha, categoriasProductoSuger
     }
   }
 
-  if (cargando) return <p className="texto-muted">Cargando…</p>;
+  if (cargando) return <div className="cliente-detalle-cargando">Cargando…</div>;
   if (!cliente) return null;
 
   return (
-    <div className="panel-segmentacion-puntual" style={{ marginTop: 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ margin: 0 }}>{cliente.nombre}</h3>
-        <button type="button" className="link-toggle" onClick={onCerrar}>Cerrar</button>
+    <div className="cliente-detalle-panel">
+      <div className="cliente-detalle-header">
+        <h3>{cliente.nombre}</h3>
+        <button type="button" className="btn-cerrar" onClick={onCerrar}>✕</button>
       </div>
 
-      {error && <p className="mensaje-error">{error}</p>}
+      {error && <div className="mensaje-error">{error}</div>}
 
-      <form className="form-campana" onSubmit={guardarDatos} style={{ marginTop: 14 }}>
-        <label>
-          Nombre
-          <input value={nombre} onChange={(e) => setNombre(e.target.value)} required />
-        </label>
-        <label>
-          RUT
-          <input value={rut} onChange={(e) => setRut(e.target.value)} placeholder="12345678-9" />
-        </label>
-        <label>
-          Teléfono
-          <input value={telefono} onChange={(e) => setTelefono(e.target.value)} />
-        </label>
-        <label>
-          Email
-          <input value={email} onChange={(e) => setEmail(e.target.value)} />
-        </label>
-
-        <p className="campo-seccion-titulo" style={{ marginTop: 10 }}>Ficha</p>
-        <CamposFichaRecursivo schema={camposFicha} path={[]} valores={fichaValores} onCambio={actualizarCampoFicha} />
-
-        <button type="submit" disabled={guardando} style={{ marginTop: 10 }}>
-          {guardando ? 'Guardando…' : 'Guardar cambios'}
+      <div className="cliente-tabs">
+        <button
+          type="button"
+          className={`tab ${tabActiva === 'datos' ? 'active' : ''}`}
+          onClick={() => setTabActiva('datos')}
+        >
+          Datos
         </button>
-      </form>
-
-      <p className="campo-seccion-titulo" style={{ marginTop: 20 }}>Registrar nueva venta/atención</p>
-      <form className="form-inline" onSubmit={manejarRegistrarVenta}>
-        <input
-          placeholder="Descripción (ej. Lentes progresivos Ray-Ban)"
-          value={descripcionVenta}
-          onChange={(e) => setDescripcionVenta(e.target.value)}
-          required
-        />
-        <input
-          type="number" min="0" placeholder="Monto CLP"
-          value={montoVenta}
-          onChange={(e) => setMontoVenta(e.target.value)}
-          required
-        />
-        {categoriasProductoSugeridas.length > 0 && (
-          <select value={categoriaVenta} onChange={(e) => setCategoriaVenta(e.target.value)}>
-            <option value="">Categoría (opcional)</option>
-            {categoriasProductoSugeridas.map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
-        )}
-        <button type="submit" disabled={registrandoVenta}>
-          {registrandoVenta ? 'Registrando…' : 'Registrar venta'}
+        <button
+          type="button"
+          className={`tab ${tabActiva === 'historial' ? 'active' : ''}`}
+          onClick={() => setTabActiva('historial')}
+        >
+          Historial
         </button>
-      </form>
+        <button
+          type="button"
+          className={`tab ${tabActiva === 'ficha' ? 'active' : ''}`}
+          onClick={() => setTabActiva('ficha')}
+        >
+          Ficha
+        </button>
+      </div>
 
-      <p className="campo-seccion-titulo" style={{ marginTop: 20 }}>Historial de ventas</p>
-      {cliente.ventas.length === 0 ? (
-        <p className="texto-muted">Sin ventas registradas todavía.</p>
-      ) : (
-        <table className="tabla-simple">
-          <thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Monto</th></tr></thead>
-          <tbody>
-            {cliente.ventas.map((v) => (
-              <tr key={v.id}>
-                <td>{formatearFecha(v.creadoEn)}</td>
-                <td>{v.descripcion}</td>
-                <td>{v.categoriaProducto || '—'}</td>
-                <td>${v.monto.toLocaleString('es-CL')}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* TAB: DATOS */}
+      {tabActiva === 'datos' && (
+        <form className="cliente-tab-content" onSubmit={guardarDatos}>
+          <div className="form-group">
+            <label>Nombre</label>
+            <input
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>RUT</label>
+            <input
+              value={rut}
+              onChange={(e) => setRut(e.target.value)}
+              placeholder="12345678-9"
+            />
+          </div>
+          <div className="form-group">
+            <label>Teléfono</label>
+            <input
+              value={telefono}
+              onChange={(e) => setTelefono(e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label>Email</label>
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <button type="submit" disabled={guardando} className="btn-guardar">
+            {guardando ? 'Guardando…' : 'Guardar cambios'}
+          </button>
+        </form>
+      )}
+
+      {/* TAB: HISTORIAL */}
+      {tabActiva === 'historial' && (
+        <div className="cliente-tab-content">
+          <div className="historial-seccion">
+            <h4 className="historial-titulo">Nueva venta/atención</h4>
+            <form className="historial-form-inline" onSubmit={manejarRegistrarVenta}>
+              <input
+                placeholder="Descripción (ej. Lentes Ray-Ban)"
+                value={descripcionVenta}
+                onChange={(e) => setDescripcionVenta(e.target.value)}
+                required
+              />
+              <input
+                type="number"
+                min="0"
+                placeholder="Monto CLP"
+                value={montoVenta}
+                onChange={(e) => setMontoVenta(e.target.value)}
+                required
+              />
+              {categoriasProductoSugeridas.length > 0 && (
+                <select
+                  value={categoriaVenta}
+                  onChange={(e) => setCategoriaVenta(e.target.value)}
+                >
+                  <option value="">Categoría (opt.)</option>
+                  {categoriasProductoSugeridas.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              )}
+              <button type="submit" disabled={registrandoVenta}>
+                {registrandoVenta ? 'Registrando…' : 'Registrar'}
+              </button>
+            </form>
+          </div>
+
+          <div className="historial-seccion">
+            <h4 className="historial-titulo">Todas las transacciones</h4>
+            {cliente.ventas.length === 0 ? (
+              <p className="texto-vacio">Sin ventas registradas.</p>
+            ) : (
+              <div className="historial-items">
+                {cliente.ventas.map((v) => (
+                  <div key={v.id} className="historial-item">
+                    <div className="historial-item-fecha">{formatearFecha(v.creadoEn)}</div>
+                    <div className="historial-item-desc">{v.descripcion}</div>
+                    {v.categoriaProducto && (
+                      <div className="historial-item-badge">{v.categoriaProducto}</div>
+                    )}
+                    <div className="historial-item-monto">${v.monto.toLocaleString('es-CL')}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB: FICHA */}
+      {tabActiva === 'ficha' && (
+        <form className="cliente-tab-content cliente-ficha-form" onSubmit={guardarDatos}>
+          <CamposFichaRecursivo
+            schema={camposFicha}
+            path={[]}
+            valores={fichaValores}
+            onCambio={actualizarCampoFicha}
+          />
+          <button type="submit" disabled={guardando} className="btn-guardar">
+            {guardando ? 'Guardando…' : 'Guardar cambios'}
+          </button>
+        </form>
       )}
     </div>
   );
@@ -244,7 +330,10 @@ function DetalleCliente({ clienteId, token, camposFicha, categoriasProductoSuger
 export default function Clientes() {
   const { token } = useAuth();
   const [clientes, setClientes] = useState([]);
-  const [config, setConfig] = useState({ camposFicha: {}, categoriasProductoSugeridas: [] });
+  const [config, setConfig] = useState({
+    camposFicha: {},
+    categoriasProductoSugeridas: [],
+  });
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState(null);
@@ -265,7 +354,9 @@ export default function Clientes() {
       .finally(() => setCargando(false));
   }
 
-  useEffect(() => { cargar(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    cargar();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function manejarCrear(e) {
     e.preventDefault();
@@ -273,8 +364,14 @@ export default function Clientes() {
     setCreando(true);
     setError('');
     try {
-      const data = await crearCliente(token, { nombre: nombreNuevo, rut: rutNuevo, telefono: telefonoNuevo });
-      setNombreNuevo(''); setRutNuevo(''); setTelefonoNuevo('');
+      const data = await crearCliente(token, {
+        nombre: nombreNuevo,
+        rut: rutNuevo,
+        telefono: telefonoNuevo,
+      });
+      setNombreNuevo('');
+      setRutNuevo('');
+      setTelefonoNuevo('');
       cargar();
       setClienteSeleccionadoId(data.cliente.id);
     } catch (err) {
@@ -285,45 +382,79 @@ export default function Clientes() {
   }
 
   return (
-    <div>
-      <h1>Pacientes / Clientes</h1>
-      <p className="pagina-sub">
-        Carga y administra la ficha de tus pacientes/clientes, y registra cada venta o atención
-        para poder segmentar campañas más adelante.
-      </p>
+    <div className="clientes-container">
+      <div className="clientes-header">
+        <h1>
+          <span className="clientes-titulo-pacientes">Pacientes</span>
+          <span className="clientes-titulo-slash">/</span>
+          <span className="clientes-titulo-clientes">Clientes</span>
+        </h1>
+        <p className="clientes-sub">
+          Carga y administra fichas de pacientes/clientes, y registra ventas
+          para segmentar campañas.
+        </p>
+      </div>
 
-      {error && <p className="mensaje-error">{error}</p>}
+      {error && <div className="mensaje-error">{error}</div>}
 
-      <form className="form-inline" onSubmit={manejarCrear}>
-        <input placeholder="Nombre completo" value={nombreNuevo} onChange={(e) => setNombreNuevo(e.target.value)} required />
-        <input placeholder="RUT (opcional)" value={rutNuevo} onChange={(e) => setRutNuevo(e.target.value)} />
-        <input placeholder="Teléfono (opcional)" value={telefonoNuevo} onChange={(e) => setTelefonoNuevo(e.target.value)} />
-        <button type="submit" disabled={creando}>{creando ? 'Creando…' : 'Nuevo paciente/cliente'}</button>
+      <form className="clientes-form-nuevo" onSubmit={manejarCrear}>
+        <input
+          placeholder="Nombre completo"
+          value={nombreNuevo}
+          onChange={(e) => setNombreNuevo(e.target.value)}
+          required
+        />
+        <input
+          placeholder="RUT (opcional)"
+          value={rutNuevo}
+          onChange={(e) => setRutNuevo(e.target.value)}
+        />
+        <input
+          placeholder="Teléfono (opcional)"
+          value={telefonoNuevo}
+          onChange={(e) => setTelefonoNuevo(e.target.value)}
+        />
+        <button type="submit" disabled={creando}>
+          {creando ? 'Creando…' : '+ Nuevo paciente/cliente'}
+        </button>
       </form>
 
       {cargando ? (
-        <p className="texto-muted">Cargando…</p>
+        <div className="clientes-loading">Cargando…</div>
       ) : clientes.length === 0 ? (
-        <p className="texto-muted">Todavía no tienes pacientes/clientes cargados.</p>
+        <div className="clientes-vacio">No hay pacientes/clientes todavía.</div>
       ) : (
-        <table className="tabla-simple" style={{ marginTop: 16 }}>
-          <thead><tr><th>Nombre</th><th>RUT</th><th>Teléfono</th><th>Ventas</th><th>Total gastado</th><th>Última compra</th><th></th></tr></thead>
-          <tbody>
-            {clientes.map((c) => (
-              <tr key={c.id}>
-                <td>{c.nombre}</td>
-                <td>{c.rut || '—'}</td>
-                <td>{c.telefono || '—'}</td>
-                <td>{c.numVentas}</td>
-                <td>${c.totalGastado.toLocaleString('es-CL')}</td>
-                <td>{formatearFecha(c.ultimaCompraFecha)}</td>
-                <td className="acciones">
-                  <button className="btn-link" onClick={() => setClienteSeleccionadoId(c.id)}>Ver / Editar</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="clientes-lista">
+          {clientes.map((c) => (
+            <div
+              key={c.id}
+              className="cliente-card"
+              onClick={() => setClienteSeleccionadoId(c.id)}
+            >
+              <div className="cliente-card-header">
+                <div className="cliente-card-info">
+                  <h3 className="cliente-card-nombre">{c.nombre}</h3>
+                  <p className="cliente-card-meta">
+                    Última visita:{' '}
+                    {c.ultimaCompraFecha
+                      ? formatearFechaCorta(c.ultimaCompraFecha)
+                      : '—'}
+                  </p>
+                  {c.numVentas > 0 && (
+                    <span className="cliente-card-badge">
+                      {c.numVentas} {c.numVentas === 1 ? 'venta' : 'ventas'}
+                    </span>
+                  )}
+                </div>
+                <div className="cliente-card-venta">
+                  <p className="cliente-card-monto">
+                    ${c.totalGastado.toLocaleString('es-CL')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {clienteSeleccionadoId && (
@@ -336,262 +467,6 @@ export default function Clientes() {
           onCambio={cargar}
         />
       )}
-
-      <style>{`
-        h1 {
-          font-size: 1.8rem;
-          font-weight: 700;
-          color: #1a1a1a;
-          margin: 0 0 8px 0;
-        }
-        .pagina-sub {
-          font-size: 0.95rem;
-          color: #6b7770;
-          margin: 0 0 24px 0;
-          line-height: 1.5;
-        }
-        .mensaje-error {
-          background: #fde8e8;
-          border: 1px solid #f5c4c4;
-          border-radius: 6px;
-          padding: 12px 16px;
-          color: #c94e4e;
-          font-size: 0.9rem;
-          margin-bottom: 16px;
-        }
-        .texto-muted {
-          color: #999;
-          font-size: 0.9rem;
-        }
-        .form-inline {
-          display: flex;
-          gap: 8px;
-          margin-bottom: 20px;
-          flex-wrap: wrap;
-          align-items: flex-end;
-        }
-        .form-inline input,
-        .form-inline select {
-          padding: 10px 12px;
-          border: 1px solid #d4ccc0;
-          border-radius: 4px;
-          font-size: 0.9rem;
-          font-family: inherit;
-          flex: 1;
-          min-width: 150px;
-        }
-        .form-inline input:focus,
-        .form-inline select:focus {
-          outline: none;
-          border-color: #2f6f62;
-          box-shadow: 0 0 0 3px rgba(47, 111, 98, 0.1);
-        }
-        .form-inline button {
-          padding: 10px 16px;
-          background: #2f6f62;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          font-size: 0.9rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.2s ease;
-        }
-        .form-inline button:hover:not(:disabled) {
-          background: #1f4e44;
-        }
-        .form-inline button:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        .tabla-simple {
-          width: 100%;
-          border-collapse: collapse;
-          background: white;
-          border: 1px solid #dad4c0;
-          border-radius: 6px;
-          overflow: hidden;
-          margin-bottom: 20px;
-        }
-        .tabla-simple thead {
-          background: #f0eee2;
-          border-bottom: 1px solid #dad4c0;
-        }
-        .tabla-simple th {
-          padding: 12px 16px;
-          text-align: left;
-          font-size: 0.75rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          color: #6b7770;
-        }
-        .tabla-simple td {
-          padding: 12px 16px;
-          border-bottom: 1px solid #f0eee2;
-          font-size: 0.9rem;
-          color: #1a1a1a;
-        }
-        .tabla-simple tbody tr:last-child td {
-          border-bottom: none;
-        }
-        .tabla-simple tbody tr:hover {
-          background: #faf8ef;
-        }
-        .tabla-simple .acciones {
-          text-align: right;
-        }
-        .tabla-simple .btn-link {
-          padding: 6px 12px;
-          background: transparent;
-          color: #2f6f62;
-          border: 1px solid #2f6f62;
-          border-radius: 4px;
-          font-size: 0.8rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        .tabla-simple .btn-link:hover {
-          background: #2f6f62;
-          color: white;
-        }
-        .panel-segmentacion-puntual {
-          background: white;
-          border: 1px solid #dad4c0;
-          border-radius: 6px;
-          padding: 20px;
-          margin-top: 24px;
-        }
-        .panel-segmentacion-puntual h3 {
-          font-size: 1.2rem;
-          font-weight: 700;
-          color: #1a1a1a;
-          margin: 0 0 16px 0;
-        }
-        .panel-segmentacion-puntual .link-toggle {
-          padding: 6px 12px;
-          background: transparent;
-          color: #2f6f62;
-          border: 1px solid #2f6f62;
-          border-radius: 4px;
-          font-size: 0.8rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        .panel-segmentacion-puntual .link-toggle:hover {
-          background: #2f6f62;
-          color: white;
-        }
-        .form-campana {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-        .form-campana label {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          font-size: 0.85rem;
-          font-weight: 600;
-          color: #1a1a1a;
-        }
-        .form-campana input,
-        .form-campana select,
-        .form-campana textarea {
-          padding: 10px 12px;
-          border: 1px solid #d4ccc0;
-          border-radius: 4px;
-          font-size: 0.9rem;
-          font-family: inherit;
-        }
-        .form-campana input:focus,
-        .form-campana select:focus,
-        .form-campana textarea:focus {
-          outline: none;
-          border-color: #2f6f62;
-          box-shadow: 0 0 0 3px rgba(47, 111, 98, 0.1);
-        }
-        .form-campana button {
-          padding: 10px 16px;
-          background: #2f6f62;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          font-size: 0.9rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.2s ease;
-        }
-        .form-campana button:hover:not(:disabled) {
-          background: #1f4e44;
-        }
-        .form-campana button:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-        .campo-seccion-titulo {
-          font-size: 0.95rem;
-          font-weight: 700;
-          color: #1a1a1a;
-          margin: 20px 0 12px 0;
-          text-transform: none;
-        }
-        .ficha-subgrupo {
-          border: 1px solid #dad4c0 !important;
-          border-radius: 4px !important;
-          padding: 12px !important;
-          margin-top: 8px !important;
-          background: #faf8ef;
-        }
-        .ficha-subgrupo legend {
-          font-size: 0.75rem !important;
-          font-weight: 700 !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.04em !important;
-          color: #6b7770 !important;
-          padding: 0 8px !important;
-        }
-        .grilla-checkbox {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-          margin-top: 8px;
-        }
-        .grilla-checkbox label {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          font-size: 0.85rem;
-          font-weight: 600;
-        }
-        .grilla-checkbox input {
-          padding: 8px 10px;
-          border: 1px solid #d4ccc0;
-          border-radius: 4px;
-          font-size: 0.9rem;
-        }
-        .grilla-checkbox input:focus {
-          outline: none;
-          border-color: #2f6f62;
-          box-shadow: 0 0 0 3px rgba(47, 111, 98, 0.1);
-        }
-        @media (max-width: 768px) {
-          h1 { font-size: 1.4rem; }
-          .pagina-sub { font-size: 0.9rem; }
-          .form-inline { flex-direction: column; gap: 10px; }
-          .form-inline input, .form-inline select, .form-inline button { width: 100%; min-width: auto; }
-          .tabla-simple { font-size: 0.8rem; }
-          .tabla-simple th, .tabla-simple td { padding: 10px 12px; }
-          .tabla-simple .acciones { text-align: left; }
-          .panel-segmentacion-puntual { padding: 16px; margin-top: 20px; }
-          .panel-segmentacion-puntual h3 { font-size: 1rem; }
-          .form-campana { gap: 12px; }
-          .grilla-checkbox { grid-template-columns: 1fr; }
-          .campo-seccion-titulo { margin-top: 16px; margin-bottom: 10px; }
-        }
-      `}</style>
     </div>
   );
 }
