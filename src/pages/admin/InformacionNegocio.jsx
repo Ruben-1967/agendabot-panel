@@ -34,7 +34,7 @@ export default function InformacionNegocio() {
     setError('');
     setGuardadoOk(false);
     try {
-      await actualizarInfoNegocio(token, { direccion, notaAgendamiento, informacionAdicional, requiereRut });
+      await actualizarInfoNegocio(token, { direccion, notaAgendamiento, informacionAdicional, requiereRut, tonoComunicacion });
       setGuardadoOk(true);
     } catch (err) {
       setError(err.message);
