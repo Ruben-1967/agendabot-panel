@@ -108,6 +108,10 @@ function DetalleCliente({
   const [categoriaVenta, setCategoriaVenta] = useState('');
   const [registrandoVenta, setRegistrandoVenta] = useState(false);
 
+  const [fechaProximaCita, setFechaProximaCita] = useState('');
+  const [profesionalAtendio, setProfesionalAtendio] = useState('');
+  const [diagnostico, setDiagnostico] = useState('');
+
   function cargar() {
     setCargando(true);
     fetchCliente(token, clienteId)
@@ -118,6 +122,9 @@ function DetalleCliente({
         setTelefono(data.cliente.telefono || '');
         setEmail(data.cliente.email || '');
         setFichaValores(data.cliente.fichaJson || {});
+        setFechaProximaCita(data.cliente.fechaProximaCita || '');
+        setProfesionalAtendio(data.cliente.profesionalAtendio || '');
+        setDiagnostico(data.cliente.diagnostico || '');
       })
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
@@ -142,6 +149,9 @@ function DetalleCliente({
         telefono,
         email,
         fichaJson: fichaValores,
+        fechaProximaCita: fechaProximaCita || null,
+        profesionalAtendio: profesionalAtendio || null,
+        diagnostico: diagnostico || null,
       });
       cargar();
       onCambio();
@@ -312,12 +322,133 @@ function DetalleCliente({
       {/* TAB: FICHA */}
       {tabActiva === 'ficha' && (
         <form className="cliente-tab-content cliente-ficha-form" onSubmit={guardarDatos}>
-          <CamposFichaRecursivo
-            schema={camposFicha}
-            path={[]}
-            valores={fichaValores}
-            onCambio={actualizarCampoFicha}
-          />
+          {/* SECCIÓN: OD */}
+          <div className="ficha-seccion">
+            <h4 className="ficha-seccion-titulo">OD (Ojo Derecho)</h4>
+            <div className="ficha-campos-grid">
+              <label className="ficha-field">
+                Esfera
+                <input
+                  type="number"
+                  step="0.25"
+                  value={obtenerValorAnidado(fichaValores, ['od', 'esfera']) ?? ''}
+                  onChange={(e) => actualizarCampoFicha(['od', 'esfera'], e.target.value)}
+                />
+              </label>
+              <label className="ficha-field">
+                Cilindro
+                <input
+                  type="number"
+                  step="0.25"
+                  value={obtenerValorAnidado(fichaValores, ['od', 'cilindro']) ?? ''}
+                  onChange={(e) => actualizarCampoFicha(['od', 'cilindro'], e.target.value)}
+                />
+              </label>
+              <label className="ficha-field">
+                Eje (°)
+                <input
+                  type="number"
+                  value={obtenerValorAnidado(fichaValores, ['od', 'eje']) ?? ''}
+                  onChange={(e) => actualizarCampoFicha(['od', 'eje'], e.target.value)}
+                />
+              </label>
+              <label className="ficha-field">
+                Adición
+                <input
+                  type="number"
+                  step="0.25"
+                  value={obtenerValorAnidado(fichaValores, ['od', 'adicion']) ?? ''}
+                  onChange={(e) => actualizarCampoFicha(['od', 'adicion'], e.target.value)}
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* SECCIÓN: OI */}
+          <div className="ficha-seccion">
+            <h4 className="ficha-seccion-titulo">OI (Ojo Izquierdo)</h4>
+            <div className="ficha-campos-grid">
+              <label className="ficha-field">
+                Esfera
+                <input
+                  type="number"
+                  step="0.25"
+                  value={obtenerValorAnidado(fichaValores, ['oi', 'esfera']) ?? ''}
+                  onChange={(e) => actualizarCampoFicha(['oi', 'esfera'], e.target.value)}
+                />
+              </label>
+              <label className="ficha-field">
+                Cilindro
+                <input
+                  type="number"
+                  step="0.25"
+                  value={obtenerValorAnidado(fichaValores, ['oi', 'cilindro']) ?? ''}
+                  onChange={(e) => actualizarCampoFicha(['oi', 'cilindro'], e.target.value)}
+                />
+              </label>
+              <label className="ficha-field">
+                Eje (°)
+                <input
+                  type="number"
+                  value={obtenerValorAnidado(fichaValores, ['oi', 'eje']) ?? ''}
+                  onChange={(e) => actualizarCampoFicha(['oi', 'eje'], e.target.value)}
+                />
+              </label>
+              <label className="ficha-field">
+                Adición
+                <input
+                  type="number"
+                  step="0.25"
+                  value={obtenerValorAnidado(fichaValores, ['oi', 'adicion']) ?? ''}
+                  onChange={(e) => actualizarCampoFicha(['oi', 'adicion'], e.target.value)}
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* SECCIÓN: OTROS */}
+          <div className="ficha-seccion">
+            <h4 className="ficha-seccion-titulo">Otros parámetros</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <label className="ficha-field">
+                DP (Distancia Pupilar)
+                <input
+                  type="text"
+                  placeholder="ej. 64"
+                  value={obtenerValorAnidado(fichaValores, ['dp']) ?? ''}
+                  onChange={(e) => actualizarCampoFicha(['dp'], e.target.value)}
+                />
+              </label>
+              <label className="ficha-field">
+                Diagnóstico
+                <input
+                  type="text"
+                  placeholder="ej. Miopía, Hipermetropía"
+                  value={diagnostico}
+                  onChange={(e) => setDiagnostico(e.target.value)}
+                />
+              </label>
+              <label className="ficha-field">
+                Profesional que lo atendió
+                <input
+                  type="text"
+                  placeholder="Nombre del profesional"
+                  value={profesionalAtendio}
+                  onChange={(e) => setProfesionalAtendio(e.target.value)}
+                />
+              </label>
+              <label className="ficha-field">
+                <strong>Fecha próxima cita (Crítica para recordatorios)</strong>
+                <input
+                  type="date"
+                  value={fechaProximaCita}
+                  onChange={(e) => setFechaProximaCita(e.target.value)}
+                  required
+                />
+              </label>
+            </div>
+          </div>
+
           <button type="submit" disabled={guardando} className="btn-guardar">
             {guardando ? 'Guardando…' : 'Guardar cambios'}
           </button>

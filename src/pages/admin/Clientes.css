@@ -1,11 +1,10 @@
 /* ========== VARIABLES DE COLOR ========== */
 :root {
   --color-verde-oscuro: #1f4e44;
-  --color-naranja: #d85a30;
+  --color-dorado: #b8863b;
   --color-teal: #0f6e56;
   --color-beige: #f0eee2;
   --color-fondo-card: #faf8ef;
-  --color-brass: #b8863b;
   --color-arena: #dad4c0;
   --color-muted: #6b7770;
   --color-error: #c94e4e;
@@ -31,7 +30,7 @@
 
 .clientes-titulo-pacientes,
 .clientes-titulo-clientes {
-  color: var(--color-naranja);
+  color: var(--color-dorado);
 }
 
 .clientes-titulo-slash {
@@ -89,7 +88,7 @@
 
 .clientes-form-nuevo button {
   padding: 10px 16px;
-  background: var(--color-naranja);
+  background: var(--color-dorado);
   color: white;
   border: none;
   border-radius: 4px;
@@ -101,7 +100,7 @@
 }
 
 .clientes-form-nuevo button:hover:not(:disabled) {
-  background: #b8481e;
+  background: #9d7432;
 }
 
 .clientes-form-nuevo button:disabled {
@@ -136,8 +135,8 @@
 
 .cliente-card:hover {
   background: var(--color-fondo-card);
-  border-color: var(--color-naranja);
-  box-shadow: 0 2px 8px rgba(216, 90, 48, 0.1);
+  border-color: var(--color-dorado);
+  box-shadow: 0 2px 8px rgba(184, 134, 59, 0.15);
 }
 
 .cliente-card-header {
@@ -188,31 +187,33 @@
   margin: 0;
 }
 
-/* ========== PANEL DETALLE LATERAL ========== */
+/* ========== PANEL DETALLE MODAL (DESDE ABAJO) ========== */
 .cliente-detalle-panel {
   position: fixed;
-  top: 0;
-  right: 0;
   bottom: 0;
+  left: 0;
+  right: 0;
   width: 100%;
-  max-width: 500px;
+  height: 75vh;
   background: white;
-  border-left: 1px solid var(--color-arena);
-  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.1);
+  border-top: 1px solid var(--color-arena);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   z-index: 100;
-  animation: slideIn 0.3s ease;
+  animation: slideUp 0.3s ease;
   overflow: hidden;
 }
 
-@keyframes slideIn {
+@keyframes slideUp {
   from {
-    transform: translateX(100%);
+    transform: translateY(100%);
     opacity: 0;
   }
   to {
-    transform: translateX(0);
+    transform: translateY(0);
     opacity: 1;
   }
 }
@@ -279,8 +280,8 @@
 }
 
 .cliente-tabs .tab.active {
-  color: var(--color-naranja);
-  border-bottom-color: var(--color-naranja);
+  color: var(--color-dorado);
+  border-bottom-color: var(--color-dorado);
 }
 
 .cliente-tabs .tab:hover:not(.active) {
@@ -393,7 +394,7 @@
 
 .historial-form-inline button {
   padding: 10px 12px;
-  background: var(--color-naranja);
+  background: var(--color-dorado);
   color: white;
   border: none;
   border-radius: 4px;
@@ -404,7 +405,7 @@
 }
 
 .historial-form-inline button:hover:not(:disabled) {
-  background: #b8481e;
+  background: #9d7432;
 }
 
 .historial-form-inline button:disabled {
@@ -423,7 +424,7 @@
   gap: 12px;
   padding: 10px;
   background: var(--color-fondo-card);
-  border-left: 3px solid var(--color-naranja);
+  border-left: 3px solid var(--color-dorado);
   border-radius: 4px;
   font-size: 0.85rem;
   align-items: center;
@@ -475,6 +476,31 @@
   padding-top: 0;
 }
 
+.ficha-seccion {
+  margin-bottom: 20px;
+}
+
+.ficha-seccion-titulo {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-dorado);
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--color-dorado);
+}
+
+.ficha-campos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 12px;
+  background: var(--color-fondo-card);
+  border: 1px solid var(--color-arena);
+  border-radius: 4px;
+}
+
 .ficha-subgrupo {
   border: 1px solid var(--color-arena);
   border-radius: 4px;
@@ -508,7 +534,8 @@
   color: var(--color-verde-oscuro);
 }
 
-.ficha-field input {
+.ficha-field input,
+.ficha-field textarea {
   padding: 8px 10px;
   border: 1px solid var(--color-arena);
   border-radius: 4px;
@@ -516,7 +543,8 @@
   font-family: inherit;
 }
 
-.ficha-field input:focus {
+.ficha-field input:focus,
+.ficha-field textarea:focus {
   outline: none;
   border-color: var(--color-teal);
   box-shadow: 0 0 0 3px rgba(15, 110, 86, 0.1);
@@ -548,7 +576,13 @@
   }
 
   .cliente-detalle-panel {
-    max-width: 100%;
+    height: 85vh;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+  }
+
+  .ficha-campos-grid {
+    grid-template-columns: 1fr;
   }
 
   .cliente-card-header {
