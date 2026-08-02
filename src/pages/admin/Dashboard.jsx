@@ -1,145 +1,206 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { fetchDashboard } from '../../api/client';
 import './Dashboard.css';
 
+function formatearFecha(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('es-CL', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function formatearHora(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
 export default function Dashboard() {
-  const { token, usuario } = useAuth();
+  const { token } = useAuth();
   const [datos, setDatos] = useState(null);
   const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!token || !usuario?.empresaId) {
-      setError('No hay sesión válida');
-      setCargando(false);
-      return;
+    function cargar() {
+      setCargando(true);
+      setError('');
+      fetchDashboard(token)
+        .then((data) => {
+          setDatos(data);
+        })
+        .catch((err) => {
+          setError(err.message || 'Error al cargar dashboard');
+        })
+        .finally(() => setCargando(false));
     }
+    cargar();
+  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    fetchDashboard(token, usuario.empresaId)
-      .then(setDatos)
-      .catch((err) => setError(err.message))
-      .finally(() => setCargando(false));
-  }, [token, usuario?.empresaId]);
-
-  if (error) {
-    return <div className="dashboard-error">Error: {error}</div>;
+  if (cargando) {
+    return (
+      <div className="dashboard-container">
+        <div className="dashboard-header">
+          <h1>Dashboard</h1>
+          <p className="dashboard-header-sub">Cargando…</p>
+        </div>
+      </div>
+    );
   }
 
-  const datos_seguros = datos || {
-    citasHoy: 0,
-    confirmadas: 0,
-    listaEspera: 0,
-    asistencia30dias: 0,
-    agendaHoy: [],
-    listaEsperaItems: [],
-  };
+  if (error) {
+    return (
+      <div className="dashboard-container">
+        <div className="dashboard-header">
+          <h1>Dashboard</h1>
+        </div>
+        <div className="dashboard-error">{error}</div>
+      </div>
+    );
+  }
 
-  // Obtener fecha de hoy formateada
+  if (!datos) {
+    return (
+      <div className="dashboard-container">
+        <div className="dashboard-header">
+          <h1>Dashboard</h1>
+        </div>
+      </div>
+    );
+  }
+
+  const {
+    citasHoy = 0,
+    confirmadas = 0,
+    pendientes = 0,
+    listaEsperaCount = 0,
+    asistenciaPromedio = 0,
+    agenda = [],
+    listaEspera = [],
+    nombreEmpresa = 'Mi negocio',
+  } = datos;
+
   const hoy = new Date();
-  const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-  const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-  const fechaFormato = `${diasSemana[hoy.getDay()]} ${hoy.getDate()} ${meses[hoy.getMonth()]}`;
+  const hoyFormato = hoy.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' });
 
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h1>Hola, {usuario?.empresaNombre || 'equipo'}</h1>
-        <p className="dashboard-header-sub">
-          Hoy · {fechaFormato}
-        </p>
+        <h1>Hola, {nombreEmpresa}</h1>
+        <p className="dashboard-header-sub">Hoy · {hoyFormato}</p>
       </div>
 
-      {/* 4 tarjetas KPI */}
+      {/* GRID DE TARJETAS KPI */}
       <div className="dashboard-grid">
-        <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
-          <span className="metric-label">Citas hoy</span>
-          <span className="metric-value">{datos_seguros.citasHoy}</span>
-          <span className="metric-description">
-            {datos_seguros.confirmadas} confirmadas, {datos_seguros.citasHoy - datos_seguros.confirmadas} pendientes
-          </span>
+        <div className={`metric-card ${citasHoy === 0 ? 'empty' : ''}`}>
+          <div className="metric-label">Citas hoy</div>
+          <div className="metric-value">{citasHoy}</div>
+          <div className="metric-description">
+            {confirmadas} confirmadas, {pendientes} pendientes
+          </div>
         </div>
 
-        <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
-          <span className="metric-label">Confirmadas</span>
-          <span className="metric-value">{datos_seguros.confirmadas}</span>
-          <span className="metric-description">
-            de {datos_seguros.citasHoy} citas agendadas
-          </span>
+        <div className={`metric-card ${confirmadas === 0 ? 'empty' : ''}`}>
+          <div className="metric-label">Confirmadas</div>
+          <div className="metric-value">{confirmadas}</div>
+          <div className="metric-description">de {citasHoy} citas agendadas</div>
         </div>
 
-        <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
-          <span className="metric-label">Lista de espera</span>
-          <span className="metric-value">{datos_seguros.listaEspera}</span>
-          <span className="metric-description">
-            clientes esperando cupo
-          </span>
+        <div className={`metric-card ${listaEsperaCount === 0 ? 'empty' : ''}`}>
+          <div className="metric-label">Lista de espera</div>
+          <div className="metric-value">{listaEsperaCount}</div>
+          <div className="metric-description">
+            {listaEsperaCount === 1 ? 'cliente' : 'clientes'} esperando cupo
+          </div>
         </div>
 
-        <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
-          <span className="metric-label">Asistencia (30 días)</span>
-          <span className="metric-value">{Math.round(datos_seguros.asistencia30dias)}%</span>
-          <span className="metric-description">
-            {datos_seguros.citasHoy} de {Math.round(datos_seguros.citasHoy / (datos_seguros.asistencia30dias / 100))} citas asistidas
-          </span>
+        <div className={`metric-card ${asistenciaPromedio === 0 ? 'empty' : ''}`}>
+          <div className="metric-label">Asistencia (30 días)</div>
+          <div className="metric-value">{Math.round(asistenciaPromedio)}%</div>
+          <div className="metric-description">
+            {isNaN(asistenciaPromedio) || !isFinite(asistenciaPromedio)
+              ? '0 de NaN citas asistidas'
+              : `${Math.round(asistenciaPromedio)}% de efectividad`}
+          </div>
         </div>
       </div>
 
-      {/* Layout principal: Agenda + Lista de Espera */}
+      {/* LAYOUT AGENDA + LISTA DE ESPERA */}
       <div className="dashboard-main">
-        {/* Agenda del día */}
+        {/* AGENDA DEL DÍA */}
         <div className="agenda-section">
           <div className="agenda-header">
             <h2>Agenda de hoy</h2>
-            <a href="/admin/agenda">ver agenda completa →</a>
+            <a href="/agenda-completa">ver agenda completa →</a>
           </div>
 
-          <div className="agenda-list">
-            {datos_seguros.agendaHoy && datos_seguros.agendaHoy.length > 0 ? (
-              datos_seguros.agendaHoy.map((cita) => (
-                <div key={cita.id} className={`agenda-item ${cita.estado.toLowerCase()}`}>
-                  <div className="agenda-hora">{cita.hora}</div>
-                  <div className="agenda-detalle">
-                    <div className="agenda-nombre">{cita.nombre}</div>
-                    <div className="agenda-servicio">
-                      {cita.servicio} · {cita.profesional || 'Atención general'}
-                    </div>
-                  </div>
-                  <div className={`agenda-badge badge-${cita.estado.toLowerCase()}`}>
-                    {cita.estado}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <>
-                <div className="agenda-item-empty"></div>
-                <div className="agenda-item-empty"></div>
-                <div className="agenda-item-empty"></div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Lista de Espera */}
-        {datos_seguros.listaEsperaItems && datos_seguros.listaEsperaItems.length > 0 && (
-          <div className="espera-section">
-            <div className="espera-header">
-              <h2>Lista de espera</h2>
+          {agenda.length === 0 ? (
+            <div className="agenda-list">
+              <div className="agenda-item-empty" />
+              <div className="agenda-item-empty" />
+              <div className="agenda-item-empty" />
             </div>
-
-            <div className="espera-list">
-              {datos_seguros.listaEsperaItems.map((item, idx) => (
-                <div key={item.id} className="espera-item">
-                  <div className="espera-numero">{idx + 1}</div>
-                  <div className="espera-detalle">
-                    <div className="espera-nombre">{item.nombre}</div>
-                    <div className="espera-servicio">{item.servicio}</div>
+          ) : (
+            <div className="agenda-list">
+              {agenda.slice(0, 5).map((cita) => (
+                <div
+                  key={cita.id}
+                  className={`agenda-item ${cita.estado || 'pendiente'}`}
+                >
+                  <div className="agenda-hora">{formatearHora(cita.horaInicio)}</div>
+                  <div className="agenda-detalle">
+                    <div className="agenda-nombre">{cita.clienteNombre}</div>
+                    <div className="agenda-servicio">{cita.recursoNombre}</div>
+                  </div>
+                  <div className={`agenda-badge badge-${cita.estado || 'pendiente'}`}>
+                    {cita.estado === 'confirmada'
+                      ? 'Confirmada'
+                      : cita.estado === 'cancelada'
+                      ? 'Cancelada'
+                      : 'Pendiente'}
                   </div>
                 </div>
               ))}
             </div>
+          )}
+        </div>
+
+        {/* LISTA DE ESPERA */}
+        <div className="espera-section">
+          <div className="espera-header">
+            <h2>Lista de espera</h2>
           </div>
-        )}
+
+          {listaEspera.length === 0 ? (
+            <div className="espera-list">
+              <div
+                style={{
+                  padding: '2rem 1rem',
+                  textAlign: 'center',
+                  color: '#999',
+                  fontSize: '13px',
+                }}
+              >
+                Sin clientes en lista de espera
+              </div>
+            </div>
+          ) : (
+            <div className="espera-list">
+              {listaEspera.slice(0, 6).map((item, idx) => (
+                <div key={item.id || idx} className="espera-item">
+                  <div className="espera-numero">{idx + 1}</div>
+                  <div className="espera-detalle">
+                    <div className="espera-nombre">{item.clienteNombre}</div>
+                    <div className="espera-servicio">{item.recursoNombre}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
