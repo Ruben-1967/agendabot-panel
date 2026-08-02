@@ -41,6 +41,11 @@ export default function Dashboard() {
   const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const fechaFormato = `${diasSemana[hoy.getDay()]} ${hoy.getDate()} ${meses[hoy.getMonth()]}`;
 
+  // ✅ FIX: Cálculo seguro de citas asistidas (sin división por cero)
+  const citasAsistidas = datos_seguros.asistencia30dias > 0 && datos_seguros.citasHoy > 0
+    ? Math.round((datos_seguros.citasHoy * datos_seguros.asistencia30dias) / 100)
+    : 0;
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
@@ -56,7 +61,7 @@ export default function Dashboard() {
           <span className="metric-label">Citas hoy</span>
           <span className="metric-value">{datos_seguros.citasHoy}</span>
           <span className="metric-description">
-            {datos_seguros.confirmadas} confirmadas, {datos_seguros.citasHoy - datos_seguros.confirmadas} pendientes
+            {datos_seguros.confirmadas} confirmadas, {Math.max(0, datos_seguros.citasHoy - datos_seguros.confirmadas)} pendientes
           </span>
         </div>
 
@@ -80,7 +85,7 @@ export default function Dashboard() {
           <span className="metric-label">Asistencia (30 días)</span>
           <span className="metric-value">{Math.round(datos_seguros.asistencia30dias)}%</span>
           <span className="metric-description">
-            {datos_seguros.citasHoy} de {Math.round(datos_seguros.citasHoy / (datos_seguros.asistencia30dias / 100))} citas asistidas
+            {citasAsistidas} de {datos_seguros.citasHoy} citas asistidas
           </span>
         </div>
       </div>
@@ -95,18 +100,18 @@ export default function Dashboard() {
           </div>
 
           <div className="agenda-list">
-            {datos_seguros.agendaHoy && datos_seguros.agendaHoy.length > 0 ? (
+            {datos_seguros.agendaHoy && Array.isArray(datos_seguros.agendaHoy) && datos_seguros.agendaHoy.length > 0 ? (
               datos_seguros.agendaHoy.map((cita) => (
-                <div key={cita.id} className={`agenda-item ${cita.estado.toLowerCase()}`}>
-                  <div className="agenda-hora">{cita.hora}</div>
+                <div key={cita?.id || Math.random()} className={`agenda-item ${(cita?.estado || '').toLowerCase()}`}>
+                  <div className="agenda-hora">{cita?.hora || '--:--'}</div>
                   <div className="agenda-detalle">
-                    <div className="agenda-nombre">{cita.nombre}</div>
+                    <div className="agenda-nombre">{cita?.nombre || 'Sin nombre'}</div>
                     <div className="agenda-servicio">
-                      {cita.servicio} · {cita.profesional || 'Atención general'}
+                      {cita?.servicio || 'Sin servicio'} · {cita?.profesional || 'Atención general'}
                     </div>
                   </div>
-                  <div className={`agenda-badge badge-${cita.estado.toLowerCase()}`}>
-                    {cita.estado}
+                  <div className={`agenda-badge badge-${(cita?.estado || '').toLowerCase()}`}>
+                    {cita?.estado || 'Pendiente'}
                   </div>
                 </div>
               ))
@@ -121,7 +126,7 @@ export default function Dashboard() {
         </div>
 
         {/* Lista de Espera */}
-        {datos_seguros.listaEsperaItems && datos_seguros.listaEsperaItems.length > 0 && (
+        {datos_seguros.listaEsperaItems && Array.isArray(datos_seguros.listaEsperaItems) && datos_seguros.listaEsperaItems.length > 0 && (
           <div className="espera-section">
             <div className="espera-header">
               <h2>Lista de espera</h2>
@@ -129,11 +134,11 @@ export default function Dashboard() {
 
             <div className="espera-list">
               {datos_seguros.listaEsperaItems.map((item, idx) => (
-                <div key={item.id} className="espera-item">
+                <div key={item?.id || idx} className="espera-item">
                   <div className="espera-numero">{idx + 1}</div>
                   <div className="espera-detalle">
-                    <div className="espera-nombre">{item.nombre}</div>
-                    <div className="espera-servicio">{item.servicio}</div>
+                    <div className="espera-nombre">{item?.nombre || 'Sin nombre'}</div>
+                    <div className="espera-servicio">{item?.servicio || 'Sin servicio'}</div>
                   </div>
                 </div>
               ))}
