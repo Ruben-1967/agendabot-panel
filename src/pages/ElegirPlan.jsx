@@ -30,52 +30,65 @@ const PLANES = {
 
 export default function ElegirPlan() {
   const navigate = useNavigate();
+  const searchParams = new URLSearchParams(window.location.search);
+  const empresaIdParam = searchParams.get('empresaId');
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [diasRestantes, setDiasRestantes] = useState(null);
+  const token = localStorage.getItem('agendabot_panel_session');
 
   useEffect(() => {
-  const fetchEstado = async () => {
-    try {
-      const token = localStorage.getItem('agendabot_panel_session');
-      if (!token) {
-        // Sin token, no intentes traer estado
-        return;
-      }
-      
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/suscripcion/estado`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!res.ok) {
-        console.warn('No se pudo traer estado de suscripción');
-        return;
-      }
-      
-      const data = await res.json();
-      setDiasRestantes(data.diasParaVencer || 0);
-    } catch (err) {
-      console.error('Error consultando estado:', err);
+    // Solo traer estado si hay token (usuario autenticado)
+    if (!token) {
+      return;
     }
-  };
+    
+    const fetchEstado = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/suscripcion/estado`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (!res.ok) {
+          console.warn('No se pudo traer estado de suscripción');
+          return;
+        }
+        
+        const data = await res.json();
+        setDiasRestantes(data.diasParaVencer || 0);
+      } catch (err) {
+        console.error('Error consultando estado:', err);
+      }
+    };
 
-  fetchEstado();
-}, []);
+    fetchEstado();
+  }, [token]);
 
   const handleElegirPlan = async (plan) => {
     setLoading(true);
     setError(null);
 
     try {
+      const body = { plan };
+      if (empresaIdParam) {
+        body.empresaId = empresaIdParam; // Pasar empresaId si es nuevo cliente
+      }
+
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${import.meta.env.VITE_API_URL}/suscripcion/elegir-plan`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('agendabot_panel_session')}`,
-        },
-        body: JSON.stringify({ plan }),
+        headers,
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
@@ -100,9 +113,11 @@ export default function ElegirPlan() {
         {/* Header */}
         <div style={styles.header}>
           <h1>Elige tu plan</h1>
-          <p style={styles.subtitle}>
-            Tu período de prueba {diasRestantes && diasRestantes <= 0 ? 'ha vencido' : `vence en ${diasRestantes} días`}
-          </p>
+          {diasRestantes !== null && (
+            <p style={styles.subtitle}>
+              Tu período de prueba {diasRestantes && diasRestantes <= 0 ? 'ha vencido' : `vence en ${diasRestantes} días`}
+            </p>
+          )}
           <p style={styles.description}>
             Selecciona el plan que mejor se ajuste a tu negocio. Puedes cambiar en cualquier momento.
           </p>
