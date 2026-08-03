@@ -35,23 +35,34 @@ export default function ElegirPlan() {
   const [diasRestantes, setDiasRestantes] = useState(null);
 
   useEffect(() => {
-    // Consultar estado de prueba
-    const fetchEstado = async () => {
-      try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/suscripcion/estado`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('agendabot_panel_session')}`,
-          },
-        });
-        const data = await res.json();
-        setDiasRestantes(data.diasParaVencer || 0);
-      } catch (err) {
-        console.error('Error consultando estado:', err);
+  const fetchEstado = async () => {
+    try {
+      const token = localStorage.getItem('agendabot_panel_session');
+      if (!token) {
+        // Sin token, no intentes traer estado
+        return;
       }
-    };
+      
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/suscripcion/estado`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (!res.ok) {
+        console.warn('No se pudo traer estado de suscripción');
+        return;
+      }
+      
+      const data = await res.json();
+      setDiasRestantes(data.diasParaVencer || 0);
+    } catch (err) {
+      console.error('Error consultando estado:', err);
+    }
+  };
 
-    fetchEstado();
-  }, []);
+  fetchEstado();
+}, []);
 
   const handleElegirPlan = async (plan) => {
     setLoading(true);
