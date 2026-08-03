@@ -6,6 +6,7 @@ export default function ConvertirAClienteReal() {
     rubro: '',
     telefonoWhatsApp: '',
     correoContacto: '',
+    password: '',
     sitioWeb: '',
   });
 
@@ -51,6 +52,12 @@ export default function ConvertirAClienteReal() {
       if (!formData.correoContacto.trim()) {
         throw new Error('El correo de contacto es requerido');
       }
+      if (!formData.password.trim()) {
+        throw new Error('La contraseña es requerida');
+      }
+      if (formData.password.length < 8) {
+        throw new Error('La contraseña debe tener al menos 8 caracteres');
+      }
 
       // Validar formato email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -63,6 +70,7 @@ export default function ConvertirAClienteReal() {
         rubro: formData.rubro,
         telefonoWhatsApp: formData.telefonoWhatsApp.trim(),
         correoContacto: formData.correoContacto.trim(),
+        password: formData.password,
         sitioWeb: formData.sitioWeb.trim() || null,
       };
 
@@ -196,6 +204,21 @@ export default function ConvertirAClienteReal() {
             />
           </div>
 
+          {/* Contraseña - NUEVO CAMPO */}
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Contraseña *</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Mínimo 8 caracteres"
+              style={styles.input}
+              required
+            />
+            <p style={styles.hint}>Mínimo 8 caracteres (mayúsculas, minúsculas, números recomendados)</p>
+          </div>
+
           {/* Sitio web (opcional) */}
           <div style={styles.formGroup}>
             <label style={styles.label}>Sitio web (opcional)</label>
@@ -220,7 +243,7 @@ export default function ConvertirAClienteReal() {
               cursor: loading ? 'not-allowed' : 'pointer',
             }}
           >
-            {loading ? 'Creando cuenta...' : 'Continuar a planes de pago'}
+            {loading ? 'Creando cuenta...' : 'Crear cuenta y continuar'}
           </button>
         </form>
 
