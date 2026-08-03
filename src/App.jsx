@@ -20,6 +20,8 @@ import ListaEspera from './pages/admin/ListaEspera';
 import LoginVendedor from './pages/vendedor/LoginVendedor';
 import NuevaDemo from './pages/vendedor/NuevaDemo';
 import MisDemos from './pages/vendedor/MisDemos';
+import ConvertirAClienteReal from './pages/ConvertirAClienteReal';
+import ElegirPlan from './pages/ElegirPlan';
 
 function RaizSegunSesion() {
   const { usuario, cargandoSesion } = useAuth();
@@ -80,7 +82,7 @@ function AppRoutes() {
           </ProtectedRouteVendedor>
         }
       />
-      <Route
+    <Route
         path="/vendedor/mis-demos"
         element={
           <ProtectedRouteVendedor>
@@ -89,7 +91,12 @@ function AppRoutes() {
         }
       />
 
+      <Route path="/convertir-a-cliente-real" element={<ConvertirAClienteReal />} />
+      <Route path="/suscripcion/elegir-plan" element={<ElegirPlan />} />
+
       <Route path="*" element={<Navigate to="/" replace />} />
+
+
     </Routes>
   );
 }
