@@ -17,6 +17,7 @@ import Dashboard from './pages/admin/Dashboard';
 import Clientes from './pages/admin/Clientes';
 import AgendaDia from './pages/admin/AgendaDia';
 import ListaEspera from './pages/admin/ListaEspera';
+import MiPerfil from './pages/admin/MiPerfil';
 import LoginVendedor from './pages/vendedor/LoginVendedor';
 import NuevaDemo from './pages/vendedor/NuevaDemo';
 import MisDemos from './pages/vendedor/MisDemos';
@@ -59,6 +60,7 @@ function AppRoutes() {
         <Route path="productos" element={<Productos />} />
         <Route path="campanas" element={<Campanas />} />
         <Route path="pedidos" element={<PedidosHoy />} />
+        <Route path="mi-perfil" element={<MiPerfil />} />
       </Route>
 
       <Route
