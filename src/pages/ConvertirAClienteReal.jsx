@@ -15,12 +15,12 @@ export default function ConvertirAClienteReal() {
   const [enviando, setEnviando] = useState(false);
 
   const rubros = [
-    'Óptica',
-    'Centro estético',
-    'Salud independiente',
-    'Mantención técnica',
-    'Panadería gourmet',
-    'Otro',
+    { id: 'de229102-0b1d-4ffa-8087-cb39660cfd70', nombre: 'Óptica' },
+    { id: '4df31014-0858-4aa6-bd92-69059082458c', nombre: 'Centro estético' },
+    { id: '264347b4-e8c9-49d8-ae07-775523644ea1', nombre: 'Salud independiente' },
+    { id: 'f26f47ca-7fa3-406a-ba1c-5d2993b64303', nombre: 'Mantención técnica' },
+    { id: '3dddc2a6-77f5-4ceb-ac40-cd8a25d7b043', nombre: 'Otro rubro' },
+    { id: 'f619e6af-bd81-47c1-b0bb-34d02fabf740', nombre: 'Catálogo rotativo' },
   ];
 
   const handleChange = (e) => {
@@ -163,7 +163,7 @@ export default function ConvertirAClienteReal() {
             >
               <option value="">-- Selecciona un rubro --</option>
               {rubros.map(r => (
-                <option key={r} value={r}>{r}</option>
+                <option key={r.id} value={r.id}>{r.nombre}</option>
               ))}
             </select>
           </div>
