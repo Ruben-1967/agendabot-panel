@@ -621,3 +621,129 @@
     text-align: right;
   }
 }
+
+/* ========== HISTORIAL CLÍNICO: CARDS ========== */
+.historial-item-clinico {
+  background: var(--color-fondo-card);
+  border: 1px solid var(--color-arena);
+  border-left: 4px solid var(--color-teal);
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.historial-item-clinico-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-arena);
+}
+
+.historial-item-clinico-header .historial-item-fecha {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-verde-oscuro);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.historial-item-clinico-acciones {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-accion {
+  padding: 6px 14px;
+  background: white;
+  border: 1px solid var(--color-arena);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-verde-oscuro);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-accion:hover:not(:disabled) {
+  background: var(--color-beige);
+  border-color: var(--color-dorado);
+}
+
+.btn-accion-eliminar {
+  color: var(--color-error);
+  border-color: #f5c4c4;
+}
+
+.btn-accion-eliminar:hover:not(:disabled) {
+  background: #fde8e8;
+  border-color: var(--color-error);
+}
+
+.btn-accion:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-cancelar {
+  padding: 10px 16px;
+  background: white;
+  border: 1px solid var(--color-arena);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancelar:hover {
+  background: var(--color-beige);
+}
+
+.historial-item-clinico-body p {
+  font-size: 0.9rem;
+  margin: 0 0 8px 0;
+  color: var(--color-verde-oscuro);
+}
+
+.historial-item-clinico-receta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px;
+  background: white;
+  border: 1px solid var(--color-arena);
+  border-radius: 4px;
+}
+
+.historial-item-clinico-receta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.receta-ojo-label {
+  font-weight: 700;
+  color: var(--color-dorado);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  margin-bottom: 2px;
+}
+
+@media (max-width: 768px) {
+  .historial-item-clinico-receta {
+    grid-template-columns: 1fr;
+  }
+
+  .historial-item-clinico-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

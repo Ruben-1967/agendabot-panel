@@ -626,13 +626,28 @@ function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, onCerra
                           {a.fechaProximaCitaFijada && (
                             <p><strong>Próxima cita:</strong> {formatearFecha(a.fechaProximaCitaFijada)}</p>
                           )}
-                          {a.fichaJson && (obtenerValorAnidado(a.fichaJson, ['od', 'esfera']) !== undefined ||
-                            obtenerValorAnidado(a.fichaJson, ['oi', 'esfera']) !== undefined) && (
-                            <p className="texto-muted">
-                              OD: {obtenerValorAnidado(a.fichaJson, ['od', 'esfera']) ?? '—'} / {' '}
-                              OI: {obtenerValorAnidado(a.fichaJson, ['oi', 'esfera']) ?? '—'}
-                            </p>
-                          )}
+                          <div className="historial-item-clinico-receta">
+                            <div>
+                              <span className="receta-ojo-label">OD</span>
+                              <span>Esf: {obtenerValorAnidado(a.fichaJson, ['od', 'esfera']) ?? '—'}</span>
+                              <span>Cil: {obtenerValorAnidado(a.fichaJson, ['od', 'cilindro']) ?? '—'}</span>
+                              <span>Eje: {obtenerValorAnidado(a.fichaJson, ['od', 'eje']) ?? '—'}</span>
+                              <span>Ad: {obtenerValorAnidado(a.fichaJson, ['od', 'adicion']) ?? '—'}</span>
+                            </div>
+                            <div>
+                              <span className="receta-ojo-label">OI</span>
+                              <span>Esf: {obtenerValorAnidado(a.fichaJson, ['oi', 'esfera']) ?? '—'}</span>
+                              <span>Cil: {obtenerValorAnidado(a.fichaJson, ['oi', 'cilindro']) ?? '—'}</span>
+                              <span>Eje: {obtenerValorAnidado(a.fichaJson, ['oi', 'eje']) ?? '—'}</span>
+                              <span>Ad: {obtenerValorAnidado(a.fichaJson, ['oi', 'adicion']) ?? '—'}</span>
+                            </div>
+                            {obtenerValorAnidado(a.fichaJson, ['dp']) && (
+                              <div>
+                                <span className="receta-ojo-label">DP</span>
+                                <span>{obtenerValorAnidado(a.fichaJson, ['dp'])}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </>
                     )}
