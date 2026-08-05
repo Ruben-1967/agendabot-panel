@@ -181,6 +181,22 @@ export function registrarVenta(token, clienteId, data) {
   return apiFetch(`/clientes/${clienteId}/ventas`, { method: 'POST', body: data, token });
 }
 
+// ---------- Atenciones clínicas (historial versionado) ----------
+export function fetchAtenciones(token, clienteId) {
+  return apiFetch(`/clientes/${clienteId}/atenciones`, { token });
+}
+export function crearAtencion(token, clienteId, data) {
+  return apiFetch(`/clientes/${clienteId}/atenciones`, { method: 'POST', body: data, token });
+}
+export function actualizarAtencion(token, clienteId, atencionId, data) {
+  return apiFetch(`/clientes/${clienteId}/atenciones/${atencionId}`, { method: 'PATCH', body: data, token });
+}
+export function eliminarAtencion(token, clienteId, atencionId) {
+  return apiFetch(`/clientes/${clienteId}/atenciones/${atencionId}`, { method: 'DELETE', token });
+}
+
+
+
 
 // ---------- Vendedores (demos comerciales) ----------
 export function loginVendedor(email, password) {

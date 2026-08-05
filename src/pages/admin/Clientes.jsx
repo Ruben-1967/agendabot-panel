@@ -7,6 +7,10 @@ import {
   crearCliente,
   actualizarCliente,
   registrarVenta,
+  fetchAtenciones,
+  crearAtencion,
+  actualizarAtencion,
+  eliminarAtencion,
 } from '../../api/client';
 import './Clientes.css';
 
@@ -21,9 +25,18 @@ function formatearFechaCorta(iso) {
   return `${d.getDate()} ${['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][d.getMonth()]}`;
 }
 
-function formatearEtiqueta(clave) {
-  const conEspacios = clave.replace(/([A-Z])/g, ' $1');
-  return conEspacios.charAt(0).toUpperCase() + conEspacios.slice(1);
+// Convierte un ISO/Date a "YYYY-MM-DD" para inputs type="date"
+function aFechaInput(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function hoyFechaInput() {
+  return aFechaInput(new Date().toISOString());
 }
 
 function obtenerValorAnidado(obj, path) {
@@ -44,73 +57,191 @@ function setValorAnidado(obj, path, valor) {
   return copia;
 }
 
-function CamposFichaRecursivo({ schema, path, valores, onCambio }) {
-  if (!schema || typeof schema !== 'object') return null;
-
+// ------------------------------------------------------------
+// Formulario reutilizable de una atención clínica (receta OD/OI/DP +
+// diagnóstico + profesional + fecha + próxima cita). Se usa tanto para
+// crear una atención nueva (tab "Ficha clínica") como para editar una
+// existente inline (tab "Historial Clínico").
+// ------------------------------------------------------------
+function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, mostrarFecha = true }) {
   return (
     <>
-      {Object.entries(schema).map(([clave, definicion]) => {
-        const rutaActual = [...path, clave];
-        const rutaId = rutaActual.join('.');
-
-        if (definicion && typeof definicion === 'object' && !Array.isArray(definicion)) {
-          return (
-            <fieldset key={rutaId} className="ficha-subgrupo">
-              <legend>{formatearEtiqueta(clave)}</legend>
-              <div className="ficha-campos">
-                <CamposFichaRecursivo schema={definicion} path={rutaActual} valores={valores} onCambio={onCambio} />
-              </div>
-            </fieldset>
-          );
-        }
-
-        const valorActual = obtenerValorAnidado(valores, rutaActual) ?? '';
-        const tipoInput = definicion === 'number' ? 'number' : definicion === 'date' ? 'date' : 'text';
-
-        return (
-          <label key={rutaId} className="ficha-field">
-            {formatearEtiqueta(clave)}
+      {mostrarFecha && (
+        <div className="ficha-seccion">
+          <label className="ficha-field">
+            <strong>Fecha de esta atención</strong>
             <input
-              type={tipoInput}
-              step={tipoInput === 'number' ? '0.25' : undefined}
-              value={valorActual}
-              onChange={(e) => onCambio(rutaActual, e.target.value)}
+              type="date"
+              value={valores.fecha || ''}
+              onChange={(e) => onCambioCampo('fecha', e.target.value)}
+              required
             />
           </label>
-        );
-      })}
+        </div>
+      )}
+
+      <div className="ficha-seccion">
+        <h4 className="ficha-seccion-titulo">OD (Ojo Derecho)</h4>
+        <div className="ficha-campos-grid">
+          <label className="ficha-field">
+            Esfera
+            <input
+              type="number"
+              step="0.25"
+              value={obtenerValorAnidado(valores.fichaJson, ['od', 'esfera']) ?? ''}
+              onChange={(e) => onCambioFicha(['od', 'esfera'], e.target.value)}
+            />
+          </label>
+          <label className="ficha-field">
+            Cilindro
+            <input
+              type="number"
+              step="0.25"
+              value={obtenerValorAnidado(valores.fichaJson, ['od', 'cilindro']) ?? ''}
+              onChange={(e) => onCambioFicha(['od', 'cilindro'], e.target.value)}
+            />
+          </label>
+          <label className="ficha-field">
+            Eje (°)
+            <input
+              type="number"
+              value={obtenerValorAnidado(valores.fichaJson, ['od', 'eje']) ?? ''}
+              onChange={(e) => onCambioFicha(['od', 'eje'], e.target.value)}
+            />
+          </label>
+          <label className="ficha-field">
+            Adición
+            <input
+              type="number"
+              step="0.25"
+              value={obtenerValorAnidado(valores.fichaJson, ['od', 'adicion']) ?? ''}
+              onChange={(e) => onCambioFicha(['od', 'adicion'], e.target.value)}
+            />
+          </label>
+        </div>
+      </div>
+
+      <div className="ficha-seccion">
+        <h4 className="ficha-seccion-titulo">OI (Ojo Izquierdo)</h4>
+        <div className="ficha-campos-grid">
+          <label className="ficha-field">
+            Esfera
+            <input
+              type="number"
+              step="0.25"
+              value={obtenerValorAnidado(valores.fichaJson, ['oi', 'esfera']) ?? ''}
+              onChange={(e) => onCambioFicha(['oi', 'esfera'], e.target.value)}
+            />
+          </label>
+          <label className="ficha-field">
+            Cilindro
+            <input
+              type="number"
+              step="0.25"
+              value={obtenerValorAnidado(valores.fichaJson, ['oi', 'cilindro']) ?? ''}
+              onChange={(e) => onCambioFicha(['oi', 'cilindro'], e.target.value)}
+            />
+          </label>
+          <label className="ficha-field">
+            Eje (°)
+            <input
+              type="number"
+              value={obtenerValorAnidado(valores.fichaJson, ['oi', 'eje']) ?? ''}
+              onChange={(e) => onCambioFicha(['oi', 'eje'], e.target.value)}
+            />
+          </label>
+          <label className="ficha-field">
+            Adición
+            <input
+              type="number"
+              step="0.25"
+              value={obtenerValorAnidado(valores.fichaJson, ['oi', 'adicion']) ?? ''}
+              onChange={(e) => onCambioFicha(['oi', 'adicion'], e.target.value)}
+            />
+          </label>
+        </div>
+      </div>
+
+      <div className="ficha-seccion">
+        <h4 className="ficha-seccion-titulo">Otros parámetros</h4>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <label className="ficha-field">
+            DP (Distancia Pupilar)
+            <input
+              type="text"
+              placeholder="ej. 64"
+              value={obtenerValorAnidado(valores.fichaJson, ['dp']) ?? ''}
+              onChange={(e) => onCambioFicha(['dp'], e.target.value)}
+            />
+          </label>
+          <label className="ficha-field">
+            Diagnóstico
+            <input
+              type="text"
+              placeholder="ej. Miopía, Hipermetropía"
+              value={valores.diagnostico || ''}
+              onChange={(e) => onCambioCampo('diagnostico', e.target.value)}
+            />
+          </label>
+          <label className="ficha-field">
+            Profesional que lo atendió
+            <input
+              type="text"
+              placeholder="Nombre del profesional"
+              value={valores.profesionalAtendio || ''}
+              onChange={(e) => onCambioCampo('profesionalAtendio', e.target.value)}
+            />
+          </label>
+          <label className="ficha-field">
+            <strong>Fecha próxima cita</strong>
+            <input
+              type="date"
+              value={valores.fechaProximaCitaFijada || ''}
+              onChange={(e) => onCambioCampo('fechaProximaCitaFijada', e.target.value)}
+            />
+          </label>
+        </div>
+      </div>
     </>
   );
 }
 
-function DetalleCliente({
-  clienteId,
-  token,
-  camposFicha,
-  categoriasProductoSugeridas,
-  onCerrar,
-  onCambio,
-}) {
+function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, onCerrar, onCambio }) {
   const [cliente, setCliente] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
-  const [guardando, setGuardando] = useState(false);
   const [tabActiva, setTabActiva] = useState('datos');
 
+  // ---- Tab Datos ----
   const [nombre, setNombre] = useState('');
   const [rut, setRut] = useState('');
   const [telefono, setTelefono] = useState('');
   const [email, setEmail] = useState('');
-  const [fichaValores, setFichaValores] = useState({});
+  const [guardandoDatos, setGuardandoDatos] = useState(false);
 
+  // ---- Tab Atenciones (ventas) ----
   const [descripcionVenta, setDescripcionVenta] = useState('');
   const [montoVenta, setMontoVenta] = useState('');
   const [categoriaVenta, setCategoriaVenta] = useState('');
   const [registrandoVenta, setRegistrandoVenta] = useState(false);
 
-  const [fechaProximaCita, setFechaProximaCita] = useState('');
-  const [profesionalAtendio, setProfesionalAtendio] = useState('');
-  const [diagnostico, setDiagnostico] = useState('');
+  // ---- Tab Ficha clínica (crea una AtencionClinica nueva) ----
+  const [nuevaAtencion, setNuevaAtencion] = useState({
+    fecha: hoyFechaInput(),
+    fichaJson: {},
+    diagnostico: '',
+    profesionalAtendio: '',
+    fechaProximaCitaFijada: '',
+  });
+  const [guardandoAtencion, setGuardandoAtencion] = useState(false);
+
+  // ---- Tab Historial Clínico ----
+  const [atenciones, setAtenciones] = useState([]);
+  const [cargandoAtenciones, setCargandoAtenciones] = useState(false);
+  const [edicionAtencionId, setEdicionAtencionId] = useState(null);
+  const [atencionEnEdicion, setAtencionEnEdicion] = useState(null);
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
+  const [eliminandoId, setEliminandoId] = useState(null);
 
   function cargar() {
     setCargando(true);
@@ -121,47 +252,57 @@ function DetalleCliente({
         setRut(data.cliente.rut || '');
         setTelefono(data.cliente.telefono || '');
         setEmail(data.cliente.email || '');
-        setFichaValores(data.cliente.fichaJson || {});
-        setFechaProximaCita(data.cliente.fechaProximaCita || '');
-        setProfesionalAtendio(data.cliente.profesionalAtendio || '');
-        setDiagnostico(data.cliente.diagnostico || '');
+
+        // Prellenar el formulario de "Ficha clínica" con el último valor
+        // conocido (el caché en Cliente), para que el profesional solo
+        // edite lo que cambió en esta visita.
+        setNuevaAtencion({
+          fecha: hoyFechaInput(),
+          fichaJson: data.cliente.fichaJson || {},
+          diagnostico: data.cliente.diagnostico || '',
+          profesionalAtendio: data.cliente.profesionalAtendio || '',
+          fechaProximaCitaFijada: aFechaInput(data.cliente.fechaProximaCita),
+        });
       })
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
+  }
+
+  function cargarAtenciones() {
+    setCargandoAtenciones(true);
+    fetchAtenciones(token, clienteId)
+      .then((data) => setAtenciones(data.atenciones || []))
+      .catch((err) => setError(err.message))
+      .finally(() => setCargandoAtenciones(false));
   }
 
   useEffect(() => {
     cargar();
   }, [clienteId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function actualizarCampoFicha(path, valor) {
-    setFichaValores((prev) => setValorAnidado(prev, path, valor));
-  }
+  useEffect(() => {
+    if (tabActiva === 'historialClinico') {
+      cargarAtenciones();
+    }
+  }, [tabActiva]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ---- Datos ----
   async function guardarDatos(e) {
     e.preventDefault();
-    setGuardando(true);
+    setGuardandoDatos(true);
     setError('');
     try {
-      await actualizarCliente(token, clienteId, {
-        nombre,
-        rut,
-        telefono,
-        email,
-        fichaJson: fichaValores,
-        fechaProximaCita: fechaProximaCita || null,
-        profesionalAtendio: profesionalAtendio || null,
-        diagnostico: diagnostico || null,
-      });
+      await actualizarCliente(token, clienteId, { nombre, rut, telefono, email });
       cargar();
       onCambio();
     } catch (err) {
       setError(err.message);
     } finally {
-      setGuardando(false);
+      setGuardandoDatos(false);
     }
   }
 
+  // ---- Atenciones (ventas) ----
   async function manejarRegistrarVenta(e) {
     e.preventDefault();
     if (!descripcionVenta.trim() || !montoVenta) return;
@@ -182,6 +323,103 @@ function DetalleCliente({
       setError(err.message);
     } finally {
       setRegistrandoVenta(false);
+    }
+  }
+
+  // ---- Ficha clínica: crear atención nueva ----
+  function actualizarFichaNuevaAtencion(path, valor) {
+    setNuevaAtencion((prev) => ({ ...prev, fichaJson: setValorAnidado(prev.fichaJson, path, valor) }));
+  }
+  function actualizarCampoNuevaAtencion(campo, valor) {
+    setNuevaAtencion((prev) => ({ ...prev, [campo]: valor }));
+  }
+
+  async function guardarNuevaAtencion(e) {
+    e.preventDefault();
+    setGuardandoAtencion(true);
+    setError('');
+    try {
+      await crearAtencion(token, clienteId, {
+        fecha: nuevaAtencion.fecha,
+        fichaJson: nuevaAtencion.fichaJson,
+        diagnostico: nuevaAtencion.diagnostico || null,
+        profesionalAtendio: nuevaAtencion.profesionalAtendio || null,
+        fechaProximaCitaFijada: nuevaAtencion.fechaProximaCitaFijada || null,
+      });
+      cargar();
+      if (tabActiva === 'historialClinico') cargarAtenciones();
+      onCambio();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setGuardandoAtencion(false);
+    }
+  }
+
+  // ---- Historial Clínico: editar / guardar / eliminar por registro ----
+  function iniciarEdicion(atencion) {
+    setEdicionAtencionId(atencion.id);
+    setAtencionEnEdicion({
+      fecha: aFechaInput(atencion.fecha),
+      fichaJson: atencion.fichaJson || {},
+      diagnostico: atencion.diagnostico || '',
+      profesionalAtendio: atencion.profesionalAtendio || '',
+      fechaProximaCitaFijada: aFechaInput(atencion.fechaProximaCitaFijada),
+    });
+  }
+
+  function cancelarEdicion() {
+    setEdicionAtencionId(null);
+    setAtencionEnEdicion(null);
+  }
+
+  function actualizarFichaEdicion(path, valor) {
+    setAtencionEnEdicion((prev) => ({ ...prev, fichaJson: setValorAnidado(prev.fichaJson, path, valor) }));
+  }
+  function actualizarCampoEdicion(campo, valor) {
+    setAtencionEnEdicion((prev) => ({ ...prev, [campo]: valor }));
+  }
+
+  async function guardarEdicion(atencionId) {
+    setGuardandoEdicion(true);
+    setError('');
+    try {
+      await actualizarAtencion(token, clienteId, atencionId, {
+        fecha: atencionEnEdicion.fecha,
+        fichaJson: atencionEnEdicion.fichaJson,
+        diagnostico: atencionEnEdicion.diagnostico || null,
+        profesionalAtendio: atencionEnEdicion.profesionalAtendio || null,
+        fechaProximaCitaFijada: atencionEnEdicion.fechaProximaCitaFijada || null,
+      });
+      cancelarEdicion();
+      cargarAtenciones();
+      cargar();
+      onCambio();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setGuardandoEdicion(false);
+    }
+  }
+
+  async function manejarEliminar(atencion) {
+    const fechaLegible = formatearFecha(atencion.fecha);
+    const confirmado = window.confirm(
+      `¿Eliminar la atención del ${fechaLegible}? Esta acción no se puede deshacer.`
+    );
+    if (!confirmado) return;
+
+    setEliminandoId(atencion.id);
+    setError('');
+    try {
+      await eliminarAtencion(token, clienteId, atencion.id);
+      cargarAtenciones();
+      cargar();
+      onCambio();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setEliminandoId(null);
     }
   }
 
@@ -207,17 +445,24 @@ function DetalleCliente({
         </button>
         <button
           type="button"
-          className={`tab ${tabActiva === 'historial' ? 'active' : ''}`}
-          onClick={() => setTabActiva('historial')}
+          className={`tab ${tabActiva === 'atenciones' ? 'active' : ''}`}
+          onClick={() => setTabActiva('atenciones')}
         >
-          Historial
+          Atenciones
         </button>
         <button
           type="button"
-          className={`tab ${tabActiva === 'ficha' ? 'active' : ''}`}
-          onClick={() => setTabActiva('ficha')}
+          className={`tab ${tabActiva === 'fichaClinica' ? 'active' : ''}`}
+          onClick={() => setTabActiva('fichaClinica')}
         >
-          Ficha
+          Ficha clínica
+        </button>
+        <button
+          type="button"
+          className={`tab ${tabActiva === 'historialClinico' ? 'active' : ''}`}
+          onClick={() => setTabActiva('historialClinico')}
+        >
+          Historial Clínico
         </button>
       </div>
 
@@ -226,42 +471,28 @@ function DetalleCliente({
         <form className="cliente-tab-content" onSubmit={guardarDatos}>
           <div className="form-group">
             <label>Nombre</label>
-            <input
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              required
-            />
+            <input value={nombre} onChange={(e) => setNombre(e.target.value)} required />
           </div>
           <div className="form-group">
             <label>RUT</label>
-            <input
-              value={rut}
-              onChange={(e) => setRut(e.target.value)}
-              placeholder="12345678-9"
-            />
+            <input value={rut} onChange={(e) => setRut(e.target.value)} placeholder="12345678-9" />
           </div>
           <div className="form-group">
             <label>Teléfono</label>
-            <input
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-            />
+            <input value={telefono} onChange={(e) => setTelefono(e.target.value)} />
           </div>
           <div className="form-group">
             <label>Email</label>
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <input value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
-          <button type="submit" disabled={guardando} className="btn-guardar">
-            {guardando ? 'Guardando…' : 'Guardar cambios'}
+          <button type="submit" disabled={guardandoDatos} className="btn-guardar">
+            {guardandoDatos ? 'Guardando…' : 'Guardar cambios'}
           </button>
         </form>
       )}
 
-      {/* TAB: HISTORIAL */}
-      {tabActiva === 'historial' && (
+      {/* TAB: ATENCIONES (ventas) */}
+      {tabActiva === 'atenciones' && (
         <div className="cliente-tab-content">
           <div className="historial-seccion">
             <h4 className="historial-titulo">Nueva venta/atención</h4>
@@ -319,140 +550,98 @@ function DetalleCliente({
         </div>
       )}
 
-      {/* TAB: FICHA */}
-      {tabActiva === 'ficha' && (
-        <form className="cliente-tab-content cliente-ficha-form" onSubmit={guardarDatos}>
-          {/* SECCIÓN: OD */}
-          <div className="ficha-seccion">
-            <h4 className="ficha-seccion-titulo">OD (Ojo Derecho)</h4>
-            <div className="ficha-campos-grid">
-              <label className="ficha-field">
-                Esfera
-                <input
-                  type="number"
-                  step="0.25"
-                  value={obtenerValorAnidado(fichaValores, ['od', 'esfera']) ?? ''}
-                  onChange={(e) => actualizarCampoFicha(['od', 'esfera'], e.target.value)}
-                />
-              </label>
-              <label className="ficha-field">
-                Cilindro
-                <input
-                  type="number"
-                  step="0.25"
-                  value={obtenerValorAnidado(fichaValores, ['od', 'cilindro']) ?? ''}
-                  onChange={(e) => actualizarCampoFicha(['od', 'cilindro'], e.target.value)}
-                />
-              </label>
-              <label className="ficha-field">
-                Eje (°)
-                <input
-                  type="number"
-                  value={obtenerValorAnidado(fichaValores, ['od', 'eje']) ?? ''}
-                  onChange={(e) => actualizarCampoFicha(['od', 'eje'], e.target.value)}
-                />
-              </label>
-              <label className="ficha-field">
-                Adición
-                <input
-                  type="number"
-                  step="0.25"
-                  value={obtenerValorAnidado(fichaValores, ['od', 'adicion']) ?? ''}
-                  onChange={(e) => actualizarCampoFicha(['od', 'adicion'], e.target.value)}
-                />
-              </label>
-            </div>
-          </div>
-
-          {/* SECCIÓN: OI */}
-          <div className="ficha-seccion">
-            <h4 className="ficha-seccion-titulo">OI (Ojo Izquierdo)</h4>
-            <div className="ficha-campos-grid">
-              <label className="ficha-field">
-                Esfera
-                <input
-                  type="number"
-                  step="0.25"
-                  value={obtenerValorAnidado(fichaValores, ['oi', 'esfera']) ?? ''}
-                  onChange={(e) => actualizarCampoFicha(['oi', 'esfera'], e.target.value)}
-                />
-              </label>
-              <label className="ficha-field">
-                Cilindro
-                <input
-                  type="number"
-                  step="0.25"
-                  value={obtenerValorAnidado(fichaValores, ['oi', 'cilindro']) ?? ''}
-                  onChange={(e) => actualizarCampoFicha(['oi', 'cilindro'], e.target.value)}
-                />
-              </label>
-              <label className="ficha-field">
-                Eje (°)
-                <input
-                  type="number"
-                  value={obtenerValorAnidado(fichaValores, ['oi', 'eje']) ?? ''}
-                  onChange={(e) => actualizarCampoFicha(['oi', 'eje'], e.target.value)}
-                />
-              </label>
-              <label className="ficha-field">
-                Adición
-                <input
-                  type="number"
-                  step="0.25"
-                  value={obtenerValorAnidado(fichaValores, ['oi', 'adicion']) ?? ''}
-                  onChange={(e) => actualizarCampoFicha(['oi', 'adicion'], e.target.value)}
-                />
-              </label>
-            </div>
-          </div>
-
-          {/* SECCIÓN: OTROS */}
-          <div className="ficha-seccion">
-            <h4 className="ficha-seccion-titulo">Otros parámetros</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <label className="ficha-field">
-                DP (Distancia Pupilar)
-                <input
-                  type="text"
-                  placeholder="ej. 64"
-                  value={obtenerValorAnidado(fichaValores, ['dp']) ?? ''}
-                  onChange={(e) => actualizarCampoFicha(['dp'], e.target.value)}
-                />
-              </label>
-              <label className="ficha-field">
-                Diagnóstico
-                <input
-                  type="text"
-                  placeholder="ej. Miopía, Hipermetropía"
-                  value={diagnostico}
-                  onChange={(e) => setDiagnostico(e.target.value)}
-                />
-              </label>
-              <label className="ficha-field">
-                Profesional que lo atendió
-                <input
-                  type="text"
-                  placeholder="Nombre del profesional"
-                  value={profesionalAtendio}
-                  onChange={(e) => setProfesionalAtendio(e.target.value)}
-                />
-              </label>
-              <label className="ficha-field">
-                <strong>Fecha próxima cita (Crítica para recordatorios)</strong>
-                <input
-                  type="date"
-                  value={fechaProximaCita}
-                  onChange={(e) => setFechaProximaCita(e.target.value)}
-                  required
-                />
-              </label>
-            </div>
-          </div>
-
-          <button type="submit" disabled={guardando} className="btn-guardar">
-            {guardando ? 'Guardando…' : 'Guardar cambios'}
+      {/* TAB: FICHA CLÍNICA (crea una atención nueva) */}
+      {tabActiva === 'fichaClinica' && (
+        <form className="cliente-tab-content cliente-ficha-form" onSubmit={guardarNuevaAtencion}>
+          <p className="texto-muted" style={{ marginBottom: '12px' }}>
+            Registrar esta atención la agrega como un nuevo registro al Historial Clínico —
+            no sobrescribe atenciones anteriores.
+          </p>
+          <FormularioAtencion
+            valores={nuevaAtencion}
+            onCambioFicha={actualizarFichaNuevaAtencion}
+            onCambioCampo={actualizarCampoNuevaAtencion}
+          />
+          <button type="submit" disabled={guardandoAtencion} className="btn-guardar">
+            {guardandoAtencion ? 'Guardando…' : 'Registrar atención'}
           </button>
         </form>
+      )}
+
+      {/* TAB: HISTORIAL CLÍNICO */}
+      {tabActiva === 'historialClinico' && (
+        <div className="cliente-tab-content">
+          {cargandoAtenciones ? (
+            <p className="texto-muted">Cargando…</p>
+          ) : atenciones.length === 0 ? (
+            <p className="texto-vacio">Sin atenciones registradas todavía.</p>
+          ) : (
+            <div className="historial-items">
+              {atenciones.map((a) => {
+                const enEdicion = edicionAtencionId === a.id;
+                return (
+                  <div key={a.id} className="historial-item-clinico">
+                    {enEdicion ? (
+                      <div className="cliente-ficha-form">
+                        <FormularioAtencion
+                          valores={atencionEnEdicion}
+                          onCambioFicha={actualizarFichaEdicion}
+                          onCambioCampo={actualizarCampoEdicion}
+                        />
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                          <button
+                            type="button"
+                            className="btn-guardar"
+                            disabled={guardandoEdicion}
+                            onClick={() => guardarEdicion(a.id)}
+                          >
+                            {guardandoEdicion ? 'Guardando…' : 'Guardar'}
+                          </button>
+                          <button type="button" className="btn-cancelar" onClick={cancelarEdicion}>
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="historial-item-clinico-header">
+                          <span className="historial-item-fecha">{formatearFecha(a.fecha)}</span>
+                          <div className="historial-item-clinico-acciones">
+                            <button type="button" className="btn-accion" onClick={() => iniciarEdicion(a)}>
+                              Editar
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-accion btn-accion-eliminar"
+                              disabled={eliminandoId === a.id}
+                              onClick={() => manejarEliminar(a)}
+                            >
+                              {eliminandoId === a.id ? 'Eliminando…' : 'Eliminar'}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="historial-item-clinico-body">
+                          {a.diagnostico && <p><strong>Diagnóstico:</strong> {a.diagnostico}</p>}
+                          {a.profesionalAtendio && <p><strong>Profesional:</strong> {a.profesionalAtendio}</p>}
+                          {a.fechaProximaCitaFijada && (
+                            <p><strong>Próxima cita:</strong> {formatearFecha(a.fechaProximaCitaFijada)}</p>
+                          )}
+                          {a.fichaJson && (obtenerValorAnidado(a.fichaJson, ['od', 'esfera']) !== undefined ||
+                            obtenerValorAnidado(a.fichaJson, ['oi', 'esfera']) !== undefined) && (
+                            <p className="texto-muted">
+                              OD: {obtenerValorAnidado(a.fichaJson, ['od', 'esfera']) ?? '—'} / {' '}
+                              OI: {obtenerValorAnidado(a.fichaJson, ['oi', 'esfera']) ?? '—'}
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
@@ -461,10 +650,7 @@ function DetalleCliente({
 export default function Clientes() {
   const { token } = useAuth();
   const [clientes, setClientes] = useState([]);
-  const [config, setConfig] = useState({
-    camposFicha: {},
-    categoriasProductoSugeridas: [],
-  });
+  const [categoriasProductoSugeridas, setCategoriasProductoSugeridas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState(null);
@@ -479,7 +665,7 @@ export default function Clientes() {
     Promise.all([fetchClientes(token), fetchConfigClientes(token)])
       .then(([dataClientes, dataConfig]) => {
         setClientes(dataClientes.clientes);
-        setConfig(dataConfig);
+        setCategoriasProductoSugeridas(dataConfig.categoriasProductoSugeridas || []);
       })
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
@@ -521,8 +707,7 @@ export default function Clientes() {
           <span className="clientes-titulo-clientes">Clientes</span>
         </h1>
         <p className="clientes-sub">
-          Carga y administra fichas de pacientes/clientes, y registra ventas
-          para segmentar campañas.
+          Carga y administra fichas de pacientes/clientes, y registra ventas y atenciones clínicas.
         </p>
       </div>
 
@@ -567,9 +752,7 @@ export default function Clientes() {
                   <h3 className="cliente-card-nombre">{c.nombre}</h3>
                   <p className="cliente-card-meta">
                     Última visita:{' '}
-                    {c.ultimaCompraFecha
-                      ? formatearFechaCorta(c.ultimaCompraFecha)
-                      : '—'}
+                    {c.ultimaCompraFecha ? formatearFechaCorta(c.ultimaCompraFecha) : '—'}
                   </p>
                   {c.numVentas > 0 && (
                     <span className="cliente-card-badge">
@@ -592,8 +775,7 @@ export default function Clientes() {
         <DetalleCliente
           clienteId={clienteSeleccionadoId}
           token={token}
-          camposFicha={config.camposFicha}
-          categoriasProductoSugeridas={config.categoriasProductoSugeridas}
+          categoriasProductoSugeridas={categoriasProductoSugeridas}
           onCerrar={() => setClienteSeleccionadoId(null)}
           onCambio={cargar}
         />
