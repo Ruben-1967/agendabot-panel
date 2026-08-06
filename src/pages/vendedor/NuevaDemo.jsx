@@ -1,17 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVendedorAuth } from '../../context/VendedorAuthContext';
-import { crearProspectoDemo } from '../../api/client';
+import { crearProspectoDemo, fetchRubrosDemo } from '../../api/client';
 import './vendedor.css';
-
-const OPCIONES_RUBRO = [
-  { valor: 'OPTICA', etiqueta: 'Óptica' },
-  { valor: 'ESTETICA', etiqueta: 'Centro estético' },
-  { valor: 'SALUD', etiqueta: 'Salud independiente' },
-  { valor: 'MANTENCION', etiqueta: 'Mantención técnica' },
-  { valor: 'PROACTIVO', etiqueta: 'Venta proactiva (panadería, rotisería, taller, etc.)' },
-  { valor: 'OTRO', etiqueta: 'Otro' },
-];
 
 const OPCIONES_PAIS = [
   { valor: 'CL', etiqueta: '🇨🇱 +56' },
@@ -26,16 +17,27 @@ export default function NuevaDemo() {
   const { token } = useVendedorAuth();
   const navigate = useNavigate();
 
+  const [rubros, setRubros] = useState([]);
+  const [cargandoRubros, setCargandoRubros] = useState(true);
+  const [errorRubros, setErrorRubros] = useState('');
+
   const [nombreNegocio, setNombreNegocio] = useState('');
   const [telefono, setTelefono] = useState('');
   const [paisTelefono, setPaisTelefono] = useState('CL');
   const [nombreEncargado, setNombreEncargado] = useState('');
-  const [rubro, setRubro] = useState('');
+  const [claveRubro, setClaveRubro] = useState('');
   const [sitioWeb, setSitioWeb] = useState('');
 
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
   const [resultado, setResultado] = useState(null);
+
+  useEffect(() => {
+    fetchRubrosDemo(token)
+      .then((data) => setRubros(data.rubros || []))
+      .catch((err) => setErrorRubros(err.message || 'No se pudieron cargar los rubros'))
+      .finally(() => setCargandoRubros(false));
+  }, [token]);
 
   async function manejarSubmit(e) {
     e.preventDefault();
@@ -49,7 +51,7 @@ export default function NuevaDemo() {
         telefono: telefono.trim(),
         paisTelefono,
         nombreEncargado: nombreEncargado.trim(),
-        rubro,
+        claveRubro,
         sitioWeb: sitioWeb.trim() || undefined,
       });
       setResultado(data);
@@ -57,7 +59,7 @@ export default function NuevaDemo() {
       setTelefono('');
       setPaisTelefono('CL');
       setNombreEncargado('');
-      setRubro('');
+      setClaveRubro('');
       setSitioWeb('');
     } catch (err) {
       setError(err.message || 'No se pudo crear la demo');
@@ -86,12 +88,20 @@ export default function NuevaDemo() {
 
             <label>
               Rubro
-              <select value={rubro} onChange={(e) => setRubro(e.target.value)} required>
-                <option value="" disabled>Selecciona un rubro</option>
-                {OPCIONES_RUBRO.map((o) => (
-                  <option key={o.valor} value={o.valor}>{o.etiqueta}</option>
+              <select
+                value={claveRubro}
+                onChange={(e) => setClaveRubro(e.target.value)}
+                required
+                disabled={cargandoRubros || rubros.length === 0}
+              >
+                <option value="" disabled>
+                  {cargandoRubros ? 'Cargando rubros…' : 'Selecciona un rubro'}
+                </option>
+                {rubros.map((r) => (
+                  <option key={r.clave} value={r.clave}>{r.nombre}</option>
                 ))}
               </select>
+              {errorRubros && <p className="login-error">{errorRubros}</p>}
             </label>
 
             <label>
@@ -141,7 +151,7 @@ export default function NuevaDemo() {
           {resultado && (
             <div className="aviso-exito-whatsapp">
               <b>✅ {resultado.mensaje}</b>
-              Ya puede llamar al número de demo{resultado.productosCreados > 0 ? ` — cargamos ${resultado.productosCreados} productos desde su sitio web` : ''}.
+              Ya puede llamar al número de demo{resultado.productosCreados > 0 ? ` — se cargó un catálogo de ${resultado.productosCreados} productos` : ''}.
             </div>
           )}
 

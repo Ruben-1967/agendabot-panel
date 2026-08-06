@@ -213,4 +213,8 @@ export function eliminarProspectoDemo(token, id) {
   return apiFetch(`/demos/prospectos/${id}`, { method: 'DELETE', token, tipoSesion: 'vendedor' });
 }
 
+export function fetchRubrosDemo(token) {
+  return apiFetch('/demos/rubros', { token, tipoSesion: 'vendedor' });
+}
+
 export { API_URL };
