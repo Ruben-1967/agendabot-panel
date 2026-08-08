@@ -372,11 +372,11 @@
   display: none;
 }
 
-.agenda-layout.detalle-abierto .mobile-overlay {
-  display: block;
-}
-
 @media (max-width: 1200px) {
+  .agenda-layout.detalle-abierto .mobile-overlay {
+    display: block;
+  }
+
   .agenda-layout {
     grid-template-columns: 1fr;
     gap: 16px;

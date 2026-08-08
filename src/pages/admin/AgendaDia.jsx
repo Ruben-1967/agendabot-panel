@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { useAuth } from '../../context/AuthContext';
 import CalendarPickerModal from '../../components/CalendarPickerModal';
 import { API_URL } from '../../api/client';
@@ -12,6 +13,7 @@ export default function AgendaDia() {
   const [error, setError] = useState(null);
   const [citaSeleccionada, setCitaSeleccionada] = useState(null);
   const [accionando, setAccionando] = useState(false);
+  const [avisoWhatsApp, setAvisoWhatsApp] = useState(null); // { telefono, nombre, servicio, hora } de la �ltima cita cancelada
   
   // Estados para CalendarPickerModal (reagendamiento)
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -21,31 +23,37 @@ export default function AgendaDia() {
     if (token) cargarAgenda();
   }, [token]);
 
-  const cargarAgenda = async () => {
+const cargarAgenda = async () => {
+    await cargarAgendaYDevolver();
+  };
+
+  const cargarAgendaYDevolver = async () => {
     try {
       setLoading(true);
       setError(null);
       const empresaId = usuario?.empresaId;
       if (!empresaId) {
-        throw new Error('No hay empresaId en la sesiÃ³n');
+        throw new Error('No hay empresaId en la sesión');
       }
-      
-     const res = await fetch(
+
+      const res = await fetch(
         `${API_URL}/agenda/dashboard/${empresaId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      
+
       if (!res.ok) {
         throw new Error(`Error ${res.status}: No se pudo cargar la agenda`);
       }
-      
+
       const data = await res.json();
       setCitas(data.agendaHoy || []);
+      return data;
     } catch (err) {
       console.error('Error cargando agenda:', err);
       setError(err.message);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -74,10 +82,24 @@ export default function AgendaDia() {
     canceladas: citas.filter(c => c.estado === 'CANCELADA').length,
   };
 
+ // Construye el link wa.me con el mensaje pre-cargado (editable por el
+  // staff antes de enviar � no requiere plantilla aprobada de Meta porque
+  // el env�o lo hace una persona, no la API).
+  function construirLinkWhatsApp({ telefono, nombre, servicio, hora }) {
+    if (!telefono) return null;
+    const numero = parsePhoneNumberFromString(telefono, 'CL');
+    if (!numero || !numero.isValid()) return null;
+
+    const mensaje = `Hola ${nombre || ''}, te escribimos de ${usuario?.empresaNombre || 'nuestro negocio'}. Lamentablemente debemos cancelar tu cita${servicio ? ` de ${servicio}` : ''} agendada para hoy a las ${hora}. [agrega aqu� el motivo antes de enviar] �Te gustar�a reagendar para otro d�a?`;
+
+    const numeroSinMas = numero.number.replace('+', '');
+    return `https://wa.me/${numeroSinMas}?text=${encodeURIComponent(mensaje)}`;
+  }
+
   // Cambiar estado de cita
-  const cambiarEstado = async (nuevoEstado) => {
+  const cambiarEstado = async (nuevoEstado, mantenerSeleccion = false) => {
     if (!citaSeleccionada) return;
-    
+
     setAccionando(true);
     try {
       const res = await fetch(
@@ -91,11 +113,27 @@ export default function AgendaDia() {
           body: JSON.stringify({ estado: nuevoEstado }),
         }
       );
-      
+
       if (!res.ok) throw new Error('Error actualizando estado');
-      
-      await cargarAgenda();
-      setCitaSeleccionada(null);
+
+  if (nuevoEstado === 'CANCELADA') {
+        setAvisoWhatsApp({
+          telefono: citaSeleccionada.telefono,
+          nombre: citaSeleccionada.nombre,
+          servicio: citaSeleccionada.servicio,
+          hora: citaSeleccionada.hora,
+        });
+      }
+
+      const citaIdActual = citaSeleccionada.id;
+      const data = await cargarAgendaYDevolver();
+      if (!mantenerSeleccion) {
+        setCitaSeleccionada(null);
+      } else {
+        const actualizada = (data?.agendaHoy || []).find((c) => c.id === citaIdActual);
+        setCitaSeleccionada(actualizada || null);
+      }
+
     } catch (err) {
       alert(`Error: ${err.message}`);
     } finally {
@@ -108,20 +146,20 @@ export default function AgendaDia() {
     await cambiarEstado('CONFIRMADA');
   };
 
-  // Completar cita (marcar como asistiÃ³)
+  // Completar cita (marcar como asistió)
   const handleCompletar = async () => {
     await cambiarEstado('COMPLETADA');
   };
 
-  // Cancelar cita
+// Cancelar cita � mantiene el panel abierto para mostrar el aviso de WhatsApp
   const handleCancelar = async () => {
-    if (!window.confirm('Â¿Confirmas que deseas cancelar esta cita?')) return;
-    await cambiarEstado('CANCELADA');
+    if (!window.confirm('¿Confirmas que deseas cancelar esta cita?')) return;
+    await cambiarEstado('CANCELADA', true);
   };
 
-  // Marcar como no asistiÃ³
+  // Marcar como no asistió
   const handleNoAsistio = async () => {
-    if (!window.confirm('Â¿Marcar como no asistiÃ³?')) return;
+    if (!window.confirm('¿Marcar como no asistió?')) return;
     await cambiarEstado('NO_ASISTIO');
   };
 
@@ -171,7 +209,7 @@ export default function AgendaDia() {
   // Obtener fecha de hoy formateada
   const obtenerFecha = () => {
     const hoy = new Date();
-    const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const diasSemana = ['domingo', 'lunes', 'martes', 'mi�rcoles', 'jueves', 'viernes', 's�bado'];
     const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
     const diaSemana = diasSemana[hoy.getDay()];
     const dia = hoy.getDate();
@@ -196,7 +234,7 @@ export default function AgendaDia() {
     return (
       <div className="agenda-container">
         <div className="agenda-header">
-          <h1>Agenda del <span className="highlight">día</span></h1>
+          <h1>Agenda del <span className="highlight">d�a</span></h1>
           <p className="fecha">{obtenerFecha()}</p>
         </div>
         <div className="citas-loading">
@@ -213,7 +251,7 @@ export default function AgendaDia() {
     return (
       <div className="agenda-container">
         <div className="agenda-header">
-          <h1>Agenda del <span className="highlight">dÃ­a</span></h1>
+          <h1>Agenda del <span className="highlight">día</span></h1>
           <p className="fecha">{obtenerFecha()}</p>
         </div>
         <div className="error-box">
@@ -227,7 +265,7 @@ export default function AgendaDia() {
   return (
     <div className="agenda-container">
       <div className="agenda-header">
-        <h1>Agenda del <span className="highlight">dÃ­a</span></h1>
+        <h1>Agenda del <span className="highlight">día</span></h1>
         <p className="fecha">{obtenerFecha()}</p>
       </div>
 
@@ -265,7 +303,7 @@ export default function AgendaDia() {
         </button>
       </div>
 
-      {/* Layout 2-col (desktop) / 1-col (mÃ³vil) */}
+      {/* Layout 2-col (desktop) / 1-col (móvil) */}
 <div className={`agenda-layout ${citaSeleccionada ? 'detalle-abierto' : ''}`}>
   {citaSeleccionada && <div className="mobile-overlay" onClick={() => setCitaSeleccionada(null)} />}
   {/* LISTA IZQUIERDA */}
@@ -285,7 +323,7 @@ export default function AgendaDia() {
                   <div className="cita-hora">{cita.hora}</div>
                   <div className="cita-info">
                     <div className="cita-nombre">{cita.nombre}</div>
-                    <div className="cita-detalle">{cita.profesional || 'Sin asignar'} Â· {cita.servicio}</div>
+                    <div className="cita-detalle">{cita.profesional || 'Sin asignar'} · {cita.servicio}</div>
                   </div>
                   <div className={`badge badge-${getClaseEstado(cita.estado)}`}>
                     {cita.estado.toLowerCase()}
@@ -321,7 +359,7 @@ export default function AgendaDia() {
                 </div>
 
                 <div className="detail-row">
-                  <span className="detail-label">TelÃ©fono</span>
+                  <span className="detail-label">Teléfono</span>
                   <span className="detail-value">{citaSeleccionada.telefono || 'No registrado'}</span>
                 </div>
 
@@ -338,7 +376,7 @@ export default function AgendaDia() {
                 </div>
               </div>
 
-              {/* Botones de acciÃ³n */}
+              {/* Botones de acción */}
               <div className="sheet-actions">
                 {citaSeleccionada.estado === 'PENDIENTE' && (
                   <button
@@ -346,7 +384,7 @@ export default function AgendaDia() {
                     onClick={handleConfirmar}
                     disabled={accionando}
                   >
-                    âœ“ Confirmar cita
+                    ✓ Confirmar cita
                   </button>
                 )}
 
@@ -357,26 +395,26 @@ export default function AgendaDia() {
                       onClick={handleCompletar}
                       disabled={accionando}
                     >
-                      âœ“ Marcar como completada
+                      ✓ Marcar como completada
                     </button>
                     <button
                       className="btn btn-warning"
                       onClick={handleNoAsistio}
                       disabled={accionando}
                     >
-                      âœ— No asistiÃ³
+                      ✗ No asistió
                     </button>
                   </>
                 )}
 
-                {citaSeleccionada.estado !== 'CANCELADA' && (
+               {citaSeleccionada.estado !== 'CANCELADA' && (
                   <>
                     <button
                       className="btn btn-secondary"
                       onClick={handleReagendar}
                       disabled={accionando}
                     >
-                      â†» Reagendar para otro dÃ­a
+                      ↻ Reagendar para otro d�a
                     </button>
 
                     <button
@@ -384,9 +422,27 @@ export default function AgendaDia() {
                       onClick={handleCancelar}
                       disabled={accionando}
                     >
-                      âœ• Cancelar cita
+                      ✕ Cancelar cita
                     </button>
                   </>
+                )}
+
+             {citaSeleccionada.estado === 'CANCELADA' && avisoWhatsApp && (
+                  (() => {
+                    const link = construirLinkWhatsApp(avisoWhatsApp);
+                    return link ? (
+                      <a
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-primary"
+                      >
+                        Avisar por WhatsApp
+                      </a>
+                    ) : (
+                      <p className="texto-muted">No se pudo generar el link de WhatsApp (tel�fono no registrado o inv�lido).</p>
+                    );
+                  })()
                 )}
               </div>
             </>
