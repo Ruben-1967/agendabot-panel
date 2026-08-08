@@ -23,6 +23,7 @@ export default function AdminLayout() {
             <>
               <NavLink to="/admin/agenda">Agenda del día</NavLink>
               <NavLink to="/admin/configuracion-agenda">Configuración de agenda</NavLink>
+              <NavLink to="/admin/profesionales">Profesionales</NavLink>
               <NavLink to="/admin/informacion-negocio">Información del negocio</NavLink>
               <NavLink to="/admin/clientes">Pacientes / Clientes</NavLink>
               {/* <NavLink to="/admin/campanas">Campañas</NavLink> */}

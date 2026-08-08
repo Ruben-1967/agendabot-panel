@@ -12,6 +12,7 @@ import Productos from './pages/admin/Productos';
 import Campanas from './pages/admin/Campanas';
 import PedidosHoy from './pages/admin/PedidosHoy';
 import ConfiguracionAgenda from './pages/admin/ConfiguracionAgenda';
+import GestionProfesionales from './pages/admin/GestionProfesionales';
 import InformacionNegocio from './pages/admin/InformacionNegocio';
 import Dashboard from './pages/admin/Dashboard';
 import Clientes from './pages/admin/Clientes';
@@ -54,6 +55,7 @@ function AppRoutes() {
         <Route index element={<Dashboard />} />
         <Route path="agenda" element={<AgendaDia />} />
         <Route path="configuracion-agenda" element={<ConfiguracionAgenda />} />
+        <Route path="profesionales" element={<GestionProfesionales />} />
         <Route path="informacion-negocio" element={<InformacionNegocio />} />
         <Route path="clientes" element={<Clientes />} />
         <Route path="lista-espera" element={<ListaEspera />} />

@@ -1,0 +1,99 @@
+.barra-limite-profesionales {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.btn-agregar-profesional {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  background: var(--brass);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.84rem;
+  white-space: nowrap;
+}
+
+.btn-agregar-profesional:hover {
+  background: #A3762F;
+}
+
+.aviso-upsell {
+  background: var(--brass-soft);
+  border: 1px solid #E0C89A;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.83rem;
+  color: #5C4A2E;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.acciones-form-profesional {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.lista-profesionales {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tarjeta-profesional {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+
+.tarjeta-profesional-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tarjeta-profesional-info strong {
+  color: var(--teal-deep);
+  font-size: 0.98rem;
+}
+
+.link-upsell {
+  color: #5C4A2E;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.tarjeta-profesional-wrap {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.tarjeta-profesional-wrap .tarjeta-profesional {
+  background: none;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.tarjeta-profesional-derecha {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.editor-horario-tarjeta {
+  border-top: 1px solid var(--line);
+  padding: 16px 20px;
+}

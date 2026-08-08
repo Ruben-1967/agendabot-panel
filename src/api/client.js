@@ -131,9 +131,11 @@ export function fetchAgenda(token) {
 export function guardarRecurso(token, data) {
   return apiFetch('/agenda/recurso', { method: 'PUT', body: data, token });
 }
-export function guardarHorarios(token, bloques) {
-  return apiFetch('/agenda/horarios', { method: 'PUT', body: { bloques }, token });
+
+export function guardarHorarios(token, bloques, recursoId) {
+  return apiFetch('/agenda/horarios', { method: 'PUT', body: { bloques, recursoId }, token });
 }
+
 export function crearBloqueo(token, data) {
   return apiFetch('/agenda/bloqueos', { method: 'POST', body: data, token });
 }
@@ -144,6 +146,14 @@ export function eliminarBloqueo(token, id) {
 // ---------- Agenda: Dashboard ----------
 export function fetchDashboard(token, empresaId) {
   return apiFetch(`/agenda/dashboard/${empresaId}`, { token });
+}
+
+// ---------- Agenda: multi-profesional ----------
+export function fetchProfesionales(token) {
+  return apiFetch('/agenda/profesionales', { token });
+}
+export function crearProfesional(token, data) {
+  return apiFetch('/agenda/profesionales', { method: 'POST', body: data, token });
 }
 
 // ---------- Servicios ----------
