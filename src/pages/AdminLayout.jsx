@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 export default function AdminLayout() {
   const { usuario, cerrarSesion } = useAuth();
   const esCatalogoRotativo = usuario?.empresaModoOperacion === 'CATALOGO_ROTATIVO';
+  const ocultarConfiguracionAgenda = usuario?.plan === 'PLAN_B' || usuario?.plan === 'PLAN_C';
 
   return (
     <div className="layout">
@@ -22,7 +23,9 @@ export default function AdminLayout() {
           ) : (
             <>
               <NavLink to="/admin/agenda">Agenda del día</NavLink>
-              <NavLink to="/admin/configuracion-agenda">Configuración de agenda</NavLink>
+              {!ocultarConfiguracionAgenda && (
+                <NavLink to="/admin/configuracion-agenda">Configuración de agenda</NavLink>
+              )}
               <NavLink to="/admin/profesionales">Profesionales</NavLink>
               <NavLink to="/admin/informacion-negocio">Información del negocio</NavLink>
               <NavLink to="/admin/clientes">Pacientes / Clientes</NavLink>
