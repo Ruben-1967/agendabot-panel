@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { fetchDashboard } from '../../api/client';
+import { fetchDashboard, fetchProfesionales } from '../../api/client';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -8,6 +8,17 @@ export default function Dashboard() {
   const [datos, setDatos] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
+  const [profesionales, setProfesionales] = useState([]);
+  const [recursoFiltro, setRecursoFiltro] = useState('');
+
+  // Cargar la lista de profesionales una sola vez, para saber si mostrar
+  // el selector (solo tiene sentido con más de uno).
+  useEffect(() => {
+    if (!token) return;
+    fetchProfesionales(token)
+      .then((data) => setProfesionales(data.profesionales || []))
+      .catch(() => {}); // si falla, simplemente no se muestra el selector
+  }, [token]);
 
   useEffect(() => {
     if (!token || !usuario?.empresaId) {
@@ -16,11 +27,12 @@ export default function Dashboard() {
       return;
     }
 
-    fetchDashboard(token, usuario.empresaId)
+    setCargando(true);
+    fetchDashboard(token, usuario.empresaId, recursoFiltro || undefined)
       .then(setDatos)
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
-  }, [token, usuario?.empresaId]);
+  }, [token, usuario?.empresaId, recursoFiltro]);
 
   if (error) {
     return <div className="dashboard-error">Error: {error}</div>;
@@ -48,11 +60,23 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-container">
-      <div className="dashboard-header">
+   <div className="dashboard-header">
         <h1>Hola, {usuario?.empresaNombre || 'equipo'}</h1>
         <p className="dashboard-header-sub">
           Hoy · {fechaFormato}
         </p>
+        {profesionales.length > 1 && (
+          <select
+            className="dashboard-filtro-profesional"
+            value={recursoFiltro}
+            onChange={(e) => setRecursoFiltro(e.target.value)}
+          >
+            <option value="">Todos los profesionales</option>
+            {profesionales.map((p) => (
+              <option key={p.id} value={p.id}>{p.nombre}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* 4 tarjetas KPI */}

@@ -144,8 +144,9 @@ export function eliminarBloqueo(token, id) {
 }
 
 // ---------- Agenda: Dashboard ----------
-export function fetchDashboard(token, empresaId) {
-  return apiFetch(`/agenda/dashboard/${empresaId}`, { token });
+export function fetchDashboard(token, empresaId, recursoId) {
+  const query = recursoId ? `?recursoId=${recursoId}` : '';
+  return apiFetch(`/agenda/dashboard/${empresaId}${query}`, { token });
 }
 
 // ---------- Agenda: multi-profesional ----------
