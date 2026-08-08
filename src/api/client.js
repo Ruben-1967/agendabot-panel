@@ -155,6 +155,9 @@ export function fetchProfesionales(token) {
 export function crearProfesional(token, data) {
   return apiFetch('/agenda/profesionales', { method: 'POST', body: data, token });
 }
+export function actualizarProfesional(token, id, data) {
+  return apiFetch(`/agenda/profesionales/${id}`, { method: 'PATCH', body: data, token });
+}
 
 // ---------- Servicios ----------
 export function fetchServicios(token) {

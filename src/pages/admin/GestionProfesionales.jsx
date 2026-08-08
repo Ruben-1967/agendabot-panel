@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import EditorHorario from '../../components/EditorHorario';
 import Bloqueos from '../../components/Bloqueos';
 import Servicios from '../../components/Servicios';
-import { fetchProfesionales, crearProfesional, fetchServicios } from '../../api/client';
+import { fetchProfesionales, crearProfesional, actualizarProfesional, fetchServicios } from '../../api/client';
 
 const NOMBRES_DIAS_CORTO = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
@@ -68,6 +68,68 @@ function FormNuevoProfesional({ token, onCreado, onUpsell, onCancelar }) {
   );
 }
 
+function DatosBaseProfesional({ profesional, token, onCambio, setError }) {
+  const [editando, setEditando] = useState(false);
+  const [nombre, setNombre] = useState(profesional.nombre);
+  const [duracion, setDuracion] = useState(profesional.duracionCitaMinutos);
+  const [anticipacion, setAnticipacion] = useState(profesional.anticipacionMinimaMin);
+  const [horizonte, setHorizonte] = useState(profesional.horizonteAgendaDias);
+  const [guardando, setGuardando] = useState(false);
+
+  async function guardar(e) {
+    e.preventDefault();
+    setGuardando(true);
+    setError('');
+    try {
+      await actualizarProfesional(token, profesional.id, {
+        nombre,
+        duracionCitaMinutos: Number(duracion),
+        anticipacionMinimaMin: Number(anticipacion),
+        horizonteAgendaDias: Number(horizonte),
+      });
+      setEditando(false);
+      await onCambio();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  if (!editando) {
+    return (
+      <button type="button" className="btn-link" onClick={(e) => { e.stopPropagation(); setEditando(true); }}>
+        Editar datos básicos
+      </button>
+    );
+  }
+
+  return (
+    <form className="form-campana" onClick={(e) => e.stopPropagation()} onSubmit={guardar}>
+      <label>
+        Nombre
+        <input value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+      </label>
+      <label>
+        Duración de cada cita (minutos)
+        <input type="number" min="5" value={duracion} onChange={(e) => setDuracion(e.target.value)} required />
+      </label>
+      <label>
+        Anticipación mínima para agendar (minutos antes)
+        <input type="number" min="0" value={anticipacion} onChange={(e) => setAnticipacion(e.target.value)} />
+      </label>
+      <label>
+        Horizonte de agenda (días hacia adelante)
+        <input type="number" min="1" value={horizonte} onChange={(e) => setHorizonte(e.target.value)} />
+      </label>
+      <div className="acciones-form-profesional">
+        <button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar cambios'}</button>
+        <button type="button" className="btn-link" onClick={() => setEditando(false)} disabled={guardando}>Cancelar</button>
+      </div>
+    </form>
+  );
+}
+
 function TarjetaProfesional({ profesional, token, onCambio, setError, expandido, onToggle }) {
   return (
     <div className="tarjeta-profesional-wrap">
@@ -85,8 +147,10 @@ function TarjetaProfesional({ profesional, token, onCambio, setError, expandido,
           <span className="btn-link">{expandido ? 'Ocultar horario' : 'Editar horario'}</span>
         </div>
       </div>
-    {expandido && (
+      {expandido && (
         <div className="editor-horario-tarjeta">
+          <h3 className="subtitulo-tarjeta">Datos básicos</h3>
+          <DatosBaseProfesional profesional={profesional} token={token} onCambio={onCambio} setError={setError} />
           <h3 className="subtitulo-tarjeta">Horario semanal</h3>
           <EditorHorario
             horarios={profesional.horarios}
