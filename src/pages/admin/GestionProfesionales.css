@@ -97,3 +97,13 @@
   border-top: 1px solid var(--line);
   padding: 16px 20px;
 }
+
+.subtitulo-tarjeta {
+  font-size: 0.9rem;
+  margin: 18px 0 10px;
+  color: var(--muted);
+}
+
+.subtitulo-tarjeta:first-child {
+  margin-top: 0;
+}

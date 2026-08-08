@@ -2,15 +2,13 @@ import { useEffect, useState } from 'react';
 import './ConfiguracionAgenda.css';
 import { useAuth } from '../../context/AuthContext';
 import EditorHorario from '../../components/EditorHorario';
+import Servicios from '../../components/Servicios';
 import {
   fetchAgenda,
   guardarRecurso,
   crearBloqueo,
   eliminarBloqueo,
   fetchServicios,
-  crearServicio,
-  actualizarServicio,
-  eliminarServicio,
 } from '../../api/client';
 
 const NOMBRES_DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -141,153 +139,7 @@ function Bloqueos({ bloqueos, token, onCambio, setError }) {
   );
 }
 
-// ------------------------------------------------------------
-// Servicios (tipos de atención que ofrece la empresa)
-// ------------------------------------------------------------
-function Servicios({ servicios, token, onCambio, setError }) {
-  const [nombre, setNombre] = useState('');
-  const [duracionMinutos, setDuracionMinutos] = useState('');
-  const [guardando, setGuardando] = useState(false);
 
-  // Edición inline: id del servicio que se está editando ahora mismo (null
-  // si ninguno), y sus valores en edición.
-  const [editandoId, setEditandoId] = useState(null);
-  const [nombreEdicion, setNombreEdicion] = useState('');
-  const [duracionEdicion, setDuracionEdicion] = useState('');
-  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
-
-  async function manejarCrear(e) {
-    e.preventDefault();
-    if (!nombre.trim()) return;
-    setGuardando(true);
-    setError('');
-    try {
-      await crearServicio(token, { nombre, duracionMinutos: duracionMinutos ? Number(duracionMinutos) : null });
-      setNombre('');
-      setDuracionMinutos('');
-      await onCambio();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setGuardando(false);
-    }
-  }
-
-  async function alternarActivo(servicio) {
-    try {
-      await actualizarServicio(token, servicio.id, { activo: !servicio.activo });
-      await onCambio();
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  async function eliminar(servicio) {
-    if (!confirm(`¿Eliminar "${servicio.nombre}"?`)) return;
-    try {
-      await eliminarServicio(token, servicio.id);
-      await onCambio();
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  function comenzarEdicion(servicio) {
-    setEditandoId(servicio.id);
-    setNombreEdicion(servicio.nombre);
-    setDuracionEdicion(servicio.duracionMinutos ?? '');
-  }
-
-  function cancelarEdicion() {
-    setEditandoId(null);
-    setNombreEdicion('');
-    setDuracionEdicion('');
-  }
-
-  async function guardarEdicion(servicio) {
-    if (!nombreEdicion.trim()) return;
-    setGuardandoEdicion(true);
-    setError('');
-    try {
-      await actualizarServicio(token, servicio.id, {
-        nombre: nombreEdicion.trim(),
-        duracionMinutos: duracionEdicion ? Number(duracionEdicion) : null,
-      });
-      cancelarEdicion();
-      await onCambio();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setGuardandoEdicion(false);
-    }
-  }
-
-  return (
-    <div>
-      <form className="form-inline" onSubmit={manejarCrear}>
-        <input placeholder="Nombre (ej. Examen visual)" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
-        <input type="number" min="1" placeholder="Duración (min, opcional)" value={duracionMinutos} onChange={(e) => setDuracionMinutos(e.target.value)} />
-        <button type="submit" disabled={guardando}>{guardando ? 'Agregando…' : 'Agregar servicio'}</button>
-      </form>
-
-      {servicios.length === 0 ? (
-        <p className="texto-muted">Todavía no tienes servicios cargados.</p>
-      ) : (
-        <table className="tabla-simple">
-          <thead><tr><th>Servicio</th><th>Duración</th><th>Estado</th><th></th></tr></thead>
-          <tbody>
-            {servicios.map((s) => {
-              const enEdicion = editandoId === s.id;
-              return (
-                <tr key={s.id} className={!s.activo ? 'fila-inactiva' : ''}>
-                  {enEdicion ? (
-                    <>
-                      <td>
-                        <input
-                          value={nombreEdicion}
-                          onChange={(e) => setNombreEdicion(e.target.value)}
-                          autoFocus
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="number"
-                          min="1"
-                          value={duracionEdicion}
-                          onChange={(e) => setDuracionEdicion(e.target.value)}
-                          placeholder="min"
-                          style={{ width: 70 }}
-                        />
-                      </td>
-                      <td>{s.activo ? 'Activo' : 'Inactivo'}</td>
-                      <td className="acciones">
-                        <button className="btn-link" onClick={() => guardarEdicion(s)} disabled={guardandoEdicion}>
-                          {guardandoEdicion ? 'Guardando…' : 'Guardar'}
-                        </button>
-                        <button className="btn-link" onClick={cancelarEdicion} disabled={guardandoEdicion}>Cancelar</button>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td>{s.nombre}</td>
-                      <td>{s.duracionMinutos ? `${s.duracionMinutos} min` : '—'}</td>
-                      <td>{s.activo ? 'Activo' : 'Inactivo'}</td>
-                      <td className="acciones">
-                        <button className="btn-link" onClick={() => comenzarEdicion(s)}>Editar</button>
-                        <button className="btn-link" onClick={() => alternarActivo(s)}>{s.activo ? 'Desactivar' : 'Activar'}</button>
-                        <button className="btn-link btn-danger" onClick={() => eliminar(s)}>Eliminar</button>
-                      </td>
-                    </>
-                  )}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
-    </div>
-  );
-}
 
 // ------------------------------------------------------------
 // Página principal

@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import './GestionProfesionales.css';
 import { useAuth } from '../../context/AuthContext';
 import EditorHorario from '../../components/EditorHorario';
-import { fetchProfesionales, crearProfesional } from '../../api/client';
+import Bloqueos from '../../components/Bloqueos';
+import Servicios from '../../components/Servicios';
+import { fetchProfesionales, crearProfesional, fetchServicios } from '../../api/client';
 
 const NOMBRES_DIAS_CORTO = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
@@ -83,13 +85,22 @@ function TarjetaProfesional({ profesional, token, onCambio, setError, expandido,
           <span className="btn-link">{expandido ? 'Ocultar horario' : 'Editar horario'}</span>
         </div>
       </div>
-      {expandido && (
+    {expandido && (
         <div className="editor-horario-tarjeta">
+          <h3 className="subtitulo-tarjeta">Horario semanal</h3>
           <EditorHorario
             horarios={profesional.horarios}
             recursoId={profesional.id}
             token={token}
             onGuardado={onCambio}
+            setError={setError}
+          />
+          <h3 className="subtitulo-tarjeta">Vacaciones y feriados</h3>
+          <Bloqueos
+            bloqueos={profesional.bloqueos || []}
+            recursoId={profesional.id}
+            token={token}
+            onCambio={onCambio}
             setError={setError}
           />
         </div>
@@ -101,6 +112,7 @@ function TarjetaProfesional({ profesional, token, onCambio, setError, expandido,
 export default function GestionProfesionales() {
   const { token } = useAuth();
   const [profesionales, setProfesionales] = useState([]);
+  const [servicios, setServicios] = useState([]);
   const [limite, setLimite] = useState(null);
   const [puedeAgregarMas, setPuedeAgregarMas] = useState(true);
   const [cargando, setCargando] = useState(true);
@@ -111,14 +123,24 @@ export default function GestionProfesionales() {
 
   async function cargar() {
     try {
-      const data = await fetchProfesionales(token);
+      const [data, serviciosData] = await Promise.all([fetchProfesionales(token), fetchServicios(token)]);
       setProfesionales(data.profesionales);
+      setServicios(serviciosData.servicios);
       setLimite(data.limite);
       setPuedeAgregarMas(data.puedeAgregarMas);
     } catch (err) {
       setError(err.message);
     } finally {
       setCargando(false);
+    }
+  }
+
+  async function cargarServicios() {
+    try {
+      const serviciosData = await fetchServicios(token);
+      setServicios(serviciosData.servicios);
+    } catch (err) {
+      setError(err.message);
     }
   }
 
@@ -149,6 +171,10 @@ export default function GestionProfesionales() {
 
       {error && <p className="mensaje-error">{error}</p>}
 
+    <h2 className="subtitulo">Servicios</h2>
+      <Servicios servicios={servicios} profesionales={profesionales} token={token} onCambio={cargarServicios} setError={setError} />
+
+      <h2 className="subtitulo">Profesionales</h2>
       <div className="barra-limite-profesionales">
         <span className="texto-muted">
           {limite === null ? 'Profesionales: ilimitados en tu plan' : `Profesionales: ${textoLimite} usados`}
