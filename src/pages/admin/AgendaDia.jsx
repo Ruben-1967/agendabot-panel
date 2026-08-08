@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import CalendarPickerModal from '../../components/CalendarPickerModal';
+import { API_URL } from '../../api/client';
 import './AgendaDia.css';
 
 export default function AgendaDia() {
@@ -29,8 +30,8 @@ export default function AgendaDia() {
         throw new Error('No hay empresaId en la sesiÃ³n');
       }
       
-      const res = await fetch(
-        `https://agendabot-backend-bbw5.onrender.com/agenda/dashboard/${empresaId}`,
+     const res = await fetch(
+        `${API_URL}/agenda/dashboard/${empresaId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -80,7 +81,7 @@ export default function AgendaDia() {
     setAccionando(true);
     try {
       const res = await fetch(
-        `https://agendabot-backend-bbw5.onrender.com/agenda/citas/${citaSeleccionada.id}/estado`,
+        `${API_URL}/agenda/citas/${citaSeleccionada.id}/estado`,
         {
           method: 'PATCH',
           headers: {
@@ -138,7 +139,7 @@ export default function AgendaDia() {
     setAccionando(true);
     try {
       const res = await fetch(
-        `https://agendabot-backend-bbw5.onrender.com/agenda/citas/${citaAReagendar.id}/reagendar`,
+        `${API_URL}/agenda/citas/${citaAReagendar.id}/reagendar`,
         {
           method: 'POST',
           headers: {
