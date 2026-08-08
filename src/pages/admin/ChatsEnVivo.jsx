@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { API_URL } from '../../api/client';
 import './ChatsEnVivo.css';
 
 export default function ChatsEnVivo() {
@@ -26,7 +27,7 @@ export default function ChatsEnVivo() {
       }
 
       const res = await fetch(
-        `https://agendabot-backend-bbw5.onrender.com/conversaciones/${empresaId}`,
+        `${API_URL}/conversaciones/${empresaId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -49,7 +50,7 @@ export default function ChatsEnVivo() {
     try {
       const empresaId = usuario?.empresaId;
       const res = await fetch(
-        `https://agendabot-backend-bbw5.onrender.com/conversaciones/${empresaId}/${conversacionId}`,
+        `${API_URL}/conversaciones/${empresaId}/${conversacionId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -76,7 +77,8 @@ export default function ChatsEnVivo() {
     try {
       const empresaId = usuario?.empresaId;
       const res = await fetch(
-        `https://agendabot-backend-bbw5.onrender.com/conversaciones/${empresaId}/${conversacionSeleccionada.id}/mensaje`,
+      `${API_URL}/conversaciones/${empresaId}/${conversacionSeleccionada.id}/mensaje`,
+
         {
           method: 'POST',
           headers: {

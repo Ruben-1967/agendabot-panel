@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import CalendarPickerModal from '../../components/CalendarPickerModal';
+import { API_URL } from '../../api/client';
 import './ListaEspera.css';
 
 export default function ListaEspera() {
@@ -30,7 +31,7 @@ export default function ListaEspera() {
         throw new Error('No hay empresaId en la sesión');
       }
       const res = await fetch(
-        `https://agendabot-backend-bbw5.onrender.com/lista-espera/${empresaId}`,
+        `${API_URL}/lista-espera/${empresaId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -63,7 +64,7 @@ export default function ListaEspera() {
     setAccionando(true);
     try {
       const res = await fetch(
-        `https://agendabot-backend-bbw5.onrender.com/lista-espera/${pacienteAgendar.id}/agendar`,
+        `${API_URL}/lista-espera/${pacienteAgendar.id}/agendar`,
         {
           method: 'POST',
           headers: {
@@ -95,7 +96,7 @@ export default function ListaEspera() {
     setAccionando(true);
     try {
       const res = await fetch(
-        `https://agendabot-backend-bbw5.onrender.com/lista-espera/${id}`,
+        `${API_URL}/lista-espera/${id}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },

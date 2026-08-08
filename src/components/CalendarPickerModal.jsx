@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '../api/client';
 import './CalendarPickerModal.css';
 
 export default function CalendarPickerModal({
@@ -27,7 +28,7 @@ export default function CalendarPickerModal({
       setLoading(true);
       setError(null);
       const res = await fetch(
-        `https://agendabot-backend-bbw5.onrender.com/disponibilidad/${recursoId}`,
+        `${API_URL}/disponibilidad/${recursoId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -52,7 +53,7 @@ export default function CalendarPickerModal({
     // Validar que el slot siga disponible
     try {
       const res = await fetch(
-        `https://agendabot-backend-bbw5.onrender.com/disponibilidad/${recursoId}/validar`,
+        `${API_URL}/disponibilidad/${recursoId}/validar`,
         {
           method: 'POST',
           headers: {
