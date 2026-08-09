@@ -22,4 +22,4 @@ if ('serviceWorker' in navigator) {
       console.error('Error registrando el service worker:', err);
     });
   });
-}s
+}
