@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const PLANES = {
   A: {
@@ -29,14 +28,23 @@ const PLANES = {
 };
 
 export default function ElegirPlan() {
-  const navigate = useNavigate();
   const searchParams = new URLSearchParams(window.location.search);
   const empresaIdParam = searchParams.get('empresaId');
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [diasRestantes, setDiasRestantes] = useState(null);
-  const token = localStorage.getItem('agendabot_panel_session');
+  const [resultadoElegido, setResultadoElegido] = useState(null);
+
+  // agendabot_panel_session guarda { token, usuario } serializado (ver
+  // AuthContext.jsx) — no es el JWT en sí.
+  let token = null;
+  try {
+    const sesionGuardada = localStorage.getItem('agendabot_panel_session');
+    token = sesionGuardada ? JSON.parse(sesionGuardada).token : null;
+  } catch {
+    token = null;
+  }
 
   useEffect(() => {
     // Solo traer estado si hay token (usuario autenticado)
@@ -97,9 +105,11 @@ export default function ElegirPlan() {
       }
 
       const resultado = await res.json();
-      
-      // Redirigir a Flow.cl
-      window.location.href = resultado.urlPago;
+
+      // El cobro real (Flow.cl) todavía no está integrado — no hay urlPago a
+      // la que redirigir. Mostramos el mensaje del backend; un admin
+      // confirma el pago manualmente y ahí el plan queda activo de verdad.
+      setResultadoElegido(resultado);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -126,8 +136,20 @@ export default function ElegirPlan() {
         {/* Aviso de error */}
         {error && <div style={styles.error}>{error}</div>}
 
+        {resultadoElegido && (
+          <div style={styles.success}>
+            <h3 style={{ margin: '0 0 8px' }}>{resultadoElegido.mensaje}</h3>
+            <p style={{ margin: 0 }}>{resultadoElegido.proximoPaso}</p>
+            {token && (
+              <a href="/admin" style={{ ...styles.link, display: 'inline-block', marginTop: '16px', fontWeight: 600 }}>
+                Ir a mi panel →
+              </a>
+            )}
+          </div>
+        )}
+
         {/* Grid de planes */}
-        <div style={styles.grid}>
+        {!resultadoElegido && <div style={styles.grid}>
           {Object.entries(PLANES).map(([planKey, planData]) => (
             <div key={planKey} style={{
               ...styles.planCard,
@@ -165,7 +187,7 @@ export default function ElegirPlan() {
               </button>
             </div>
           ))}
-        </div>
+        </div>}
 
         {/* Footer */}
         <div style={styles.footer}>
@@ -278,6 +300,15 @@ const styles = {
     fontSize: '15px',
     fontWeight: 600,
     transition: 'opacity 0.2s',
+  },
+  success: {
+    background: '#e4ede9',
+    color: '#1f4e44',
+    padding: '24px',
+    borderRadius: '8px',
+    marginBottom: '24px',
+    textAlign: 'center',
+    fontSize: '15px',
   },
   error: {
     background: '#f3e1dc',

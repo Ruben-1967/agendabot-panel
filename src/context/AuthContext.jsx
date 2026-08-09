@@ -50,8 +50,17 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(STORAGE_KEY);
   }
 
+  // Para flujos que ya trajeron { token, usuario } de otro endpoint que no es
+  // /auth/login (ej. POST /auth/activar-cuenta) — misma forma de respuesta,
+  // pero sin repetir la llamada de login.
+  function establecerSesion(data) {
+    setToken(data.token);
+    setUsuario(data.usuario);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ token: data.token, usuario: data.usuario }));
+  }
+
   return (
-    <AuthContext.Provider value={{ usuario, token, cargandoSesion, iniciarSesion, cerrarSesion }}>
+    <AuthContext.Provider value={{ usuario, token, cargandoSesion, iniciarSesion, cerrarSesion, establecerSesion }}>
       {children}
     </AuthContext.Provider>
   );

@@ -219,8 +219,12 @@ export function loginVendedor(email, password) {
 export function crearProspectoDemo(token, data) {
   return apiFetch('/demos/prospectos', { method: 'POST', body: data, token, tipoSesion: 'vendedor' });
 }
-export function fetchProspectosDemo(token) {
-  return apiFetch('/demos/prospectos', { token, tipoSesion: 'vendedor' });
+export function fetchProspectosDemo(token, filtros = {}) {
+  const params = new URLSearchParams();
+  if (filtros.estadoSLA) params.set('estadoSLA', filtros.estadoSLA);
+  if (filtros.tipoLead) params.set('tipoLead', filtros.tipoLead);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return apiFetch(`/demos/prospectos${query}`, { token, tipoSesion: 'vendedor' });
 }
 
 export function eliminarProspectoDemo(token, id) {
@@ -229,6 +233,47 @@ export function eliminarProspectoDemo(token, id) {
 
 export function fetchRubrosDemo(token) {
   return apiFetch('/demos/rubros', { token, tipoSesion: 'vendedor' });
+}
+
+export function marcarProspectoContactado(token, id) {
+  return apiFetch(`/demos/prospectos/${id}/marcar-contactado`, { method: 'POST', token, tipoSesion: 'vendedor' });
+}
+
+export function convertirClienteReal(token, demoId) {
+  return apiFetch('/demos/convertir-a-cliente-real', { method: 'POST', body: { demoId }, token, tipoSesion: 'vendedor' });
+}
+
+// ---------- Activación de cuenta (cliente real, sin sesión de vendedor) ----------
+export function activarCuenta(tokenActivacion, password) {
+  return apiFetch('/auth/activar-cuenta', { method: 'POST', body: { token: tokenActivacion, password } });
+}
+
+// ---------- Ranking mensual de conversión ----------
+export function fetchRankingActual(token) {
+  return apiFetch('/ranking/actual', { token, tipoSesion: 'vendedor' });
+}
+export function fetchRankingHistorial(token, vendedorId) {
+  return apiFetch(`/ranking/historial/${vendedorId}`, { token, tipoSesion: 'vendedor' });
+}
+
+// ---------- Admin del panel de vendedores (rolVendedor: ADMIN) ----------
+export function fetchConfigRanking(token) {
+  return apiFetch('/admin-vendedores/ranking/config', { token, tipoSesion: 'vendedor' });
+}
+export function guardarConfigRanking(token, data) {
+  return apiFetch('/admin-vendedores/ranking/config', { method: 'POST', body: data, token, tipoSesion: 'vendedor' });
+}
+export function fetchConfigSLA(token) {
+  return apiFetch('/admin-vendedores/sla/config', { token, tipoSesion: 'vendedor' });
+}
+export function guardarConfigSLA(token, config) {
+  return apiFetch('/admin-vendedores/sla/config', { method: 'POST', body: { config }, token, tipoSesion: 'vendedor' });
+}
+export function fetchSuscripcionesPendientes(token) {
+  return apiFetch('/admin-vendedores/suscripciones/pendientes', { token, tipoSesion: 'vendedor' });
+}
+export function marcarSuscripcionActiva(token, empresaId) {
+  return apiFetch(`/admin-vendedores/suscripciones/${empresaId}/marcar-activa`, { method: 'POST', token, tipoSesion: 'vendedor' });
 }
 
 export { API_URL };

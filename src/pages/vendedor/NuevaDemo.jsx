@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVendedorAuth } from '../../context/VendedorAuthContext';
 import { crearProspectoDemo, fetchRubrosDemo } from '../../api/client';
+import NavVendedor from './NavVendedor';
 import './vendedor.css';
 
 const OPCIONES_PAIS = [
@@ -70,6 +71,7 @@ export default function NuevaDemo() {
 
   return (
     <div className="pantalla-vendedor">
+      <NavVendedor />
       <div className="vendedor-inner">
         <p className="vendedor-eyebrow">Demo comercial</p>
         <h1>Cargar negocio</h1>

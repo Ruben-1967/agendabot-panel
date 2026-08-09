@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { VendedorAuthProvider } from './context/VendedorAuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedRouteVendedor from './components/ProtectedRouteVendedor';
+import ProtectedRouteVendedorAdmin from './components/ProtectedRouteVendedorAdmin';
 import Login from './pages/Login';
 import AdminLayout from './pages/AdminLayout';
 import ProfesionalLayout from './pages/ProfesionalLayout';
@@ -22,7 +23,11 @@ import MiPerfil from './pages/admin/MiPerfil';
 import LoginVendedor from './pages/vendedor/LoginVendedor';
 import NuevaDemo from './pages/vendedor/NuevaDemo';
 import MisDemos from './pages/vendedor/MisDemos';
-import ConvertirAClienteReal from './pages/ConvertirAClienteReal';
+import Ranking from './pages/vendedor/Ranking';
+import ConfigRanking from './pages/vendedor/admin/ConfigRanking';
+import ConfigSLA from './pages/vendedor/admin/ConfigSLA';
+import MarcarPagos from './pages/vendedor/admin/MarcarPagos';
+import ActivarCuenta from './pages/ActivarCuenta';
 import ElegirPlan from './pages/ElegirPlan';
 
 function RaizSegunSesion() {
@@ -94,8 +99,40 @@ function AppRoutes() {
           </ProtectedRouteVendedor>
         }
       />
+      <Route
+        path="/vendedor/ranking"
+        element={
+          <ProtectedRouteVendedor>
+            <Ranking />
+          </ProtectedRouteVendedor>
+        }
+      />
+      <Route
+        path="/vendedor/admin/ranking"
+        element={
+          <ProtectedRouteVendedorAdmin>
+            <ConfigRanking />
+          </ProtectedRouteVendedorAdmin>
+        }
+      />
+      <Route
+        path="/vendedor/admin/sla"
+        element={
+          <ProtectedRouteVendedorAdmin>
+            <ConfigSLA />
+          </ProtectedRouteVendedorAdmin>
+        }
+      />
+      <Route
+        path="/vendedor/admin/pagos"
+        element={
+          <ProtectedRouteVendedorAdmin>
+            <MarcarPagos />
+          </ProtectedRouteVendedorAdmin>
+        }
+      />
 
-      <Route path="/convertir-a-cliente-real" element={<ConvertirAClienteReal />} />
+      <Route path="/activar-cuenta" element={<ActivarCuenta />} />
       <Route path="/suscripcion/elegir-plan" element={<ElegirPlan />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
