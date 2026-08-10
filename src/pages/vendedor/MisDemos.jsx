@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useVendedorAuth } from '../../context/VendedorAuthContext';
-import { fetchProspectosDemo, eliminarProspectoDemo, marcarProspectoContactado, convertirClienteReal } from '../../api/client';
+import { fetchProspectosDemo, eliminarProspectoDemo, marcarProspectoContactado, convertirClienteReal, fetchVendedoresKPI } from '../../api/client';
 import NavVendedor from './NavVendedor';
 import './vendedor.css';
 
@@ -16,7 +16,8 @@ const ETIQUETA_TIPO_LEAD = { CALIENTE: 'Caliente', FRIO: 'Frío' };
 const ETIQUETA_FASE = { primer_contacto: 'sin primer contacto', aging: 'sin avance' };
 
 export default function MisDemos() {
-  const { token } = useVendedorAuth();
+  const { token, vendedor } = useVendedorAuth();
+  const esAdmin = vendedor?.rol === 'ADMIN';
 
   const [demos, setDemos] = useState([]);
   const [contadorVencidos, setContadorVencidos] = useState(0);
@@ -27,10 +28,13 @@ export default function MisDemos() {
 
   const [filtroEstadoSLA, setFiltroEstadoSLA] = useState('');
   const [filtroTipoLead, setFiltroTipoLead] = useState('');
+  const [filtroVendedorId, setFiltroVendedorId] = useState('todos');
+
+  const [vendedoresKPI, setVendedoresKPI] = useState([]);
 
   function cargar() {
     setCargando(true);
-    fetchProspectosDemo(token, { estadoSLA: filtroEstadoSLA, tipoLead: filtroTipoLead })
+    fetchProspectosDemo(token, { estadoSLA: filtroEstadoSLA, tipoLead: filtroTipoLead, vendedorId: esAdmin ? filtroVendedorId : undefined })
       .then((data) => {
         setDemos(data.demos || []);
         setContadorVencidos(data.contadorVencidos || 0);
@@ -39,7 +43,14 @@ export default function MisDemos() {
       .finally(() => setCargando(false));
   }
 
-  useEffect(() => { cargar(); }, [token, filtroEstadoSLA, filtroTipoLead]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { cargar(); }, [token, filtroEstadoSLA, filtroTipoLead, filtroVendedorId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!esAdmin) return;
+    fetchVendedoresKPI(token)
+      .then((data) => setVendedoresKPI(data.vendedores || []))
+      .catch(() => {}); // los KPIs son un extra — si fallan, no bloquean el listado principal
+  }, [token, esAdmin]);
 
   async function manejarEliminar(demo) {
     const confirmado = window.confirm(
@@ -90,6 +101,25 @@ export default function MisDemos() {
     }
   }
 
+  // KPI a mostrar: del vendedor seleccionado, o la suma de todos si el
+  // filtro está en "todos".
+  const kpiMostrado = (() => {
+    if (vendedoresKPI.length === 0) return null;
+    if (filtroVendedorId !== 'todos') {
+      return vendedoresKPI.find((v) => v.vendedorId === filtroVendedorId) || null;
+    }
+    return vendedoresKPI.reduce(
+      (acc, v) => ({
+        total: acc.total + v.total,
+        rojo: acc.rojo + v.rojo,
+        amarillo: acc.amarillo + v.amarillo,
+        ok: acc.ok + v.ok,
+        conversionesMes: acc.conversionesMes + v.conversionesMes,
+      }),
+      { total: 0, rojo: 0, amarillo: 0, ok: 0, conversionesMes: 0 }
+    );
+  })();
+
   return (
     <div className="pantalla-vendedor">
       <NavVendedor />
@@ -98,6 +128,27 @@ export default function MisDemos() {
 
         {contadorVencidos > 0 && (
           <span className="badge-vencidos">🔴 {contadorVencidos} lead{contadorVencidos === 1 ? '' : 's'} vencido{contadorVencidos === 1 ? '' : 's'}</span>
+        )}
+
+        {esAdmin && (
+          <div className="barra-filtros">
+            <select value={filtroVendedorId} onChange={(e) => setFiltroVendedorId(e.target.value)}>
+              <option value="todos">Todos los vendedores</option>
+              {vendedoresKPI.map((v) => (
+                <option key={v.vendedorId} value={v.vendedorId}>{v.nombre}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {esAdmin && kpiMostrado && (
+          <div className="kpi-vendedor">
+            <div><strong>{kpiMostrado.total}</strong><span>casos activos</span></div>
+            <div><strong>{kpiMostrado.rojo}</strong><span>🔴 vencidos</span></div>
+            <div><strong>{kpiMostrado.amarillo}</strong><span>🟡 por vencer</span></div>
+            <div><strong>{kpiMostrado.ok}</strong><span>⚪ al día</span></div>
+            <div><strong>{kpiMostrado.conversionesMes}</strong><span>conversiones este mes</span></div>
+          </div>
         )}
 
         <div className="barra-filtros">
@@ -117,6 +168,12 @@ export default function MisDemos() {
         {error && <p className="login-error">{error}</p>}
         {cargando && <p>Cargando…</p>}
 
+        {!cargando && (
+          <p className="texto-ayuda" style={{ margin: '0 0 8px' }}>
+            Mostrando {demos.length} caso{demos.length === 1 ? '' : 's'}
+          </p>
+        )}
+
         {!cargando && demos.length === 0 && (
           <p className="texto-ayuda">No hay casos que calcen con este filtro.</p>
         )}
@@ -135,6 +192,7 @@ export default function MisDemos() {
               <p className="texto-ayuda">
                 Cargada: {formatearFecha(d.creadoEn)}
                 {d.yaProbo && ' · Ya probó el sistema'}
+                {esAdmin && d.vendedorNombre && ` · Vendedor: ${d.vendedorNombre}`}
               </p>
 
               <div className="tarjeta-demo-acciones">

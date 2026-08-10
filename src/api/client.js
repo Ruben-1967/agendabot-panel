@@ -223,8 +223,15 @@ export function fetchProspectosDemo(token, filtros = {}) {
   const params = new URLSearchParams();
   if (filtros.estadoSLA) params.set('estadoSLA', filtros.estadoSLA);
   if (filtros.tipoLead) params.set('tipoLead', filtros.tipoLead);
+  if (filtros.vendedorId) params.set('vendedorId', filtros.vendedorId);
   const query = params.toString() ? `?${params.toString()}` : '';
   return apiFetch(`/demos/prospectos${query}`, { token, tipoSesion: 'vendedor' });
+}
+
+// Solo rolVendedor ADMIN: resumen de casos por semáforo SLA + conversiones
+// del mes, por cada vendedor — alimenta el selector de "Mis casos".
+export function fetchVendedoresKPI(token) {
+  return apiFetch('/admin-vendedores/vendedores-kpi', { token, tipoSesion: 'vendedor' });
 }
 
 export function eliminarProspectoDemo(token, id) {
