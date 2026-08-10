@@ -28,6 +28,7 @@ import GestionVenta from './pages/vendedor/GestionVenta';
 import ConfigRanking from './pages/vendedor/admin/ConfigRanking';
 import ConfigSLA from './pages/vendedor/admin/ConfigSLA';
 import MarcarPagos from './pages/vendedor/admin/MarcarPagos';
+import AdminVendedores from './pages/vendedor/admin/AdminVendedores';
 import ActivarCuenta from './pages/ActivarCuenta';
 import ElegirPlan from './pages/ElegirPlan';
 
@@ -137,6 +138,14 @@ function AppRoutes() {
         element={
           <ProtectedRouteVendedorAdmin>
             <MarcarPagos />
+          </ProtectedRouteVendedorAdmin>
+        }
+      />
+      <Route
+        path="/vendedor/admin/vendedores"
+        element={
+          <ProtectedRouteVendedorAdmin>
+            <AdminVendedores />
           </ProtectedRouteVendedorAdmin>
         }
       />

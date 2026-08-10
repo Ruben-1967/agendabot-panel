@@ -1,5 +1,27 @@
-import { Fragment, useState } from 'react';
-import { crearServicio, actualizarServicio, eliminarServicio } from '../api/client';
+import { Fragment, useEffect, useState } from 'react';
+import { crearServicio, actualizarServicio, eliminarServicio, fetchPlantillasFicha } from '../api/client';
+
+// Vista previa de los campos de una plantilla — camposFicha es plano o con
+// un nivel de anidamiento (ej. { od: { esfera: "number", ... } }). Sin
+// recursión más allá de eso, que es lo que existe hoy.
+function VistaPreviaCampos({ camposFicha }) {
+  if (!camposFicha || Object.keys(camposFicha).length === 0) {
+    return <p className="texto-muted" style={{ margin: '4px 0 0' }}>Esta plantilla no tiene campos.</p>;
+  }
+  return (
+    <ul className="lista-campos-plantilla">
+      {Object.entries(camposFicha).map(([clave, valor]) => (
+        typeof valor === 'object' && valor !== null ? (
+          <li key={clave}>
+            <strong>{clave}</strong>: {Object.entries(valor).map(([k, v]) => `${k} (${v})`).join(', ')}
+          </li>
+        ) : (
+          <li key={clave}><strong>{clave}</strong> ({valor})</li>
+        )
+      ))}
+    </ul>
+  );
+}
 
 /**
  * Gestión de servicios (tipos de atención que ofrece la empresa). Es una
@@ -11,12 +33,21 @@ import { crearServicio, actualizarServicio, eliminarServicio } from '../api/clie
 export default function Servicios({ servicios, profesionales, token, onCambio, setError }) {
   const [nombre, setNombre] = useState('');
   const [duracionMinutos, setDuracionMinutos] = useState('');
+  const [plantillaFichaId, setPlantillaFichaId] = useState('');
   const [guardando, setGuardando] = useState(false);
 
   const [editandoId, setEditandoId] = useState(null);
   const [nombreEdicion, setNombreEdicion] = useState('');
   const [duracionEdicion, setDuracionEdicion] = useState('');
+  const [plantillaFichaIdEdicion, setPlantillaFichaIdEdicion] = useState('');
   const [guardandoEdicion, setGuardandoEdicion] = useState(false);
+
+  // Catálogo fijo de fichas dinámicas — el negocio elige entre estas, no
+  // diseña campos libres. Se ven todas, no solo las sugeridas para el rubro.
+  const [plantillasFicha, setPlantillasFicha] = useState([]);
+  useEffect(() => {
+    fetchPlantillasFicha(token).then((data) => setPlantillasFicha(data.plantillas || [])).catch(() => {});
+  }, [token]);
 
   // Vinculación con profesionales: id del servicio cuyo panel de
   // asignación está abierto (null si ninguno). Solo tiene sentido cuando
@@ -31,9 +62,14 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
     setGuardando(true);
     setError('');
     try {
-      await crearServicio(token, { nombre, duracionMinutos: duracionMinutos ? Number(duracionMinutos) : null });
+      await crearServicio(token, {
+        nombre,
+        duracionMinutos: duracionMinutos ? Number(duracionMinutos) : null,
+        plantillaFichaId: plantillaFichaId || null,
+      });
       setNombre('');
       setDuracionMinutos('');
+      setPlantillaFichaId('');
       await onCambio();
     } catch (err) {
       setError(err.message);
@@ -65,12 +101,14 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
     setEditandoId(servicio.id);
     setNombreEdicion(servicio.nombre);
     setDuracionEdicion(servicio.duracionMinutos ?? '');
+    setPlantillaFichaIdEdicion(servicio.plantillaFichaId || '');
   }
 
   function cancelarEdicion() {
     setEditandoId(null);
     setNombreEdicion('');
     setDuracionEdicion('');
+    setPlantillaFichaIdEdicion('');
   }
 
   async function alternarRequiereProfesional(servicio) {
@@ -110,6 +148,7 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
       await actualizarServicio(token, servicio.id, {
         nombre: nombreEdicion.trim(),
         duracionMinutos: duracionEdicion ? Number(duracionEdicion) : null,
+        plantillaFichaId: plantillaFichaIdEdicion || null,
       });
       cancelarEdicion();
       await onCambio();
@@ -122,17 +161,29 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
 
   return (
     <div>
-      <form className="form-inline" onSubmit={manejarCrear}>
+      <form className="form-inline" onSubmit={manejarCrear} style={{ flexWrap: 'wrap' }}>
         <input placeholder="Nombre (ej. Examen visual)" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
         <input type="number" min="1" placeholder="Duración (min, opcional)" value={duracionMinutos} onChange={(e) => setDuracionMinutos(e.target.value)} />
+        <select value={plantillaFichaId} onChange={(e) => setPlantillaFichaId(e.target.value)}>
+          <option value="">Sin ficha (hereda la del rubro)</option>
+          {plantillasFicha.map((p) => (
+            <option key={p.id} value={p.id}>{p.nombre}</option>
+          ))}
+        </select>
         <button type="submit" disabled={guardando}>{guardando ? 'Agregando…' : 'Agregar servicio'}</button>
       </form>
+      {plantillaFichaId && (
+        <div className="bloque-segmentacion" style={{ marginTop: 0, marginBottom: 16 }}>
+          <p className="texto-muted" style={{ margin: '0 0 4px' }}>Campos de "{plantillasFicha.find((p) => p.id === plantillaFichaId)?.nombre}":</p>
+          <VistaPreviaCampos camposFicha={plantillasFicha.find((p) => p.id === plantillaFichaId)?.camposFicha} />
+        </div>
+      )}
 
       {servicios.length === 0 ? (
         <p className="texto-muted">Todavía no tienes servicios cargados.</p>
       ) : (
         <table className="tabla-simple">
-          <thead><tr><th>Servicio</th><th>Duración</th><th>Estado</th>{hayMultiplesProfesionales && <th>Profesionales</th>}<th></th></tr></thead>
+          <thead><tr><th>Servicio</th><th>Duración</th><th>Ficha</th><th>Estado</th>{hayMultiplesProfesionales && <th>Profesionales</th>}<th></th></tr></thead>
           <tbody>
             {servicios.map((s) => {
               const enEdicion = editandoId === s.id;
@@ -160,6 +211,14 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
                             style={{ width: 70 }}
                           />
                         </td>
+                        <td>
+                          <select value={plantillaFichaIdEdicion} onChange={(e) => setPlantillaFichaIdEdicion(e.target.value)}>
+                            <option value="">Sin ficha</option>
+                            {plantillasFicha.map((p) => (
+                              <option key={p.id} value={p.id}>{p.nombre}</option>
+                            ))}
+                          </select>
+                        </td>
                         <td>{s.activo ? 'Activo' : 'Inactivo'}</td>
                         {hayMultiplesProfesionales && <td>—</td>}
                         <td className="acciones">
@@ -173,6 +232,7 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
                       <>
                         <td>{s.nombre}</td>
                         <td>{s.duracionMinutos ? `${s.duracionMinutos} min` : '—'}</td>
+                        <td>{s.plantillaFicha ? s.plantillaFicha.nombre : <span className="texto-muted">Hereda del rubro</span>}</td>
                         <td>{s.activo ? 'Activo' : 'Inactivo'}</td>
                         {hayMultiplesProfesionales && (
                           <td>
@@ -191,7 +251,7 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
                   </tr>
                   {asignando && hayMultiplesProfesionales && (
                     <tr>
-                      <td colSpan={5}>
+                      <td colSpan={hayMultiplesProfesionales ? 6 : 5}>
                         <div className="bloque-segmentacion">
                           <label className="checkbox-segmentacion">
                             <input

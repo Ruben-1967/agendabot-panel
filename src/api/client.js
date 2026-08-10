@@ -175,6 +175,11 @@ export function eliminarServicio(token, id) {
   return apiFetch(`/servicios/${id}`, { method: 'DELETE', token });
 }
 
+// ---------- Plantillas de ficha (fichas dinámicas por servicio) ----------
+export function fetchPlantillasFicha(token) {
+  return apiFetch('/plantillas-ficha', { token });
+}
+
 // ---------- Clientes / Pacientes (negocios reactivos) ----------
 export function fetchConfigClientes(token) {
   return apiFetch('/clientes/config', { token });
@@ -298,6 +303,20 @@ export function editarEventoGestion(token, eventoId, data) {
 }
 export function eliminarEventoGestion(token, eventoId) {
   return apiFetch(`/gestion-venta/eventos/${eventoId}`, { method: 'DELETE', token, tipoSesion: 'vendedor' });
+}
+
+// ---------- Gestión de vendedores (admin) ----------
+export function fetchVendedores(token) {
+  return apiFetch('/admin-vendedores/vendedores', { token, tipoSesion: 'vendedor' });
+}
+export function crearVendedor(token, data) {
+  return apiFetch('/admin-vendedores/vendedores', { method: 'POST', body: data, token, tipoSesion: 'vendedor' });
+}
+export function alternarActivoVendedor(token, vendedorId, activo) {
+  return apiFetch(`/admin-vendedores/vendedores/${vendedorId}/activo`, { method: 'PATCH', body: { activo }, token, tipoSesion: 'vendedor' });
+}
+export function resetearPasswordVendedor(token, vendedorId, password) {
+  return apiFetch(`/admin-vendedores/vendedores/${vendedorId}/resetear-password`, { method: 'PATCH', body: { password }, token, tipoSesion: 'vendedor' });
 }
 
 export { API_URL };

@@ -152,10 +152,14 @@ export default function MisDemos() {
             <select value={filtroVendedorId} onChange={(e) => setFiltroVendedorId(e.target.value)}>
               <option value="todos">Todos los vendedores</option>
               {vendedoresKPI.map((v) => (
-                <option key={v.vendedorId} value={v.vendedorId}>{v.nombre}</option>
+                <option key={v.vendedorId} value={v.vendedorId}>{v.nombre}{!v.activo ? ' (Bloqueado)' : ''}</option>
               ))}
             </select>
           </div>
+        )}
+
+        {esAdmin && filtroVendedorId !== 'todos' && vendedoresKPI.find((v) => v.vendedorId === filtroVendedorId)?.activo === false && (
+          <p className="login-error" style={{ margin: '0 0 12px' }}>Este vendedor está bloqueado — no puede iniciar sesión, pero sus casos siguen visibles acá.</p>
         )}
 
         {esAdmin && kpiMostrado && (

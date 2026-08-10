@@ -298,6 +298,13 @@ button {
 }
 .etiqueta-segmentada { color: var(--teal-deep); font-weight: 600; margin-top: 2px; }
 
+.lista-campos-plantilla {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 0.84rem; color: var(--ink);
+}
+.lista-campos-plantilla strong { color: var(--teal-deep); }
+
 .form-inline button, .form-campana button {
   padding: 8px 14px;
   border: none;
