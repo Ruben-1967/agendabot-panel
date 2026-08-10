@@ -502,3 +502,33 @@
   color: var(--muted);
   font-family: 'IBM Plex Mono', monospace;
 }
+
+/* ---------- Fallback: link de activación cuando el WhatsApp automático falla ---------- */
+.aviso-link-manual {
+  background: var(--brass-soft);
+  border: 1px solid var(--brass);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.aviso-link-manual p {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+.aviso-link-manual-fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.aviso-link-manual-fila code {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 9px;
+  font-size: 0.78rem;
+  font-family: 'IBM Plex Mono', monospace;
+  word-break: break-all;
+}

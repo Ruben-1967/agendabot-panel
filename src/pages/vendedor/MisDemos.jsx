@@ -31,6 +31,7 @@ export default function MisDemos() {
   const [filtroVendedorId, setFiltroVendedorId] = useState('todos');
 
   const [vendedoresKPI, setVendedoresKPI] = useState([]);
+  const [avisoLinkManual, setAvisoLinkManual] = useState(null);
 
   function cargar() {
     setCargando(true);
@@ -91,13 +92,26 @@ export default function MisDemos() {
 
     setProcesandoId(demo.id);
     setError('');
+    setAvisoLinkManual(null);
     try {
-      await convertirClienteReal(token, demo.id);
+      const resultado = await convertirClienteReal(token, demo.id);
+      if (!resultado.whatsappEnviado) {
+        setAvisoLinkManual({ nombreNegocio: demo.nombreNegocio, link: resultado.linkActivacion });
+      }
       cargar();
     } catch (err) {
       setError(err.message || 'No se pudo convertir a cliente real');
     } finally {
       setProcesandoId(null);
+    }
+  }
+
+  async function copiarLinkManual() {
+    if (!avisoLinkManual) return;
+    try {
+      await navigator.clipboard.writeText(avisoLinkManual.link);
+    } catch {
+      // si el navegador bloquea el clipboard, el link ya está visible para copiar a mano
     }
   }
 
@@ -128,6 +142,20 @@ export default function MisDemos() {
 
         {contadorVencidos > 0 && (
           <span className="badge-vencidos">🔴 {contadorVencidos} lead{contadorVencidos === 1 ? '' : 's'} vencido{contadorVencidos === 1 ? '' : 's'}</span>
+        )}
+
+        {avisoLinkManual && (
+          <div className="aviso-link-manual">
+            <p>
+              El WhatsApp automático para <strong>{avisoLinkManual.nombreNegocio}</strong> no se pudo enviar (fuera de la
+              ventana de 24h de WhatsApp). Compartile este link a mano:
+            </p>
+            <div className="aviso-link-manual-fila">
+              <code>{avisoLinkManual.link}</code>
+              <button className="cta-secundaria" onClick={copiarLinkManual}>Copiar</button>
+            </div>
+            <button className="btn-link" onClick={() => setAvisoLinkManual(null)}>Cerrar</button>
+          </div>
         )}
 
         {esAdmin && (
