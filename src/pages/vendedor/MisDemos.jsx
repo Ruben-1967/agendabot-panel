@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useVendedorAuth } from '../../context/VendedorAuthContext';
-import { fetchProspectosDemo, eliminarProspectoDemo, marcarProspectoContactado, convertirClienteReal, fetchVendedoresKPI } from '../../api/client';
+import { fetchProspectosDemo, eliminarProspectoDemo, convertirClienteReal, fetchVendedoresKPI } from '../../api/client';
 import NavVendedor from './NavVendedor';
 import './vendedor.css';
 
@@ -17,6 +18,7 @@ const ETIQUETA_FASE = { primer_contacto: 'sin primer contacto', aging: 'sin avan
 
 export default function MisDemos() {
   const { token, vendedor } = useVendedorAuth();
+  const navigate = useNavigate();
   const esAdmin = vendedor?.rol === 'ADMIN';
 
   const [demos, setDemos] = useState([]);
@@ -68,19 +70,6 @@ export default function MisDemos() {
       setError(err.message || 'No se pudo eliminar la demo');
     } finally {
       setEliminandoId(null);
-    }
-  }
-
-  async function manejarMarcarContactado(demo) {
-    setProcesandoId(demo.id);
-    setError('');
-    try {
-      await marcarProspectoContactado(token, demo.id);
-      cargar();
-    } catch (err) {
-      setError(err.message || 'No se pudo marcar el contacto');
-    } finally {
-      setProcesandoId(null);
     }
   }
 
@@ -226,10 +215,9 @@ export default function MisDemos() {
               <div className="tarjeta-demo-acciones">
                 <button
                   className="cta-secundaria"
-                  onClick={() => manejarMarcarContactado(d)}
-                  disabled={procesandoId === d.id}
+                  onClick={() => navigate(`/vendedor/gestion/${d.id}`, { state: { demo: d } })}
                 >
-                  {procesandoId === d.id ? 'Guardando…' : 'Marcar como contactado'}
+                  Gestionar
                 </button>
                 <button
                   className="cta-secundaria"

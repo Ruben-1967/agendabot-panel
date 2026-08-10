@@ -24,6 +24,7 @@ import LoginVendedor from './pages/vendedor/LoginVendedor';
 import NuevaDemo from './pages/vendedor/NuevaDemo';
 import MisDemos from './pages/vendedor/MisDemos';
 import Ranking from './pages/vendedor/Ranking';
+import GestionVenta from './pages/vendedor/GestionVenta';
 import ConfigRanking from './pages/vendedor/admin/ConfigRanking';
 import ConfigSLA from './pages/vendedor/admin/ConfigSLA';
 import MarcarPagos from './pages/vendedor/admin/MarcarPagos';
@@ -104,6 +105,14 @@ function AppRoutes() {
         element={
           <ProtectedRouteVendedor>
             <Ranking />
+          </ProtectedRouteVendedor>
+        }
+      />
+      <Route
+        path="/vendedor/gestion/:demoId"
+        element={
+          <ProtectedRouteVendedor>
+            <GestionVenta />
           </ProtectedRouteVendedor>
         }
       />

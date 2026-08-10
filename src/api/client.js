@@ -283,4 +283,21 @@ export function marcarSuscripcionActiva(token, empresaId) {
   return apiFetch(`/admin-vendedores/suscripciones/${empresaId}/marcar-activa`, { method: 'POST', token, tipoSesion: 'vendedor' });
 }
 
+// ---------- Árbol de gestión de ventas ----------
+export function fetchCatalogoGestion(token) {
+  return apiFetch('/gestion-venta/catalogo', { token, tipoSesion: 'vendedor' });
+}
+export function fetchEventosGestion(token, demoId) {
+  return apiFetch(`/gestion-venta/${demoId}/eventos`, { token, tipoSesion: 'vendedor' });
+}
+export function crearEventoGestion(token, demoId, data) {
+  return apiFetch(`/gestion-venta/${demoId}/eventos`, { method: 'POST', body: data, token, tipoSesion: 'vendedor' });
+}
+export function editarEventoGestion(token, eventoId, data) {
+  return apiFetch(`/gestion-venta/eventos/${eventoId}`, { method: 'PATCH', body: data, token, tipoSesion: 'vendedor' });
+}
+export function eliminarEventoGestion(token, eventoId) {
+  return apiFetch(`/gestion-venta/eventos/${eventoId}`, { method: 'DELETE', token, tipoSesion: 'vendedor' });
+}
+
 export { API_URL };
