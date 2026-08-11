@@ -503,6 +503,83 @@
   font-family: 'IBM Plex Mono', monospace;
 }
 
+/* ---------- Listado de vendedores (admin) ---------- */
+.lista-vendedores-admin {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tarjeta-vendedor-admin-wrap {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.tarjeta-vendedor-admin {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 18px;
+  cursor: pointer;
+}
+
+.tarjeta-vendedor-admin-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.tarjeta-vendedor-admin-info strong {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.tarjeta-vendedor-admin-derecha {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.detalle-vendedor-admin {
+  border-top: 1px solid var(--line);
+  padding: 16px 18px 20px;
+}
+
+/* ---------- Modal genérico del panel de vendedor ---------- */
+.modal-vendedor-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(22, 36, 31, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.modal-vendedor-caja {
+  background: var(--paper);
+  border-radius: 10px;
+  padding: 24px 22px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 24px 48px -12px rgba(0,0,0,0.4);
+}
+.modal-vendedor-caja h3 {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 1.15rem;
+  margin: 0 0 6px;
+}
+
 /* ---------- Fallback: link de activación cuando el WhatsApp automático falla ---------- */
 .aviso-link-manual {
   background: var(--brass-soft);

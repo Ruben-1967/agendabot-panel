@@ -31,7 +31,9 @@ async function apiFetch(path, { method = 'GET', body, token, tipoSesion = 'negoc
 
   if (!res.ok) {
     const mensaje = data?.error || `Error ${res.status} al llamar a ${path}`;
-    throw new Error(mensaje);
+    const error = new Error(mensaje);
+    error.status = res.status;
+    throw error;
   }
 
   return data;
@@ -317,6 +319,9 @@ export function alternarActivoVendedor(token, vendedorId, activo) {
 }
 export function resetearPasswordVendedor(token, vendedorId, password) {
   return apiFetch(`/admin-vendedores/vendedores/${vendedorId}/resetear-password`, { method: 'PATCH', body: { password }, token, tipoSesion: 'vendedor' });
+}
+export function guardarHorarioModalidad(token, vendedorId, dias) {
+  return apiFetch(`/admin-vendedores/vendedores/${vendedorId}/horario-modalidad`, { method: 'PUT', body: dias, token, tipoSesion: 'vendedor' });
 }
 
 export { API_URL };
