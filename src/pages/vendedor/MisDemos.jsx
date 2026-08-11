@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVendedorAuth } from '../../context/VendedorAuthContext';
-import { fetchProspectosDemo, eliminarProspectoDemo, convertirClienteReal, fetchVendedoresKPI } from '../../api/client';
+import { fetchProspectosDemo, eliminarProspectoDemo, convertirClienteReal, fetchVendedoresKPI, fetchKpisDiarios } from '../../api/client';
 import NavVendedor from './NavVendedor';
 import './vendedor.css';
 
@@ -10,6 +10,12 @@ function formatearFecha(iso) {
   return new Date(iso).toLocaleDateString('es-CL', {
     day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
   });
+}
+
+// "Hoy" en hora de Chile, no la del navegador — mismo criterio que el
+// default del backend (ver GET /demos/kpis-diarios).
+function hoyEnChile() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago' }).format(new Date());
 }
 
 const ETIQUETA_SLA = { ROJO: '🔴 Vencido', AMARILLO: '🟡 Por vencer', OK: '⚪ Al día' };
@@ -35,6 +41,12 @@ export default function MisDemos() {
   const [vendedoresKPI, setVendedoresKPI] = useState([]);
   const [avisoLinkManual, setAvisoLinkManual] = useState(null);
 
+  const [desdeKpiDiario, setDesdeKpiDiario] = useState(hoyEnChile());
+  const [hastaKpiDiario, setHastaKpiDiario] = useState(hoyEnChile());
+  const [kpisDiarios, setKpisDiarios] = useState(null);
+  const [cargandoKpisDiarios, setCargandoKpisDiarios] = useState(true);
+  const [errorKpisDiarios, setErrorKpisDiarios] = useState('');
+
   function cargar() {
     setCargando(true);
     fetchProspectosDemo(token, { estadoSLA: filtroEstadoSLA, tipoLead: filtroTipoLead, vendedorId: esAdmin ? filtroVendedorId : undefined })
@@ -54,6 +66,15 @@ export default function MisDemos() {
       .then((data) => setVendedoresKPI(data.vendedores || []))
       .catch(() => {}); // los KPIs son un extra — si fallan, no bloquean el listado principal
   }, [token, esAdmin]);
+
+  useEffect(() => {
+    setCargandoKpisDiarios(true);
+    setErrorKpisDiarios('');
+    fetchKpisDiarios(token, { desde: desdeKpiDiario, hasta: hastaKpiDiario, vendedorId: esAdmin ? filtroVendedorId : undefined })
+      .then((data) => setKpisDiarios(data))
+      .catch((err) => setErrorKpisDiarios(err.message || 'No se pudo cargar los KPIs de gestión diaria'))
+      .finally(() => setCargandoKpisDiarios(false));
+  }, [token, desdeKpiDiario, hastaKpiDiario, esAdmin, filtroVendedorId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function manejarEliminar(demo) {
     const confirmado = window.confirm(
@@ -169,6 +190,38 @@ export default function MisDemos() {
             <div><strong>{kpiMostrado.amarillo}</strong><span>🟡 por vencer</span></div>
             <div><strong>{kpiMostrado.ok}</strong><span>⚪ al día</span></div>
             <div><strong>{kpiMostrado.conversionesMes}</strong><span>conversiones este mes</span></div>
+          </div>
+        )}
+
+        <h2 className="subtitulo">Actividad por rango de fecha</h2>
+        <div className="barra-filtros">
+          <label className="filtro-fecha">
+            Desde
+            <input type="date" value={desdeKpiDiario} max={hastaKpiDiario} onChange={(e) => setDesdeKpiDiario(e.target.value)} />
+          </label>
+          <label className="filtro-fecha">
+            Hasta
+            <input type="date" value={hastaKpiDiario} min={desdeKpiDiario} max={hoyEnChile()} onChange={(e) => setHastaKpiDiario(e.target.value)} />
+          </label>
+          {(desdeKpiDiario !== hoyEnChile() || hastaKpiDiario !== hoyEnChile()) && (
+            <button
+              type="button"
+              className="btn-link"
+              onClick={() => { setDesdeKpiDiario(hoyEnChile()); setHastaKpiDiario(hoyEnChile()); }}
+            >
+              Volver a hoy
+            </button>
+          )}
+        </div>
+
+        {errorKpisDiarios && <p className="login-error">{errorKpisDiarios}</p>}
+
+        {!cargandoKpisDiarios && kpisDiarios && (
+          <div className="kpi-vendedor" style={{ marginBottom: 20 }}>
+            <div><strong>{kpisDiarios.demosCreadas}</strong><span>demos creadas</span></div>
+            <div><strong>{kpisDiarios.negociosQueProbaron}</strong><span>negocios que probaron</span></div>
+            <div><strong>{kpisDiarios.negociosGestionados}</strong><span>negocios gestionados</span></div>
+            <div><strong>{kpisDiarios.conversiones}</strong><span>conversiones del período</span></div>
           </div>
         )}
 

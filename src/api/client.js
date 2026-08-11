@@ -235,6 +235,19 @@ export function fetchProspectosDemo(token, filtros = {}) {
   return apiFetch(`/demos/prospectos${query}`, { token, tipoSesion: 'vendedor' });
 }
 
+// KPIs de gestión diaria (rango de fecha libre, default hoy) — complementa
+// fetchVendedoresKPI (estado actual) sin reemplazarlo. Cualquier vendedor
+// puede llamarlo: si no es admin, el backend ignora vendedorId y usa el
+// propio sin importar lo que se mande acá.
+export function fetchKpisDiarios(token, filtros = {}) {
+  const params = new URLSearchParams();
+  if (filtros.desde) params.set('desde', filtros.desde);
+  if (filtros.hasta) params.set('hasta', filtros.hasta);
+  if (filtros.vendedorId) params.set('vendedorId', filtros.vendedorId);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return apiFetch(`/demos/kpis-diarios${query}`, { token, tipoSesion: 'vendedor' });
+}
+
 // Solo rolVendedor ADMIN: resumen de casos por semáforo SLA + conversiones
 // del mes, por cada vendedor — alimenta el selector de "Mis casos".
 export function fetchVendedoresKPI(token) {
