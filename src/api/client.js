@@ -321,7 +321,7 @@ export function resetearPasswordVendedor(token, vendedorId, password) {
   return apiFetch(`/admin-vendedores/vendedores/${vendedorId}/resetear-password`, { method: 'PATCH', body: { password }, token, tipoSesion: 'vendedor' });
 }
 export function guardarHorarioModalidad(token, vendedorId, dias) {
-  return apiFetch(`/admin-vendedores/vendedores/${vendedorId}/horario-modalidad`, { method: 'PUT', body: dias, token, tipoSesion: 'vendedor' });
+  return apiFetch(`/admin-vendedores/vendedores/${vendedorId}/horario-modalidad`, { method: 'PUT', body: { horario: dias }, token, tipoSesion: 'vendedor' });
 }
 
 export { API_URL };
