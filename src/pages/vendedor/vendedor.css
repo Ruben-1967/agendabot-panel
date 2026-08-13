@@ -8,6 +8,7 @@
   --teal-deep: #1F4E44;
   --teal-soft: #E4EDE9;
   --brass: #B8863B;
+  --naranja: #C1692C;
   --brass-soft: #F3E7D2;
   --line: #DAD4C0;
   --muted: #6B7770;
@@ -262,6 +263,12 @@
   gap: 8px;
   margin-bottom: 6px;
 }
+.tarjeta-demo-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
 .tarjeta-demo-header strong {
   font-family: 'Fraunces', serif;
   font-weight: 600;
@@ -282,8 +289,8 @@
   white-space: nowrap;
   font-family: 'IBM Plex Mono', monospace;
 }
-.badge-exito { background: var(--teal-soft); color: var(--teal-deep); }
-.badge-pendiente { background: var(--brass-soft); color: var(--brass); }
+.badge-exito { background: var(--teal); color: #fff; }
+.badge-pendiente { background: var(--naranja); color: #fff; }
 
 /* ---------- Nav compartido del panel de vendedor ---------- */
 .nav-vendedor {

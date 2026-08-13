@@ -257,15 +257,19 @@ export default function MisDemos() {
             <li key={d.id} className="tarjeta-demo">
               <div className="tarjeta-demo-header">
                 <strong>{d.nombreNegocio}</strong>
-                <span className={`badge-sla badge-sla-${d.estadoSLA.toLowerCase()}`}>
-                  {ETIQUETA_SLA[d.estadoSLA]}
-                </span>
+                <div className="tarjeta-demo-badges">
+                  <span className={`badge-sla badge-sla-${d.estadoSLA.toLowerCase()}`}>
+                    {ETIQUETA_SLA[d.estadoSLA]}
+                  </span>
+                  <span className={d.yaProbo ? 'badge-exito' : 'badge-pendiente'}>
+                    {d.yaProbo ? '✓ Probó' : 'No ha probado'}
+                  </span>
+                </div>
               </div>
               <p>{d.nombreEncargado} · {d.telefono}</p>
               <p className="texto-ayuda">{d.rubro} · {ETIQUETA_TIPO_LEAD[d.tipoLead]} · {d.diasEnEstado} día{d.diasEnEstado === 1 ? '' : 's'} {ETIQUETA_FASE[d.fase]}</p>
               <p className="texto-ayuda">
                 Cargada: {formatearFecha(d.creadoEn)}
-                {d.yaProbo && ' · Ya probó el sistema'}
                 {esAdmin && d.vendedorNombre && ` · Vendedor: ${d.vendedorNombre}`}
               </p>
 
