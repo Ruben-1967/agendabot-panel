@@ -14,6 +14,7 @@ export default function AdminLayout() {
         </div>
         <nav>
           <NavLink to="/admin" end>Dashboard</NavLink>
+          <NavLink to="/admin/conectar-whatsapp">Conectar WhatsApp</NavLink>
           {esCatalogoRotativo ? (
             <>
               <NavLink to="/admin/pedidos">Pedidos de hoy</NavLink>

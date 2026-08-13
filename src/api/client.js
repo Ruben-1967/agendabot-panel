@@ -126,6 +126,11 @@ export function actualizarInfoNegocio(token, data) {
   return apiFetch('/empresa/info', { method: 'PUT', body: data, token });
 }
 
+// ---------- Conectar WhatsApp (Embedded Signup) ----------
+export function conectarWhatsApp(token, { code, wabaId, phoneNumberId }) {
+  return apiFetch('/empresa/whatsapp/conectar', { method: 'POST', body: { code, wabaId, phoneNumberId }, token });
+}
+
 // ---------- Agenda: recurso, horario semanal, bloqueos ----------
 export function fetchAgenda(token) {
   return apiFetch('/agenda', { token });
