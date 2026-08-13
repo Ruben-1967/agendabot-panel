@@ -223,6 +223,10 @@ function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, onCerra
   const [descripcionVenta, setDescripcionVenta] = useState('');
   const [montoVenta, setMontoVenta] = useState('');
   const [categoriaVenta, setCategoriaVenta] = useState('');
+  const [fechaVenta, setFechaVenta] = useState(() => new Date().toISOString().slice(0, 10));
+  const [editandoVentaId, setEditandoVentaId] = useState(null);
+  const [fechaEditVenta, setFechaEditVenta] = useState('');
+  const [guardandoFechaVenta, setGuardandoFechaVenta] = useState(false);
   const [registrandoVenta, setRegistrandoVenta] = useState(false);
 
   // ---- Tab Ficha clínica (crea una AtencionClinica nueva) ----
@@ -309,14 +313,16 @@ function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, onCerra
     setRegistrandoVenta(true);
     setError('');
     try {
-      await registrarVenta(token, clienteId, {
+        await registrarVenta(token, clienteId, {
         descripcion: descripcionVenta.trim(),
         monto: Number(montoVenta),
         categoriaProducto: categoriaVenta || null,
+        fecha: fechaVenta,
       });
       setDescripcionVenta('');
       setMontoVenta('');
       setCategoriaVenta('');
+      setFechaVenta(new Date().toISOString().slice(0, 10));
       cargar();
       onCambio();
     } catch (err) {
@@ -325,6 +331,23 @@ function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, onCerra
       setRegistrandoVenta(false);
     }
   }
+
+async function guardarFechaVenta(ventaId) {
+    if (!fechaEditVenta) return;
+    setGuardandoFechaVenta(true);
+    setError('');
+    try {
+      await editarVenta(token, clienteId, ventaId, { fecha: fechaEditVenta });
+      setEditandoVentaId(null);
+      cargar();
+      onCambio();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setGuardandoFechaVenta(false);
+    }
+  }
+
 
   // ---- Ficha clínica: crear atención nueva ----
   function actualizarFichaNuevaAtencion(path, valor) {
@@ -504,6 +527,12 @@ function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, onCerra
                 required
               />
               <input
+                type="date"
+                value={fechaVenta}
+                onChange={(e) => setFechaVenta(e.target.value)}
+                required
+              />
+              <input
                 type="number"
                 min="0"
                 placeholder="Monto CLP"
@@ -534,9 +563,39 @@ function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, onCerra
               <p className="texto-vacio">Sin ventas registradas.</p>
             ) : (
               <div className="historial-items">
-                {cliente.ventas.map((v) => (
+              {cliente.ventas.map((v) => (
                   <div key={v.id} className="historial-item">
-                    <div className="historial-item-fecha">{formatearFecha(v.creadoEn)}</div>
+                    {editandoVentaId === v.id ? (
+                      <>
+                        <input
+                          type="date"
+                          value={fechaEditVenta}
+                          onChange={(e) => setFechaEditVenta(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          disabled={guardandoFechaVenta}
+                          onClick={() => guardarFechaVenta(v.id)}
+                        >
+                          {guardandoFechaVenta ? 'Guardando…' : 'Guardar'}
+                        </button>
+                        <button type="button" onClick={() => setEditandoVentaId(null)}>
+                          Cancelar
+                        </button>
+                      </>
+                    ) : (
+                      <div
+                        className="historial-item-fecha"
+                        style={{ cursor: 'pointer', textDecoration: 'underline dotted' }}
+                        title="Clic para editar la fecha"
+                        onClick={() => {
+                          setEditandoVentaId(v.id);
+                          setFechaEditVenta(new Date(v.fecha || v.creadoEn).toISOString().slice(0, 10));
+                        }}
+                      >
+                        {formatearFecha(v.fecha || v.creadoEn)}
+                      </div>
+                    )}
                     <div className="historial-item-desc">{v.descripcion}</div>
                     {v.categoriaProducto && (
                       <div className="historial-item-badge">{v.categoriaProducto}</div>
