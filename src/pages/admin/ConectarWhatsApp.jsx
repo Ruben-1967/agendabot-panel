@@ -6,32 +6,44 @@ const SDK_SRC = 'https://connect.facebook.net/es_LA/sdk.js';
 const GRAPH_API_VERSION = 'v21.0';
 const ORIGEN_META = 'https://www.facebook.com';
 
-// Carga el SDK de Facebook una sola vez y lo inicializa con el App ID del
-// panel. Si ya está cargado (navegación de vuelta a esta página) no vuelve
-// a inyectar el script.
-function cargarSdkFacebook(appId) {
-  return new Promise((resolve, reject) => {
-    if (window.FB) {
-      resolve(window.FB);
-      return;
-    }
+// Promesa a nivel de módulo (no de componente): garantiza que el script se
+// inyecte y FB.init() se ejecute UNA sola vez por carga de página, aunque el
+// useEffect que la llama se dispare dos veces (React StrictMode en dev) o el
+// componente se desmonte/remonte. Sin esto, una doble inicialización puede
+// dejar el SDK en un estado inconsistente que ignora las opciones de
+// FB.login() (se observó en producción: override_default_response_type no
+// se respetaba y Meta caía al response_type=token por defecto).
+//
+// El query string ?nocache= fuerza al navegador a pedir sdk.js de nuevo en
+// cada carga de página en vez de reusar una copia cacheada — connect.
+// facebook.net/{locale}/sdk.js no lleva versión en la URL, así que el
+// navegador puede quedarse con una copia vieja del SDK que no soporta
+// override_default_response_type.
+let sdkFacebookPromise = null;
 
+function cargarSdkFacebook(appId) {
+  if (sdkFacebookPromise) return sdkFacebookPromise;
+
+  sdkFacebookPromise = new Promise((resolve, reject) => {
     window.fbAsyncInit = function () {
-      window.FB.init({ appId, xfbml: false, version: GRAPH_API_VERSION });
+      window.FB.init({ appId, autoLogAppEvents: true, xfbml: false, version: GRAPH_API_VERSION });
       resolve(window.FB);
     };
 
-    if (document.getElementById('facebook-jssdk')) return;
-
     const script = document.createElement('script');
     script.id = 'facebook-jssdk';
-    script.src = SDK_SRC;
+    script.src = `${SDK_SRC}?nocache=${Date.now()}`;
     script.async = true;
     script.defer = true;
     script.crossOrigin = 'anonymous';
-    script.onerror = () => reject(new Error('No se pudo cargar el SDK de Facebook'));
+    script.onerror = () => {
+      sdkFacebookPromise = null; // permite reintentar si falló la carga
+      reject(new Error('No se pudo cargar el SDK de Facebook'));
+    };
     document.body.appendChild(script);
   });
+
+  return sdkFacebookPromise;
 }
 
 export default function ConectarWhatsApp() {
