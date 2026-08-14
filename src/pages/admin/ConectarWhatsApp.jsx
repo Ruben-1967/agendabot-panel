@@ -4,7 +4,18 @@ import { conectarWhatsApp } from '../../api/client';
 
 const SDK_SRC = 'https://connect.facebook.net/es_LA/sdk.js';
 const GRAPH_API_VERSION = 'v21.0';
-const ORIGEN_META = 'https://www.facebook.com';
+// El popup de Embedded Signup puede correr bajo www.facebook.com o
+// web.facebook.com (esta última se vio en móvil) — hay que aceptar ambos o
+// el postMessage con waba_id/phone_number_id se descarta en silencio.
+const ORIGENES_META = ['https://www.facebook.com', 'https://web.facebook.com'];
+
+// Cuánto esperar, después de que FB.login() ya entregó un "code" válido, a
+// que llegue el postMessage WA_EMBEDDED_SIGNUP con waba_id/phone_number_id
+// antes de darnos por vencidos. Sin este límite, si Meta corta el registro
+// del número de su lado (visto en producción: "Empresa no puede registrar
+// clientes") y nunca manda FINISH ni CANCEL/ERROR, el botón queda
+// "Conectando…" para siempre sin ninguna explicación.
+const ESPERA_DATOS_WABA_MS = 15000;
 
 // Promesa a nivel de módulo (no de componente): garantiza que el script se
 // inyecte y FB.init() se ejecute UNA sola vez por carga de página, aunque el
@@ -83,6 +94,14 @@ export default function ConectarWhatsApp() {
   // cuando están los tres.
   const datosSignupRef = useRef({ code: null, wabaId: null, phoneNumberId: null });
   const yaEnviadoRef = useRef(false);
+  const timeoutEsperaRef = useRef(null);
+
+  function limpiarTimeoutEspera() {
+    if (timeoutEsperaRef.current) {
+      clearTimeout(timeoutEsperaRef.current);
+      timeoutEsperaRef.current = null;
+    }
+  }
 
   useEffect(() => {
     if (!appId) {
@@ -94,9 +113,11 @@ export default function ConectarWhatsApp() {
       .catch((err) => setError(err.message));
   }, [appId]);
 
+  useEffect(() => limpiarTimeoutEspera, []);
+
   useEffect(() => {
     function alRecibirMensaje(event) {
-      if (event.origin !== ORIGEN_META) return;
+      if (!ORIGENES_META.includes(event.origin)) return;
 
       let datos;
       try {
@@ -117,6 +138,7 @@ export default function ConectarWhatsApp() {
         datosSignupRef.current.phoneNumberId = datos.data?.phone_number_id || null;
         intentarEnviarAlBackend();
       } else if (datos.event === 'CANCEL' || datos.event === 'ERROR') {
+        limpiarTimeoutEspera();
         setConectando(false);
         setError(describirFalloEmbeddedSignup(datos.data));
       }
@@ -130,6 +152,7 @@ export default function ConectarWhatsApp() {
     const { code, wabaId, phoneNumberId } = datosSignupRef.current;
     if (!code || !wabaId || !phoneNumberId || yaEnviadoRef.current) return;
 
+    limpiarTimeoutEspera();
     yaEnviadoRef.current = true;
     try {
       const empresaActualizada = await conectarWhatsApp(token, { code, wabaId, phoneNumberId });
@@ -151,6 +174,7 @@ export default function ConectarWhatsApp() {
     setResultado(null);
     datosSignupRef.current = { code: null, wabaId: null, phoneNumberId: null };
     yaEnviadoRef.current = false;
+    limpiarTimeoutEspera();
     setConectando(true);
 
     window.FB.login(
@@ -163,6 +187,18 @@ export default function ConectarWhatsApp() {
 
         if (response.authResponse?.code) {
           datosSignupRef.current.code = response.authResponse.code;
+          // A partir de acá lo único que falta es el postMessage con
+          // waba_id/phone_number_id — si nunca llega, avisamos en vez de
+          // dejar el botón "Conectando…" pegado para siempre.
+          timeoutEsperaRef.current = setTimeout(() => {
+            if (!yaEnviadoRef.current) {
+              setConectando(false);
+              setError(
+                'Meta autorizó el acceso pero nunca confirmó los datos del número de WhatsApp (no llegó la señal de fin de registro). ' +
+                'Es probable que el registro se haya interrumpido del lado de Meta antes de completarse — revisa la consola para más detalle.'
+              );
+            }
+          }, ESPERA_DATOS_WABA_MS);
           intentarEnviarAlBackend();
         } else {
           setConectando(false);
