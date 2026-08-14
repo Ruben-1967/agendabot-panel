@@ -4,10 +4,21 @@ import { conectarWhatsApp } from '../../api/client';
 
 const SDK_SRC = 'https://connect.facebook.net/es_LA/sdk.js';
 const GRAPH_API_VERSION = 'v21.0';
-// El popup de Embedded Signup puede correr bajo www.facebook.com o
-// web.facebook.com (esta última se vio en móvil) — hay que aceptar ambos o
-// el postMessage con waba_id/phone_number_id se descarta en silencio.
-const ORIGENES_META = ['https://www.facebook.com', 'https://web.facebook.com'];
+// El popup de Embedded Signup puede correr bajo distintos subdominios de
+// Meta (www.facebook.com, web.facebook.com en móvil, y potencialmente
+// otros) — Meta documenta validar que el origen termine en "facebook.com",
+// no una lista fija de dominios exactos, o el postMessage con
+// waba_id/phone_number_id se descarta en silencio. Se valida el hostname
+// real (no un endsWith ingenuo del string completo) para no aceptar un
+// dominio spoofeado tipo "evilfacebook.com".
+function esOrigenMeta(origen) {
+  try {
+    const { protocol, hostname } = new URL(origen);
+    return protocol === 'https:' && (hostname === 'facebook.com' || hostname.endsWith('.facebook.com'));
+  } catch {
+    return false;
+  }
+}
 
 // Cuánto esperar, después de que FB.login() ya entregó un "code" válido, a
 // que llegue el postMessage WA_EMBEDDED_SIGNUP con waba_id/phone_number_id
@@ -117,7 +128,7 @@ export default function ConectarWhatsApp() {
 
   useEffect(() => {
     function alRecibirMensaje(event) {
-      if (!ORIGENES_META.includes(event.origin)) return;
+      if (!esOrigenMeta(event.origin)) return;
 
       let datos;
       try {
