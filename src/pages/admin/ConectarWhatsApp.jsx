@@ -21,6 +21,26 @@ const ORIGEN_META = 'https://www.facebook.com';
 // override_default_response_type.
 let sdkFacebookPromise = null;
 
+// Meta documenta que los eventos CANCEL/ERROR del postMessage
+// WA_EMBEDDED_SIGNUP traen { current_step, error_id, error_message,
+// session_id } en "data" — más información que el mensaje genérico que ve
+// el usuario en la ventana de Meta. La mostramos en pantalla (no solo en
+// consola) para no depender de que alguien abra DevTools la próxima vez que
+// falle en un intento real.
+function describirFalloEmbeddedSignup(data) {
+  if (!data) return 'El proceso de conexión con Meta se canceló o falló antes de completarse.';
+
+  const partes = [];
+  if (data.error_message) partes.push(data.error_message);
+  if (data.current_step) partes.push(`paso: ${data.current_step}`);
+  if (data.error_id) partes.push(`error_id: ${data.error_id}`);
+  if (data.session_id) partes.push(`session_id: ${data.session_id}`);
+
+  return partes.length > 0
+    ? `Meta rechazó la conexión — ${partes.join(' — ')}`
+    : 'El proceso de conexión con Meta se canceló o falló antes de completarse.';
+}
+
 function cargarSdkFacebook(appId) {
   if (sdkFacebookPromise) return sdkFacebookPromise;
 
@@ -87,13 +107,18 @@ export default function ConectarWhatsApp() {
 
       if (datos.type !== 'WA_EMBEDDED_SIGNUP') return;
 
+      // Log completo siempre, incluso en FINISH: si algo falla más adelante
+      // (ej. el backend rechaza el code) queremos poder correlacionar con lo
+      // que Meta mandó acá, no solo con el mensaje amigable que ve el usuario.
+      console.log('[EMBEDDED SIGNUP] postMessage recibido de Meta:', JSON.stringify(datos));
+
       if (datos.event === 'FINISH') {
         datosSignupRef.current.wabaId = datos.data?.waba_id || null;
         datosSignupRef.current.phoneNumberId = datos.data?.phone_number_id || null;
         intentarEnviarAlBackend();
       } else if (datos.event === 'CANCEL' || datos.event === 'ERROR') {
         setConectando(false);
-        setError('El proceso de conexión con Meta se canceló o falló antes de completarse.');
+        setError(describirFalloEmbeddedSignup(datos.data));
       }
     }
 
@@ -130,12 +155,19 @@ export default function ConectarWhatsApp() {
 
     window.FB.login(
       (response) => {
+        // Log completo siempre — el mensaje amigable que ve el usuario en la
+        // ventana de Meta (ej. "Empresa no puede registrar clientes") no es
+        // lo mismo que lo que este callback recibe; acá puede venir un
+        // status/error de la API de Facebook que ayuda a diagnosticar.
+        console.log('[EMBEDDED SIGNUP] Respuesta de FB.login():', JSON.stringify(response));
+
         if (response.authResponse?.code) {
           datosSignupRef.current.code = response.authResponse.code;
           intentarEnviarAlBackend();
         } else {
           setConectando(false);
-          setError('No se completó el inicio de sesión con Meta.');
+          const detalle = response?.status ? ` (status: ${response.status})` : '';
+          setError(`No se completó el inicio de sesión con Meta${detalle}. Revisa la consola para el detalle completo.`);
         }
       },
       {
