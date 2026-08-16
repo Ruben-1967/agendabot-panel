@@ -105,9 +105,16 @@ export default function MisDemos() {
     setAvisoLinkManual(null);
     try {
       const resultado = await convertirClienteReal(token, demo.id);
-      if (!resultado.whatsappEnviado) {
-        setAvisoLinkManual({ nombreNegocio: demo.nombreNegocio, link: resultado.linkActivacion });
-      }
+      // Se muestra siempre, no solo cuando whatsappEnviado es false: que la
+      // API de Meta no haya tirado error no garantiza que el mensaje haya
+      // llegado de verdad al teléfono del prospecto (ej. número sin una app
+      // de WhatsApp real detrás), así que el link queda visible como
+      // respaldo en los dos casos.
+      setAvisoLinkManual({
+        nombreNegocio: demo.nombreNegocio,
+        link: resultado.linkActivacion,
+        whatsappEnviado: resultado.whatsappEnviado,
+      });
       cargar();
     } catch (err) {
       setError(err.message || 'No se pudo convertir a cliente real');
@@ -157,8 +164,18 @@ export default function MisDemos() {
         {avisoLinkManual && (
           <div className="aviso-link-manual">
             <p>
-              El WhatsApp automático para <strong>{avisoLinkManual.nombreNegocio}</strong> no se pudo enviar (fuera de la
-              ventana de 24h de WhatsApp). Compartile este link a mano:
+              {avisoLinkManual.whatsappEnviado ? (
+                <>
+                  <strong>{avisoLinkManual.nombreNegocio}</strong> se convirtió a cliente real y se envió el WhatsApp
+                  automático. Si el mensaje no le llega (puede pasar si el número no tiene un WhatsApp real detrás),
+                  compartile este link a mano:
+                </>
+              ) : (
+                <>
+                  El WhatsApp automático para <strong>{avisoLinkManual.nombreNegocio}</strong> no se pudo enviar (fuera de
+                  la ventana de 24h de WhatsApp). Compartile este link a mano:
+                </>
+              )}
             </p>
             <div className="aviso-link-manual-fila">
               <code>{avisoLinkManual.link}</code>
