@@ -106,9 +106,13 @@ export default function ElegirPlan() {
 
       const resultado = await res.json();
 
-      // El cobro real (Flow.cl) todavía no está integrado — no hay urlPago a
-      // la que redirigir. Mostramos el mensaje del backend; un admin
-      // confirma el pago manualmente y ahí el plan queda activo de verdad.
+      if (resultado.url) {
+        // Redirige a Flow para que el cliente registre su tarjeta — desde
+        // ahí Flow lo trae de vuelta a /suscripcion/resultado.
+        window.location.href = resultado.url;
+        return;
+      }
+
       setResultadoElegido(resultado);
     } catch (err) {
       setError(err.message);

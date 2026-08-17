@@ -295,6 +295,14 @@ export function editarPlanCliente(token, empresaId, plan) {
   return apiFetch(`/demos/clientes-convertidos/${empresaId}/plan`, { method: 'PATCH', body: { plan }, token, tipoSesion: 'vendedor' });
 }
 
+export function bloquearClienteConvertido(token, empresaId) {
+  return apiFetch(`/demos/clientes-convertidos/${empresaId}/bloquear-prueba`, { method: 'POST', token, tipoSesion: 'vendedor' });
+}
+
+export function desbloquearClienteConvertido(token, empresaId) {
+  return apiFetch(`/demos/clientes-convertidos/${empresaId}/desbloquear-prueba`, { method: 'POST', token, tipoSesion: 'vendedor' });
+}
+
 // ---------- Activación de cuenta (cliente real, sin sesión de vendedor) ----------
 export function activarCuenta(tokenActivacion, password) {
   return apiFetch('/auth/activar-cuenta', { method: 'POST', body: { token: tokenActivacion, password } });

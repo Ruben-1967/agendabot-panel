@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVendedorAuth } from '../../context/VendedorAuthContext';
-import { fetchProspectosDemo, eliminarProspectoDemo, convertirClienteReal, fetchClientesConvertidos, eliminarClienteConvertido, editarPlanCliente, fetchVendedoresKPI, fetchKpisDiarios } from '../../api/client';
+import { fetchProspectosDemo, eliminarProspectoDemo, convertirClienteReal, fetchClientesConvertidos, eliminarClienteConvertido, editarPlanCliente, bloquearClienteConvertido, desbloquearClienteConvertido, fetchVendedoresKPI, fetchKpisDiarios } from '../../api/client';
 import NavVendedor from './NavVendedor';
 import './vendedor.css';
 
@@ -168,6 +168,7 @@ export default function MisDemos() {
   const [errorClientes, setErrorClientes] = useState('');
   const [eliminandoClienteId, setEliminandoClienteId] = useState(null);
   const [modalEditarPlan, setModalEditarPlan] = useState(null); // null = cerrado, cliente = abierto
+  const [bloqueandoClienteId, setBloqueandoClienteId] = useState(null);
 
   const [desdeKpiDiario, setDesdeKpiDiario] = useState(hoyEnChile());
   const [hastaKpiDiario, setHastaKpiDiario] = useState(hoyEnChile());
@@ -267,6 +268,43 @@ export default function MisDemos() {
       setErrorClientes(err.message || 'No se pudo eliminar el cliente');
     } finally {
       setEliminandoClienteId(null);
+    }
+  }
+
+  async function manejarBloquearCliente(cliente) {
+    const confirmado = window.confirm(
+      `¿Bloquear el servicio de "${cliente.nombre}" ahora mismo? Deja de responder a sus clientes por WhatsApp hasta que se desbloquee o pague.`
+    );
+    if (!confirmado) return;
+
+    setBloqueandoClienteId(cliente.empresaId);
+    setErrorClientes('');
+    try {
+      await bloquearClienteConvertido(token, cliente.empresaId);
+      setClientes((prev) => prev.map((c) => (
+        c.empresaId === cliente.empresaId ? { ...c, bloqueadaPorPruebaVencida: true } : c
+      )));
+    } catch (err) {
+      setErrorClientes(err.message || 'No se pudo bloquear al cliente');
+    } finally {
+      setBloqueandoClienteId(null);
+    }
+  }
+
+  async function manejarDesbloquearCliente(cliente) {
+    setBloqueandoClienteId(cliente.empresaId);
+    setErrorClientes('');
+    try {
+      await desbloquearClienteConvertido(token, cliente.empresaId);
+      setClientes((prev) => prev.map((c) => (
+        c.empresaId === cliente.empresaId
+          ? { ...c, bloqueadaPorPruebaVencida: false, avisosPruebaVencidaEnviados: 0 }
+          : c
+      )));
+    } catch (err) {
+      setErrorClientes(err.message || 'No se pudo desbloquear al cliente');
+    } finally {
+      setBloqueandoClienteId(null);
     }
   }
 
@@ -516,6 +554,14 @@ export default function MisDemos() {
                             🕒 {c.diasSinPago} día{c.diasSinPago === 1 ? '' : 's'} sin pago
                           </span>
                         )}
+                        {c.avisosPruebaVencidaEnviados > 0 && !c.bloqueadaPorPruebaVencida && (
+                          <span className="badge-sla badge-sla-amarillo">
+                            📨 {c.avisosPruebaVencidaEnviados}/3 avisos de pago
+                          </span>
+                        )}
+                        {c.bloqueadaPorPruebaVencida && (
+                          <span className="badge-sla badge-sla-rojo">🔒 Bloqueada</span>
+                        )}
                       </div>
                     </div>
                     <p>{c.email || 'Sin email'} · {c.telefonoContacto}</p>
@@ -534,6 +580,23 @@ export default function MisDemos() {
                         <button className="cta-secundaria" onClick={() => setModalEditarPlan(c)}>
                           Cambiar plan
                         </button>
+                        {c.bloqueadaPorPruebaVencida ? (
+                          <button
+                            className="cta-secundaria"
+                            onClick={() => manejarDesbloquearCliente(c)}
+                            disabled={bloqueandoClienteId === c.empresaId}
+                          >
+                            {bloqueandoClienteId === c.empresaId ? 'Desbloqueando…' : 'Desbloquear'}
+                          </button>
+                        ) : (
+                          <button
+                            className="cta-secundaria"
+                            onClick={() => manejarBloquearCliente(c)}
+                            disabled={bloqueandoClienteId === c.empresaId}
+                          >
+                            {bloqueandoClienteId === c.empresaId ? 'Bloqueando…' : 'Bloquear ahora'}
+                          </button>
+                        )}
                         <button
                           className="btn-link btn-danger"
                           onClick={() => manejarEliminarCliente(c)}

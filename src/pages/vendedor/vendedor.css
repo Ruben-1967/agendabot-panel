@@ -106,6 +106,15 @@
   margin-bottom: 16px;
 }
 
+.login-link {
+  display: inline-block;
+  margin-top: 12px;
+  color: var(--teal);
+  font-weight: 600;
+  text-decoration: none;
+}
+.login-link:hover { text-decoration: underline; }
+
 /* ---------- Pantallas internas del vendedor (post-login) ---------- */
 .pantalla-vendedor {
   min-height: 100vh;

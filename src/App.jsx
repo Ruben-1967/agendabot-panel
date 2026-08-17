@@ -32,6 +32,7 @@ import MarcarPagos from './pages/vendedor/admin/MarcarPagos';
 import AdminVendedores from './pages/vendedor/admin/AdminVendedores';
 import ActivarCuenta from './pages/ActivarCuenta';
 import ElegirPlan from './pages/ElegirPlan';
+import ResultadoSuscripcion from './pages/ResultadoSuscripcion';
 
 function RaizSegunSesion() {
   const { usuario, cargandoSesion } = useAuth();
@@ -154,6 +155,7 @@ function AppRoutes() {
 
       <Route path="/activar-cuenta" element={<ActivarCuenta />} />
       <Route path="/suscripcion/elegir-plan" element={<ElegirPlan />} />
+      <Route path="/suscripcion/resultado" element={<ResultadoSuscripcion />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
 
