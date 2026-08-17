@@ -14,7 +14,6 @@ export default function AdminLayout() {
         </div>
         <nav>
           <NavLink to="/admin" end>Dashboard</NavLink>
-          <NavLink to="/admin/conectar-whatsapp">Conectar WhatsApp</NavLink>
           {esCatalogoRotativo ? (
             <>
               <NavLink to="/admin/pedidos">Pedidos de hoy</NavLink>
@@ -35,6 +34,7 @@ export default function AdminLayout() {
               <NavLink to="/admin/lista-espera">Lista de espera</NavLink>
             </>
           )}
+          <NavLink to="/admin/conectar-whatsapp">Conectar WhatsApp</NavLink>
         </nav>
         <div className="sidebar-footer">
           <div className="usuario-info">
