@@ -30,7 +30,7 @@ function VistaPreviaCampos({ camposFicha }) {
  * profesional) como en GestionProfesionales.jsx (negocios multi-profesional,
  * como sección general arriba de la lista de profesionales).
  */
-export default function Servicios({ servicios, profesionales, token, onCambio, setError }) {
+export default function Servicios({ servicios, profesionales, token, onCambio, setError, bloqueado = false }) {
   const [nombre, setNombre] = useState('');
   const [duracionMinutos, setDuracionMinutos] = useState('');
   const [plantillaFichaId, setPlantillaFichaId] = useState('');
@@ -46,7 +46,16 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
   // diseña campos libres. Se ven todas, no solo las sugeridas para el rubro.
   const [plantillasFicha, setPlantillasFicha] = useState([]);
   useEffect(() => {
-    fetchPlantillasFicha(token).then((data) => setPlantillasFicha(data.plantillas || [])).catch(() => {});
+    fetchPlantillasFicha(token)
+      .then((data) => {
+        const plantillas = data.plantillas || [];
+        setPlantillasFicha(plantillas);
+        // Ya no existe la opción "sin ficha" — el select queda controlado y
+        // requiere un valor real, así que precargamos la primera plantilla
+        // apenas llegan, para que coincida con lo que el navegador muestra.
+        if (plantillas.length > 0) setPlantillaFichaId((actual) => actual || plantillas[0].id);
+      })
+      .catch(() => {});
   }, [token]);
 
   // Vinculación con profesionales: id del servicio cuyo panel de
@@ -101,7 +110,10 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
     setEditandoId(servicio.id);
     setNombreEdicion(servicio.nombre);
     setDuracionEdicion(servicio.duracionMinutos ?? '');
-    setPlantillaFichaIdEdicion(servicio.plantillaFichaId || '');
+    // "Sin ficha" ya no es una opción — si el servicio quedó así de antes
+    // (creado previo a este cambio), se precarga la primera plantilla real
+    // disponible en vez de dejar el select sin nada seleccionado.
+    setPlantillaFichaIdEdicion(servicio.plantillaFichaId || plantillasFicha[0]?.id || '');
   }
 
   function cancelarEdicion() {
@@ -161,29 +173,37 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
 
   return (
     <div>
-      <form className="form-inline" onSubmit={manejarCrear} style={{ flexWrap: 'wrap' }}>
-        <input placeholder="Nombre (ej. Examen visual)" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
-        <input type="number" min="1" placeholder="Duración (min, opcional)" value={duracionMinutos} onChange={(e) => setDuracionMinutos(e.target.value)} />
-        <select value={plantillaFichaId} onChange={(e) => setPlantillaFichaId(e.target.value)}>
-          <option value="">Sin ficha (hereda la del rubro)</option>
-          {plantillasFicha.map((p) => (
-            <option key={p.id} value={p.id}>{p.nombre}</option>
-          ))}
-        </select>
-        <button type="submit" disabled={guardando}>{guardando ? 'Agregando…' : 'Agregar servicio'}</button>
-      </form>
-      {plantillaFichaId && (
-        <div className="bloque-segmentacion" style={{ marginTop: 0, marginBottom: 16 }}>
-          <p className="texto-muted" style={{ margin: '0 0 4px' }}>Campos de "{plantillasFicha.find((p) => p.id === plantillaFichaId)?.nombre}":</p>
-          <VistaPreviaCampos camposFicha={plantillasFicha.find((p) => p.id === plantillaFichaId)?.camposFicha} />
-        </div>
+      {bloqueado && (
+        <p className="texto-muted" style={{ marginBottom: 8 }}>
+          Los servicios de tu plan actual se administran desde "Configuración de agenda".
+        </p>
+      )}
+      {!bloqueado && (
+        <>
+          <form className="form-inline" onSubmit={manejarCrear} style={{ flexWrap: 'wrap' }}>
+            <input placeholder="Nombre (ej. Examen visual)" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+            <input type="number" min="1" placeholder="Duración (min, opcional)" value={duracionMinutos} onChange={(e) => setDuracionMinutos(e.target.value)} />
+            <select value={plantillaFichaId} onChange={(e) => setPlantillaFichaId(e.target.value)} required>
+              {plantillasFicha.map((p) => (
+                <option key={p.id} value={p.id}>{p.nombre}</option>
+              ))}
+            </select>
+            <button type="submit" disabled={guardando}>{guardando ? 'Agregando…' : 'Agregar servicio'}</button>
+          </form>
+          {plantillaFichaId && (
+            <div className="bloque-segmentacion" style={{ marginTop: 0, marginBottom: 16 }}>
+              <p className="texto-muted" style={{ margin: '0 0 4px' }}>Campos de "{plantillasFicha.find((p) => p.id === plantillaFichaId)?.nombre}":</p>
+              <VistaPreviaCampos camposFicha={plantillasFicha.find((p) => p.id === plantillaFichaId)?.camposFicha} />
+            </div>
+          )}
+        </>
       )}
 
       {servicios.length === 0 ? (
         <p className="texto-muted">Todavía no tienes servicios cargados.</p>
       ) : (
         <table className="tabla-simple">
-          <thead><tr><th>Servicio</th><th>Duración</th><th>Ficha</th><th>Estado</th>{hayMultiplesProfesionales && <th>Profesionales</th>}<th></th></tr></thead>
+          <thead><tr><th>Servicio</th><th>Duración</th><th>Ficha</th><th>Estado</th>{hayMultiplesProfesionales && <th>Profesionales</th>}{!bloqueado && <th></th>}</tr></thead>
           <tbody>
             {servicios.map((s) => {
               const enEdicion = editandoId === s.id;
@@ -212,8 +232,7 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
                           />
                         </td>
                         <td>
-                          <select value={plantillaFichaIdEdicion} onChange={(e) => setPlantillaFichaIdEdicion(e.target.value)}>
-                            <option value="">Sin ficha</option>
+                          <select value={plantillaFichaIdEdicion} onChange={(e) => setPlantillaFichaIdEdicion(e.target.value)} required>
                             {plantillasFicha.map((p) => (
                               <option key={p.id} value={p.id}>{p.nombre}</option>
                             ))}
@@ -236,16 +255,22 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
                         <td>{s.activo ? 'Activo' : 'Inactivo'}</td>
                         {hayMultiplesProfesionales && (
                           <td>
-                            <button className="btn-link" onClick={() => setAsignandoId(asignando ? null : s.id)}>
-                              {recursosVinculados.length === 0 ? 'Sin asignar' : `${recursosVinculados.length} asignado(s)`}
-                            </button>
+                            {bloqueado ? (
+                              recursosVinculados.length === 0 ? 'Sin asignar' : `${recursosVinculados.length} asignado(s)`
+                            ) : (
+                              <button className="btn-link" onClick={() => setAsignandoId(asignando ? null : s.id)}>
+                                {recursosVinculados.length === 0 ? 'Sin asignar' : `${recursosVinculados.length} asignado(s)`}
+                              </button>
+                            )}
                           </td>
                         )}
-                        <td className="acciones">
-                          <button className="btn-link" onClick={() => comenzarEdicion(s)}>Editar</button>
-                          <button className="btn-link" onClick={() => alternarActivo(s)}>{s.activo ? 'Desactivar' : 'Activar'}</button>
-                          <button className="btn-link btn-danger" onClick={() => eliminar(s)}>Eliminar</button>
-                        </td>
+                        {!bloqueado && (
+                          <td className="acciones">
+                            <button className="btn-link" onClick={() => comenzarEdicion(s)}>Editar</button>
+                            <button className="btn-link" onClick={() => alternarActivo(s)}>{s.activo ? 'Desactivar' : 'Activar'}</button>
+                            <button className="btn-link btn-danger" onClick={() => eliminar(s)}>Eliminar</button>
+                          </td>
+                        )}
                       </>
                     )}
                   </tr>

@@ -130,7 +130,35 @@ function DatosBaseProfesional({ profesional, token, onCambio, setError }) {
   );
 }
 
-function TarjetaProfesional({ profesional, token, onCambio, setError, expandido, onToggle }) {
+// Vista de solo lectura del horario semanal — mismos datos que EditorHorario
+// pero sin controles, para planes donde esta pestaña queda bloqueada.
+function ResumenHorarioSoloLectura({ horarios }) {
+  const activos = (horarios || []).filter((h) => h.activo).sort((a, b) => a.diaSemana - b.diaSemana);
+  if (activos.length === 0) return <p className="texto-muted">Sin horario cargado.</p>;
+  return (
+    <ul className="lista-campos-plantilla">
+      {activos.map((h) => (
+        <li key={h.id}>{NOMBRES_DIAS_CORTO[h.diaSemana]}: {h.horaInicio} – {h.horaFin}</li>
+      ))}
+    </ul>
+  );
+}
+
+function BloqueosSoloLectura({ bloqueos }) {
+  if (!bloqueos || bloqueos.length === 0) return <p className="texto-muted">No hay bloqueos cargados.</p>;
+  return (
+    <ul className="lista-campos-plantilla">
+      {bloqueos.map((b) => (
+        <li key={b.id}>
+          {new Date(b.fechaInicio).toLocaleDateString('es-CL', { timeZone: 'UTC' })} – {new Date(b.fechaFin).toLocaleDateString('es-CL', { timeZone: 'UTC' })}
+          {b.motivo ? ` (${b.motivo})` : ''}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function TarjetaProfesional({ profesional, token, onCambio, setError, expandido, onToggle, bloqueado }) {
   return (
     <div className="tarjeta-profesional-wrap">
       <div className="tarjeta-profesional" onClick={onToggle} role="button" tabIndex={0}>
@@ -144,29 +172,45 @@ function TarjetaProfesional({ profesional, token, onCambio, setError, expandido,
           ) : (
             <span className="estado-pill estado-ninguno">Sin usuario asignado</span>
           )}
-          <span className="btn-link">{expandido ? 'Ocultar horario' : 'Editar horario'}</span>
+          <span className="btn-link">
+            {expandido ? 'Ocultar' : bloqueado ? 'Ver detalle' : 'Editar horario'}
+          </span>
         </div>
       </div>
       {expandido && (
         <div className="editor-horario-tarjeta">
-          <h3 className="subtitulo-tarjeta">Datos básicos</h3>
-          <DatosBaseProfesional profesional={profesional} token={token} onCambio={onCambio} setError={setError} />
-          <h3 className="subtitulo-tarjeta">Horario semanal</h3>
-          <EditorHorario
-            horarios={profesional.horarios}
-            recursoId={profesional.id}
-            token={token}
-            onGuardado={onCambio}
-            setError={setError}
-          />
-          <h3 className="subtitulo-tarjeta">Vacaciones y feriados</h3>
-          <Bloqueos
-            bloqueos={profesional.bloqueos || []}
-            recursoId={profesional.id}
-            token={token}
-            onCambio={onCambio}
-            setError={setError}
-          />
+          {bloqueado ? (
+            <>
+              <h3 className="subtitulo-tarjeta">Horario semanal</h3>
+              <ResumenHorarioSoloLectura horarios={profesional.horarios} />
+              <h3 className="subtitulo-tarjeta">Vacaciones y feriados</h3>
+              <BloqueosSoloLectura bloqueos={profesional.bloqueos} />
+              <p className="texto-muted" style={{ marginTop: 8 }}>
+                Estos datos se administran desde "Configuración de agenda" en tu plan actual.
+              </p>
+            </>
+          ) : (
+            <>
+              <h3 className="subtitulo-tarjeta">Datos básicos</h3>
+              <DatosBaseProfesional profesional={profesional} token={token} onCambio={onCambio} setError={setError} />
+              <h3 className="subtitulo-tarjeta">Horario semanal</h3>
+              <EditorHorario
+                horarios={profesional.horarios}
+                recursoId={profesional.id}
+                token={token}
+                onGuardado={onCambio}
+                setError={setError}
+              />
+              <h3 className="subtitulo-tarjeta">Vacaciones y feriados</h3>
+              <Bloqueos
+                bloqueos={profesional.bloqueos || []}
+                recursoId={profesional.id}
+                token={token}
+                onCambio={onCambio}
+                setError={setError}
+              />
+            </>
+          )}
         </div>
       )}
     </div>
@@ -174,7 +218,12 @@ function TarjetaProfesional({ profesional, token, onCambio, setError, expandido,
 }
 
 export default function GestionProfesionales() {
-  const { token } = useAuth();
+  const { token, usuario } = useAuth();
+  // Plan A ya administra Servicios/Horario/etc. desde "Configuración de
+  // agenda" (para su único profesional) — dejar esos mismos campos editables
+  // acá también sería duplicado y confuso, así que esta pestaña queda de
+  // solo lectura + el aviso de upgrade siempre visible.
+  const bloqueadoPorPlan = usuario?.plan === 'PLAN_A';
   const [profesionales, setProfesionales] = useState([]);
   const [servicios, setServicios] = useState([]);
   const [limite, setLimite] = useState(null);
@@ -236,25 +285,25 @@ export default function GestionProfesionales() {
       {error && <p className="mensaje-error">{error}</p>}
 
     <h2 className="subtitulo">Servicios</h2>
-      <Servicios servicios={servicios} profesionales={profesionales} token={token} onCambio={cargarServicios} setError={setError} />
+      <Servicios servicios={servicios} profesionales={profesionales} token={token} onCambio={cargarServicios} setError={setError} bloqueado={bloqueadoPorPlan} />
 
       <h2 className="subtitulo">Profesionales</h2>
       <div className="barra-limite-profesionales">
         <span className="texto-muted">
           {limite === null ? 'Profesionales: ilimitados en tu plan' : `Profesionales: ${textoLimite} usados`}
         </span>
-        {!mostrarForm && (
+        {!mostrarForm && !bloqueadoPorPlan && (
           <button className="btn-agregar-profesional" onClick={manejarClickAgregar}>+ Agregar profesional</button>
         )}
       </div>
 
-      {mostrarUpsell && (
+      {(mostrarUpsell || bloqueadoPorPlan) && (
         <div className="aviso-upsell">
           Tu plan actual permite máximo {limite} profesional{limite === 1 ? '' : 'es'}. <Link to="/suscripcion/elegir-plan" className="link-upsell">Mejora tu plan para agregar más.</Link>
         </div>
       )}
 
-      {mostrarForm && (
+      {mostrarForm && !bloqueadoPorPlan && (
         <FormNuevoProfesional
           token={token}
           onCreado={manejarCreado}
@@ -276,6 +325,7 @@ export default function GestionProfesionales() {
               setError={setError}
               expandido={expandidoId === p.id}
               onToggle={() => setExpandidoId(expandidoId === p.id ? null : p.id)}
+              bloqueado={bloqueadoPorPlan}
             />
           ))}
         </div>

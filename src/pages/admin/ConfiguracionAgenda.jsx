@@ -22,7 +22,7 @@ function generarClave() {
 // ------------------------------------------------------------
 function FormRecurso({ recurso, token, onGuardado, setError }) {
   const [nombre, setNombre] = useState(recurso?.nombre || '');
-  const [duracion, setDuracion] = useState(recurso?.duracionCitaMinutos ?? 30);
+  const [duracion] = useState(recurso?.duracionCitaMinutos ?? 30);
   const [anticipacion, setAnticipacion] = useState(recurso?.anticipacionMinimaMin ?? 120);
   const [horizonte, setHorizonte] = useState(recurso?.horizonteAgendaDias ?? 28);
   const [guardando, setGuardando] = useState(false);
@@ -52,10 +52,10 @@ function FormRecurso({ recurso, token, onGuardado, setError }) {
         Nombre del recurso (negocio o profesional que atiende)
         <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Atención Ahorróptica" required />
       </label>
-      <label>
-        Duración de cada cita (minutos)
-        <input type="number" min="5" value={duracion} onChange={(e) => setDuracion(e.target.value)} required />
-      </label>
+      {/* Duración de cada cita: se sigue mandando en el guardado (duracionCitaMinutos
+          es un campo obligatorio del recurso), pero ya no se muestra acá — ese dato
+          vive por servicio (ver sección "Servicios" más abajo), que es donde
+          corresponde configurarlo. */}
       <label>
         Anticipación mínima para agendar (minutos antes)
         <input type="number" min="0" value={anticipacion} onChange={(e) => setAnticipacion(e.target.value)} />
@@ -184,11 +184,11 @@ export default function ConfiguracionAgenda() {
           <h2 className="subtitulo">Horario semanal</h2>
           <EditorHorario horarios={recurso.horarios} token={token} onGuardado={cargar} setError={setError} />
 
-          <h2 className="subtitulo">Vacaciones y feriados</h2>
-          <Bloqueos bloqueos={recurso.bloqueos} token={token} onCambio={cargar} setError={setError} />
-
           <h2 className="subtitulo">Servicios</h2>
           <Servicios servicios={servicios} token={token} onCambio={cargar} setError={setError} />
+
+          <h2 className="subtitulo">Vacaciones y feriados</h2>
+          <Bloqueos bloqueos={recurso.bloqueos} token={token} onCambio={cargar} setError={setError} />
         </>
       )}
     </div>

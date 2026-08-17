@@ -728,6 +728,7 @@ export default function Clientes() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState(null);
+  const [busqueda, setBusqueda] = useState('');
 
   const [nombreNuevo, setNombreNuevo] = useState('');
   const [rutNuevo, setRutNuevo] = useState('');
@@ -748,6 +749,16 @@ export default function Clientes() {
   useEffect(() => {
     cargar();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const clientesFiltrados = (() => {
+    const termino = busqueda.trim().toLowerCase();
+    if (!termino) return clientes;
+    return clientes.filter((c) => (
+      c.nombre?.toLowerCase().includes(termino)
+      || c.rut?.toLowerCase().includes(termino)
+      || c.telefono?.toLowerCase().includes(termino)
+    ));
+  })();
 
   async function manejarCrear(e) {
     e.preventDefault();
@@ -809,13 +820,25 @@ export default function Clientes() {
         </button>
       </form>
 
+      {!cargando && clientes.length > 0 && (
+        <input
+          type="search"
+          className="clientes-buscador"
+          placeholder="Buscar por nombre, RUT o teléfono…"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
+      )}
+
       {cargando ? (
         <div className="clientes-loading">Cargando…</div>
       ) : clientes.length === 0 ? (
         <div className="clientes-vacio">No hay pacientes/clientes todavía.</div>
+      ) : clientesFiltrados.length === 0 ? (
+        <div className="clientes-vacio">Ningún paciente/cliente coincide con "{busqueda}".</div>
       ) : (
         <div className="clientes-lista">
-          {clientes.map((c) => (
+          {clientesFiltrados.map((c) => (
             <div
               key={c.id}
               className="cliente-card"
