@@ -35,6 +35,9 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
   const [duracionMinutos, setDuracionMinutos] = useState('');
   const [plantillaFichaId, setPlantillaFichaId] = useState('');
   const [guardando, setGuardando] = useState(false);
+  // Solo se usa cuando bloqueado=true: el form de creación arranca
+  // colapsado detrás de un botón, en vez de mostrarse siempre abierto.
+  const [mostrarFormNuevo, setMostrarFormNuevo] = useState(false);
 
   const [editandoId, setEditandoId] = useState(null);
   const [nombreEdicion, setNombreEdicion] = useState('');
@@ -78,8 +81,9 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
       });
       setNombre('');
       setDuracionMinutos('');
-      setPlantillaFichaId('');
+      setPlantillaFichaId(plantillasFicha[0]?.id || '');
       await onCambio();
+      if (bloqueado) setMostrarFormNuevo(false);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -175,10 +179,15 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
     <div>
       {bloqueado && (
         <p className="texto-muted" style={{ marginBottom: 8 }}>
-          Los servicios de tu plan actual se administran desde "Configuración de agenda".
+          Editar o eliminar un servicio existente se administra desde "Configuración de agenda".
         </p>
       )}
-      {!bloqueado && (
+      {bloqueado && !mostrarFormNuevo && (
+        <button type="button" className="cta-secundaria" onClick={() => setMostrarFormNuevo(true)} style={{ marginBottom: 16 }}>
+          + Agregar servicio
+        </button>
+      )}
+      {(!bloqueado || mostrarFormNuevo) && (
         <>
           <form className="form-inline" onSubmit={manejarCrear} style={{ flexWrap: 'wrap' }}>
             <input placeholder="Nombre (ej. Examen visual)" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
@@ -189,6 +198,9 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
               ))}
             </select>
             <button type="submit" disabled={guardando}>{guardando ? 'Agregando…' : 'Agregar servicio'}</button>
+            {bloqueado && (
+              <button type="button" className="btn-link" onClick={() => setMostrarFormNuevo(false)} disabled={guardando}>Cancelar</button>
+            )}
           </form>
           {plantillaFichaId && (
             <div className="bloque-segmentacion" style={{ marginTop: 0, marginBottom: 16 }}>

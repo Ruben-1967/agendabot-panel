@@ -284,9 +284,6 @@ export default function GestionProfesionales() {
 
       {error && <p className="mensaje-error">{error}</p>}
 
-    <h2 className="subtitulo">Servicios</h2>
-      <Servicios servicios={servicios} profesionales={profesionales} token={token} onCambio={cargarServicios} setError={setError} bloqueado={bloqueadoPorPlan} />
-
       <h2 className="subtitulo">Profesionales</h2>
       <div className="barra-limite-profesionales">
         <span className="texto-muted">
@@ -330,6 +327,9 @@ export default function GestionProfesionales() {
           ))}
         </div>
       )}
+
+      <h2 className="subtitulo">Servicios</h2>
+      <Servicios servicios={servicios} profesionales={profesionales} token={token} onCambio={cargarServicios} setError={setError} bloqueado={bloqueadoPorPlan} />
     </div>
   );
 }
