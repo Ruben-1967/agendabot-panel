@@ -36,7 +36,9 @@ export default function ActivarCuenta() {
     try {
       const data = await activarCuenta(tokenActivacion, password);
       establecerSesion(data);
-      navigate(`/suscripcion/elegir-plan?empresaId=${data.usuario.empresaId}`, { replace: true });
+      // El plan ya lo eligió el vendedor al convertir la demo — no hace
+      // falta volver a pedirlo acá, se entra directo al panel.
+      navigate('/admin', { replace: true });
     } catch (err) {
       setError(err.message || 'No se pudo activar la cuenta');
     } finally {

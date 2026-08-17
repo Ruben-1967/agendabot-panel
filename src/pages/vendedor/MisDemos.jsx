@@ -428,30 +428,35 @@ export default function MisDemos() {
             )}
 
             {!cargandoClientes && clientes.length > 0 && (
-              <table className="tabla-admin-vendedor">
-                <thead>
-                  <tr>
-                    <th>Empresa</th>
-                    <th>Email</th>
-                    <th>Cuenta</th>
-                    <th>Plan</th>
-                    <th>Estado suscripción</th>
-                    {esAdmin && <th>Vendedor</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {clientes.map((c) => (
-                    <tr key={c.empresaId}>
-                      <td>{c.nombre}<br /><span className="texto-ayuda">{c.telefonoContacto}</span></td>
-                      <td>{c.email || '—'}</td>
-                      <td>{c.activado ? '✓ Activada' : 'Pendiente de activar'}</td>
-                      <td>{c.plan ? PLANES[c.plan.replace('PLAN_', '')]?.etiqueta || c.plan : 'Sin plan'}</td>
-                      <td>{c.estadoSuscripcion ? ETIQUETA_ESTADO_SUSCRIPCION[c.estadoSuscripcion] || c.estadoSuscripcion : '—'} {c.montoMensualActual ? `(${formatoCLP(c.montoMensualActual)}/mes)` : ''}</td>
-                      {esAdmin && <td>{c.vendedorNombre || '—'}</td>}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <ul className="lista-demos">
+                {clientes.map((c) => (
+                  <li key={c.empresaId} className="tarjeta-demo">
+                    <div className="tarjeta-demo-header">
+                      <strong>{c.nombre}</strong>
+                      <div className="tarjeta-demo-badges">
+                        <span className={c.activado ? 'badge-exito' : 'badge-pendiente'}>
+                          {c.activado ? '✓ Activada' : 'Pendiente de activar'}
+                        </span>
+                        {c.diasSinPago != null && (
+                          <span className="badge-sla badge-sla-amarillo">
+                            🕒 {c.diasSinPago} día{c.diasSinPago === 1 ? '' : 's'} sin pago
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <p>{c.email || 'Sin email'} · {c.telefonoContacto}</p>
+                    <p className="texto-ayuda">
+                      {c.plan ? PLANES[c.plan.replace('PLAN_', '')]?.etiqueta || c.plan : 'Sin plan'}
+                      {c.estadoSuscripcion && ` · ${ETIQUETA_ESTADO_SUSCRIPCION[c.estadoSuscripcion] || c.estadoSuscripcion}`}
+                      {c.montoMensualActual ? ` · ${formatoCLP(c.montoMensualActual)}/mes` : ''}
+                    </p>
+                    <p className="texto-ayuda">
+                      Convertido: {formatearFecha(c.creadoEn)}
+                      {esAdmin && c.vendedorNombre && ` · Vendedor: ${c.vendedorNombre}`}
+                    </p>
+                  </li>
+                ))}
+              </ul>
             )}
           </>
         )}

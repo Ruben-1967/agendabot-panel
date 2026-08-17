@@ -59,7 +59,7 @@ export default function MarcarPagos() {
         {!cargando && pendientes.length > 0 && (
           <table className="tabla-admin-vendedor">
             <thead>
-              <tr><th>Empresa</th><th>Vendedor</th><th>Plan</th><th>Monto</th><th>Desde</th><th></th></tr>
+              <tr><th>Empresa</th><th>Vendedor</th><th>Plan</th><th>Monto</th><th>Desde</th><th>Días sin pago</th><th></th></tr>
             </thead>
             <tbody>
               {pendientes.map((p) => (
@@ -69,6 +69,7 @@ export default function MarcarPagos() {
                   <td>{p.plan}</td>
                   <td>${p.montoMensualActual?.toLocaleString('es-CL')}</td>
                   <td>{formatFecha(p.fechaInicio)}</td>
+                  <td>{p.diasSinPago}</td>
                   <td>
                     <button
                       className="cta-secundaria"
