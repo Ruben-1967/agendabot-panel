@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVendedorAuth } from '../../context/VendedorAuthContext';
-import { fetchProspectosDemo, eliminarProspectoDemo, convertirClienteReal, fetchClientesConvertidos, fetchVendedoresKPI, fetchKpisDiarios } from '../../api/client';
+import { fetchProspectosDemo, eliminarProspectoDemo, convertirClienteReal, fetchClientesConvertidos, eliminarClienteConvertido, editarPlanCliente, fetchVendedoresKPI, fetchKpisDiarios } from '../../api/client';
 import NavVendedor from './NavVendedor';
 import './vendedor.css';
 
@@ -98,6 +98,51 @@ function ModalConvertirCliente({ demo, token, onCerrar, onConvertido }) {
   );
 }
 
+function ModalEditarPlan({ cliente, token, onCerrar, onGuardado }) {
+  const [plan, setPlan] = useState(cliente.plan ? cliente.plan.replace('PLAN_', '') : 'A');
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
+
+  async function manejarGuardar(e) {
+    e.preventDefault();
+    setError('');
+    setEnviando(true);
+    try {
+      const resultado = await editarPlanCliente(token, cliente.empresaId, plan);
+      onGuardado(resultado);
+    } catch (err) {
+      setError(err.message || 'No se pudo cambiar el plan');
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <div className="modal-vendedor-overlay" onClick={onCerrar}>
+      <div className="modal-vendedor-caja" onClick={(e) => e.stopPropagation()}>
+        <h3>Cambiar plan de "{cliente.nombre}"</h3>
+        <form onSubmit={manejarGuardar} className="form-vendedor">
+          <label>
+            Plan
+            <select value={plan} onChange={(e) => setPlan(e.target.value)}>
+              {Object.entries(PLANES).map(([clave, p]) => (
+                <option key={clave} value={clave}>{p.etiqueta} — {formatoCLP(p.montoMensual)}/mes</option>
+              ))}
+            </select>
+          </label>
+          {error && <p className="login-error">{error}</p>}
+          <div className="tarjeta-demo-acciones">
+            <button type="submit" className="cta-primaria" disabled={enviando}>
+              {enviando ? 'Guardando…' : 'Guardar plan'}
+            </button>
+            <button type="button" className="btn-link" onClick={onCerrar} disabled={enviando}>Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function MisDemos() {
   const { token, vendedor } = useVendedorAuth();
   const navigate = useNavigate();
@@ -121,6 +166,8 @@ export default function MisDemos() {
   const [clientes, setClientes] = useState([]);
   const [cargandoClientes, setCargandoClientes] = useState(false);
   const [errorClientes, setErrorClientes] = useState('');
+  const [eliminandoClienteId, setEliminandoClienteId] = useState(null);
+  const [modalEditarPlan, setModalEditarPlan] = useState(null); // null = cerrado, cliente = abierto
 
   const [desdeKpiDiario, setDesdeKpiDiario] = useState(hoyEnChile());
   const [hastaKpiDiario, setHastaKpiDiario] = useState(hoyEnChile());
@@ -203,6 +250,33 @@ export default function MisDemos() {
     setModalConvertir(null);
     cargar();
     if (pestanaActiva === 'clientes') cargarClientes();
+  }
+
+  async function manejarEliminarCliente(cliente) {
+    const confirmado = window.confirm(
+      `¿Eliminar por completo a "${cliente.nombre}"? Se borra la empresa, su usuario, la suscripción y la demo que la originó — no se puede deshacer. Pensado solo para limpiar pruebas, no para clientes reales.`
+    );
+    if (!confirmado) return;
+
+    setEliminandoClienteId(cliente.empresaId);
+    setErrorClientes('');
+    try {
+      await eliminarClienteConvertido(token, cliente.empresaId);
+      setClientes((prev) => prev.filter((c) => c.empresaId !== cliente.empresaId));
+    } catch (err) {
+      setErrorClientes(err.message || 'No se pudo eliminar el cliente');
+    } finally {
+      setEliminandoClienteId(null);
+    }
+  }
+
+  function manejarPlanGuardado(resultado) {
+    setClientes((prev) => prev.map((c) => (
+      c.empresaId === modalEditarPlan.empresaId
+        ? { ...c, plan: resultado.suscripcion.plan, montoMensualActual: resultado.suscripcion.montoMensualActual }
+        : c
+    )));
+    setModalEditarPlan(null);
   }
 
   async function copiarLinkManual() {
@@ -454,6 +528,21 @@ export default function MisDemos() {
                       Convertido: {formatearFecha(c.creadoEn)}
                       {esAdmin && c.vendedorNombre && ` · Vendedor: ${c.vendedorNombre}`}
                     </p>
+
+                    {esAdmin && (
+                      <div className="tarjeta-demo-acciones">
+                        <button className="cta-secundaria" onClick={() => setModalEditarPlan(c)}>
+                          Cambiar plan
+                        </button>
+                        <button
+                          className="btn-link btn-danger"
+                          onClick={() => manejarEliminarCliente(c)}
+                          disabled={eliminandoClienteId === c.empresaId}
+                        >
+                          {eliminandoClienteId === c.empresaId ? 'Eliminando…' : 'Eliminar'}
+                        </button>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -468,6 +557,15 @@ export default function MisDemos() {
           token={token}
           onCerrar={() => setModalConvertir(null)}
           onConvertido={(resultado) => manejarConvertido(modalConvertir, resultado)}
+        />
+      )}
+
+      {modalEditarPlan && (
+        <ModalEditarPlan
+          cliente={modalEditarPlan}
+          token={token}
+          onCerrar={() => setModalEditarPlan(null)}
+          onGuardado={manejarPlanGuardado}
         />
       )}
     </div>

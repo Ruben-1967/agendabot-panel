@@ -286,6 +286,15 @@ export function fetchClientesConvertidos(token, filtros = {}) {
   return apiFetch(`/demos/clientes-convertidos${query}`, { token, tipoSesion: 'vendedor' });
 }
 
+// Solo rolVendedor ADMIN — herramienta de limpieza de pruebas.
+export function eliminarClienteConvertido(token, empresaId) {
+  return apiFetch(`/demos/clientes-convertidos/${empresaId}`, { method: 'DELETE', token, tipoSesion: 'vendedor' });
+}
+
+export function editarPlanCliente(token, empresaId, plan) {
+  return apiFetch(`/demos/clientes-convertidos/${empresaId}/plan`, { method: 'PATCH', body: { plan }, token, tipoSesion: 'vendedor' });
+}
+
 // ---------- Activación de cuenta (cliente real, sin sesión de vendedor) ----------
 export function activarCuenta(tokenActivacion, password) {
   return apiFetch('/auth/activar-cuenta', { method: 'POST', body: { token: tokenActivacion, password } });
