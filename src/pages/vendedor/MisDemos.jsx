@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVendedorAuth } from '../../context/VendedorAuthContext';
-import { fetchProspectosDemo, eliminarProspectoDemo, convertirClienteReal, fetchVendedoresKPI, fetchKpisDiarios } from '../../api/client';
+import { fetchProspectosDemo, eliminarProspectoDemo, convertirClienteReal, fetchClientesConvertidos, fetchVendedoresKPI, fetchKpisDiarios } from '../../api/client';
 import NavVendedor from './NavVendedor';
 import './vendedor.css';
 
@@ -22,6 +22,82 @@ const ETIQUETA_SLA = { ROJO: '🔴 Vencido', AMARILLO: '🟡 Por vencer', OK: '�
 const ETIQUETA_TIPO_LEAD = { CALIENTE: 'Caliente', FRIO: 'Frío' };
 const ETIQUETA_FASE = { primer_contacto: 'sin primer contacto', aging: 'sin avance' };
 
+// Mismos valores que PLANES en src/services/contratoHtml.js (backend) — solo
+// para mostrar precio en el selector del modal, el backend es la fuente de
+// verdad real al crear la Suscripcion.
+const PLANES = {
+  A: { etiqueta: 'Plan A', montoMensual: 9900 },
+  B: { etiqueta: 'Plan B', montoMensual: 19900 },
+  C: { etiqueta: 'Plan C', montoMensual: 49900 },
+};
+
+const ETIQUETA_ESTADO_SUSCRIPCION = { PENDIENTE_PAGO: 'Pendiente de pago', ACTIVA: 'Activa', SUSPENDIDA: 'Suspendida' };
+
+function formatoCLP(n) {
+  if (n == null) return '—';
+  return `$${n.toLocaleString('es-CL')}`;
+}
+
+function ModalConvertirCliente({ demo, token, onCerrar, onConvertido }) {
+  const [email, setEmail] = useState(demo.email || '');
+  const [plan, setPlan] = useState('A');
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
+
+  async function manejarGuardar(e) {
+    e.preventDefault();
+    setError('');
+    setEnviando(true);
+    try {
+      const resultado = await convertirClienteReal(token, demo.id, { email: email.trim(), plan });
+      onConvertido(resultado);
+    } catch (err) {
+      setError(err.message || 'No se pudo convertir a cliente real');
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <div className="modal-vendedor-overlay" onClick={onCerrar}>
+      <div className="modal-vendedor-caja" onClick={(e) => e.stopPropagation()}>
+        <h3>Convertir "{demo.nombreNegocio}" a cliente real</h3>
+        <p className="texto-ayuda">
+          Se creará la cuenta con este plan y se le enviará por WhatsApp un link para que defina su propia
+          contraseña — la contraseña la elige el negocio, nunca queda en tus manos.
+        </p>
+        <form onSubmit={manejarGuardar} className="form-vendedor">
+          <label>
+            Email del negocio
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="contacto@negocio.cl"
+            />
+          </label>
+          <label>
+            Plan
+            <select value={plan} onChange={(e) => setPlan(e.target.value)}>
+              {Object.entries(PLANES).map(([clave, p]) => (
+                <option key={clave} value={clave}>{p.etiqueta} — {formatoCLP(p.montoMensual)}/mes</option>
+              ))}
+            </select>
+          </label>
+          {error && <p className="login-error">{error}</p>}
+          <div className="tarjeta-demo-acciones">
+            <button type="submit" className="cta-primaria" disabled={enviando}>
+              {enviando ? 'Convirtiendo…' : 'Convertir a cliente real'}
+            </button>
+            <button type="button" className="btn-link" onClick={onCerrar} disabled={enviando}>Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function MisDemos() {
   const { token, vendedor } = useVendedorAuth();
   const navigate = useNavigate();
@@ -32,7 +108,6 @@ export default function MisDemos() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [eliminandoId, setEliminandoId] = useState(null);
-  const [procesandoId, setProcesandoId] = useState(null);
 
   const [filtroEstadoSLA, setFiltroEstadoSLA] = useState('');
   const [filtroTipoLead, setFiltroTipoLead] = useState('');
@@ -40,6 +115,12 @@ export default function MisDemos() {
 
   const [vendedoresKPI, setVendedoresKPI] = useState([]);
   const [avisoLinkManual, setAvisoLinkManual] = useState(null);
+  const [modalConvertir, setModalConvertir] = useState(null); // null = cerrado, demo = abierto para esa demo
+
+  const [pestanaActiva, setPestanaActiva] = useState('demos'); // 'demos' | 'clientes'
+  const [clientes, setClientes] = useState([]);
+  const [cargandoClientes, setCargandoClientes] = useState(false);
+  const [errorClientes, setErrorClientes] = useState('');
 
   const [desdeKpiDiario, setDesdeKpiDiario] = useState(hoyEnChile());
   const [hastaKpiDiario, setHastaKpiDiario] = useState(hoyEnChile());
@@ -59,6 +140,20 @@ export default function MisDemos() {
   }
 
   useEffect(() => { cargar(); }, [token, filtroEstadoSLA, filtroTipoLead, filtroVendedorId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function cargarClientes() {
+    setCargandoClientes(true);
+    setErrorClientes('');
+    fetchClientesConvertidos(token, { vendedorId: esAdmin ? filtroVendedorId : undefined })
+      .then((data) => setClientes(data.clientes || []))
+      .catch((err) => setErrorClientes(err.message || 'No se pudo cargar el listado de clientes'))
+      .finally(() => setCargandoClientes(false));
+  }
+
+  useEffect(() => {
+    if (pestanaActiva !== 'clientes') return;
+    cargarClientes();
+  }, [token, pestanaActiva, filtroVendedorId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!esAdmin) return;
@@ -94,33 +189,20 @@ export default function MisDemos() {
     }
   }
 
-  async function manejarConvertir(demo) {
-    const confirmado = window.confirm(
-      `¿Convertir a "${demo.nombreNegocio}" en cliente real? Se le enviará por WhatsApp un link para que defina su propia contraseña y elija un plan.`
-    );
-    if (!confirmado) return;
-
-    setProcesandoId(demo.id);
-    setError('');
-    setAvisoLinkManual(null);
-    try {
-      const resultado = await convertirClienteReal(token, demo.id);
-      // Se muestra siempre, no solo cuando whatsappEnviado es false: que la
-      // API de Meta no haya tirado error no garantiza que el mensaje haya
-      // llegado de verdad al teléfono del prospecto (ej. número sin una app
-      // de WhatsApp real detrás), así que el link queda visible como
-      // respaldo en los dos casos.
-      setAvisoLinkManual({
-        nombreNegocio: demo.nombreNegocio,
-        link: resultado.linkActivacion,
-        whatsappEnviado: resultado.whatsappEnviado,
-      });
-      cargar();
-    } catch (err) {
-      setError(err.message || 'No se pudo convertir a cliente real');
-    } finally {
-      setProcesandoId(null);
-    }
+  function manejarConvertido(demo, resultado) {
+    // Se muestra siempre, no solo cuando whatsappEnviado es false: que la API
+    // de Meta no haya tirado error no garantiza que el mensaje haya llegado
+    // de verdad al teléfono del prospecto (ej. número sin una app de
+    // WhatsApp real detrás), así que el link queda visible como respaldo en
+    // los dos casos.
+    setAvisoLinkManual({
+      nombreNegocio: demo.nombreNegocio,
+      link: resultado.linkActivacion,
+      whatsappEnviado: resultado.whatsappEnviado,
+    });
+    setModalConvertir(null);
+    cargar();
+    if (pestanaActiva === 'clientes') cargarClientes();
   }
 
   async function copiarLinkManual() {
@@ -243,79 +325,146 @@ export default function MisDemos() {
         )}
 
         <div className="barra-filtros">
-          <select value={filtroEstadoSLA} onChange={(e) => setFiltroEstadoSLA(e.target.value)}>
-            <option value="">Todos los estados</option>
-            <option value="ROJO">🔴 Vencidos</option>
-            <option value="AMARILLO">🟡 Por vencer</option>
-            <option value="OK">⚪ Al día</option>
-          </select>
-          <select value={filtroTipoLead} onChange={(e) => setFiltroTipoLead(e.target.value)}>
-            <option value="">Caliente y frío</option>
-            <option value="CALIENTE">Solo calientes</option>
-            <option value="FRIO">Solo fríos</option>
-          </select>
+          <button
+            type="button"
+            className={pestanaActiva === 'demos' ? 'cta-primaria' : 'cta-secundaria'}
+            onClick={() => setPestanaActiva('demos')}
+          >
+            Mis casos
+          </button>
+          <button
+            type="button"
+            className={pestanaActiva === 'clientes' ? 'cta-primaria' : 'cta-secundaria'}
+            onClick={() => setPestanaActiva('clientes')}
+          >
+            Clientes
+          </button>
         </div>
 
-        {error && <p className="login-error">{error}</p>}
-        {cargando && <p>Cargando…</p>}
+        {pestanaActiva === 'demos' && (
+          <>
+            <div className="barra-filtros">
+              <select value={filtroEstadoSLA} onChange={(e) => setFiltroEstadoSLA(e.target.value)}>
+                <option value="">Todos los estados</option>
+                <option value="ROJO">🔴 Vencidos</option>
+                <option value="AMARILLO">🟡 Por vencer</option>
+                <option value="OK">⚪ Al día</option>
+              </select>
+              <select value={filtroTipoLead} onChange={(e) => setFiltroTipoLead(e.target.value)}>
+                <option value="">Caliente y frío</option>
+                <option value="CALIENTE">Solo calientes</option>
+                <option value="FRIO">Solo fríos</option>
+              </select>
+            </div>
 
-        {!cargando && (
-          <p className="texto-ayuda" style={{ margin: '0 0 8px' }}>
-            Mostrando {demos.length} caso{demos.length === 1 ? '' : 's'}
-          </p>
-        )}
+            {error && <p className="login-error">{error}</p>}
+            {cargando && <p>Cargando…</p>}
 
-        {!cargando && demos.length === 0 && (
-          <p className="texto-ayuda">No hay casos que calcen con este filtro.</p>
-        )}
-
-        <ul className="lista-demos">
-          {demos.map((d) => (
-            <li key={d.id} className="tarjeta-demo">
-              <div className="tarjeta-demo-header">
-                <strong>{d.nombreNegocio}</strong>
-                <div className="tarjeta-demo-badges">
-                  <span className={`badge-sla badge-sla-${d.estadoSLA.toLowerCase()}`}>
-                    {ETIQUETA_SLA[d.estadoSLA]}
-                  </span>
-                  <span className={d.yaProbo ? 'badge-exito' : 'badge-pendiente'}>
-                    {d.yaProbo ? '✓ Probó' : 'No ha probado'}
-                  </span>
-                </div>
-              </div>
-              <p>{d.nombreEncargado} · {d.telefono}</p>
-              <p className="texto-ayuda">{d.rubro} · {ETIQUETA_TIPO_LEAD[d.tipoLead]} · {d.diasEnEstado} día{d.diasEnEstado === 1 ? '' : 's'} {ETIQUETA_FASE[d.fase]}</p>
-              <p className="texto-ayuda">
-                Cargada: {formatearFecha(d.creadoEn)}
-                {esAdmin && d.vendedorNombre && ` · Vendedor: ${d.vendedorNombre}`}
+            {!cargando && (
+              <p className="texto-ayuda" style={{ margin: '0 0 8px' }}>
+                Mostrando {demos.length} caso{demos.length === 1 ? '' : 's'}
               </p>
+            )}
 
-              <div className="tarjeta-demo-acciones">
-                <button
-                  className="cta-secundaria"
-                  onClick={() => navigate(`/vendedor/gestion/${d.id}`, { state: { demo: d } })}
-                >
-                  Gestionar
-                </button>
-                <button
-                  className="cta-secundaria"
-                  onClick={() => manejarConvertir(d)}
-                  disabled={procesandoId === d.id}
-                >
-                  Convertir a cliente real
-                </button>
-                <button
-                  className="btn-link btn-danger"
-                  onClick={() => manejarEliminar(d)}
-                  disabled={eliminandoId === d.id}
-                >
-                  {eliminandoId === d.id ? 'Eliminando…' : 'Eliminar'}
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+            {!cargando && demos.length === 0 && (
+              <p className="texto-ayuda">No hay casos que calcen con este filtro.</p>
+            )}
+
+            <ul className="lista-demos">
+              {demos.map((d) => (
+                <li key={d.id} className="tarjeta-demo">
+                  <div className="tarjeta-demo-header">
+                    <strong>{d.nombreNegocio}</strong>
+                    <div className="tarjeta-demo-badges">
+                      <span className={`badge-sla badge-sla-${d.estadoSLA.toLowerCase()}`}>
+                        {ETIQUETA_SLA[d.estadoSLA]}
+                      </span>
+                      <span className={d.yaProbo ? 'badge-exito' : 'badge-pendiente'}>
+                        {d.yaProbo ? '✓ Probó' : 'No ha probado'}
+                      </span>
+                    </div>
+                  </div>
+                  <p>{d.nombreEncargado} · {d.telefono}</p>
+                  <p className="texto-ayuda">{d.rubro} · {ETIQUETA_TIPO_LEAD[d.tipoLead]} · {d.diasEnEstado} día{d.diasEnEstado === 1 ? '' : 's'} {ETIQUETA_FASE[d.fase]}</p>
+                  <p className="texto-ayuda">
+                    Cargada: {formatearFecha(d.creadoEn)}
+                    {esAdmin && d.vendedorNombre && ` · Vendedor: ${d.vendedorNombre}`}
+                  </p>
+
+                  <div className="tarjeta-demo-acciones">
+                    <button
+                      className="cta-secundaria"
+                      onClick={() => navigate(`/vendedor/gestion/${d.id}`, { state: { demo: d } })}
+                    >
+                      Gestionar
+                    </button>
+                    <button
+                      className="cta-secundaria"
+                      onClick={() => setModalConvertir(d)}
+                    >
+                      Convertir a cliente real
+                    </button>
+                    <button
+                      className="btn-link btn-danger"
+                      onClick={() => manejarEliminar(d)}
+                      disabled={eliminandoId === d.id}
+                    >
+                      {eliminandoId === d.id ? 'Eliminando…' : 'Eliminar'}
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
+        {pestanaActiva === 'clientes' && (
+          <>
+            {errorClientes && <p className="login-error">{errorClientes}</p>}
+            {cargandoClientes && <p>Cargando…</p>}
+
+            {!cargandoClientes && clientes.length === 0 && (
+              <p className="texto-ayuda">Todavía no hay negocios convertidos a cliente real.</p>
+            )}
+
+            {!cargandoClientes && clientes.length > 0 && (
+              <table className="tabla-admin-vendedor">
+                <thead>
+                  <tr>
+                    <th>Empresa</th>
+                    <th>Email</th>
+                    <th>Cuenta</th>
+                    <th>Plan</th>
+                    <th>Estado suscripción</th>
+                    {esAdmin && <th>Vendedor</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {clientes.map((c) => (
+                    <tr key={c.empresaId}>
+                      <td>{c.nombre}<br /><span className="texto-ayuda">{c.telefonoContacto}</span></td>
+                      <td>{c.email || '—'}</td>
+                      <td>{c.activado ? '✓ Activada' : 'Pendiente de activar'}</td>
+                      <td>{c.plan ? PLANES[c.plan.replace('PLAN_', '')]?.etiqueta || c.plan : 'Sin plan'}</td>
+                      <td>{c.estadoSuscripcion ? ETIQUETA_ESTADO_SUSCRIPCION[c.estadoSuscripcion] || c.estadoSuscripcion : '—'} {c.montoMensualActual ? `(${formatoCLP(c.montoMensualActual)}/mes)` : ''}</td>
+                      {esAdmin && <td>{c.vendedorNombre || '—'}</td>}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </>
+        )}
       </div>
+
+      {modalConvertir && (
+        <ModalConvertirCliente
+          demo={modalConvertir}
+          token={token}
+          onCerrar={() => setModalConvertir(null)}
+          onConvertido={(resultado) => manejarConvertido(modalConvertir, resultado)}
+        />
+      )}
     </div>
   );
 }

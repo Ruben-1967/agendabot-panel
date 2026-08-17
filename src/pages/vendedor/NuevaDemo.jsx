@@ -28,6 +28,7 @@ export default function NuevaDemo() {
   const [nombreEncargado, setNombreEncargado] = useState('');
   const [claveRubro, setClaveRubro] = useState('');
   const [sitioWeb, setSitioWeb] = useState('');
+  const [email, setEmail] = useState('');
 
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
@@ -54,6 +55,7 @@ export default function NuevaDemo() {
         nombreEncargado: nombreEncargado.trim(),
         claveRubro,
         sitioWeb: sitioWeb.trim() || undefined,
+        email: email.trim() || undefined,
       });
       setResultado(data);
       setNombreNegocio('');
@@ -62,6 +64,7 @@ export default function NuevaDemo() {
       setNombreEncargado('');
       setClaveRubro('');
       setSitioWeb('');
+      setEmail('');
     } catch (err) {
       setError(err.message || 'No se pudo crear la demo');
     } finally {
@@ -145,6 +148,16 @@ export default function NuevaDemo() {
             <label>
               Nombre del encargado
               <input value={nombreEncargado} onChange={(e) => setNombreEncargado(e.target.value)} required />
+            </label>
+
+            <label>
+              Email (opcional)
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="contacto@negocio.cl"
+              />
             </label>
           </div>
 

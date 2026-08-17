@@ -275,8 +275,15 @@ export function marcarProspectoContactado(token, id) {
   return apiFetch(`/demos/prospectos/${id}/marcar-contactado`, { method: 'POST', token, tipoSesion: 'vendedor' });
 }
 
-export function convertirClienteReal(token, demoId) {
-  return apiFetch('/demos/convertir-a-cliente-real', { method: 'POST', body: { demoId }, token, tipoSesion: 'vendedor' });
+export function convertirClienteReal(token, demoId, { email, plan }) {
+  return apiFetch('/demos/convertir-a-cliente-real', { method: 'POST', body: { demoId, email, plan }, token, tipoSesion: 'vendedor' });
+}
+
+export function fetchClientesConvertidos(token, filtros = {}) {
+  const params = new URLSearchParams();
+  if (filtros.vendedorId) params.set('vendedorId', filtros.vendedorId);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return apiFetch(`/demos/clientes-convertidos${query}`, { token, tipoSesion: 'vendedor' });
 }
 
 // ---------- Activación de cuenta (cliente real, sin sesión de vendedor) ----------
