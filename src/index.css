@@ -225,18 +225,16 @@ button {
   left: 0;
   right: 0;
   z-index: 50;
-  background: var(--brass-soft);
   color: var(--ink);
   padding: 10px 24px;
   font-size: 0.85rem;
   text-align: center;
-  border-bottom: 1px solid var(--brass);
+  border-bottom: 1px solid;
 }
 
 .layout-con-banner { padding-top: 40px; }
 
 .banner-pago-pendiente a {
-  color: var(--brass);
   font-weight: 600;
   text-decoration: none;
   margin-left: 10px;
@@ -245,6 +243,25 @@ button {
 .banner-pago-pendiente a:hover {
   text-decoration: underline;
 }
+
+.banner-pago-verde {
+  background: var(--teal-soft);
+  border-color: var(--teal);
+}
+.banner-pago-verde a { color: var(--teal-deep); }
+
+.banner-pago-amarillo {
+  background: var(--brass-soft);
+  border-color: var(--brass);
+}
+.banner-pago-amarillo a { color: var(--brass); }
+
+.banner-pago-rojo {
+  background: var(--red-soft);
+  border-color: var(--red);
+  color: var(--red);
+}
+.banner-pago-rojo a { color: var(--red); }
 
 /* ---------- Placeholder de sección ---------- */
 .placeholder-pagina h1 {

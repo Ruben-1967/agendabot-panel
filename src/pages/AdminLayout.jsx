@@ -8,20 +8,28 @@ export default function AdminLayout() {
   const esCatalogoRotativo = usuario?.empresaModoOperacion === 'CATALOGO_ROTATIVO';
   const ocultarConfiguracionAgenda = usuario?.plan === 'PLAN_B' || usuario?.plan === 'PLAN_C';
 
-  const [pendientePago, setPendientePago] = useState(false);
+  // null = sin aviso (o todavía dentro de las primeras 12h desde que activó
+  // la cuenta) — 'verde'/'amarillo'/'rojo' según cuántos días lleva sin pagar.
+  const [avisoPagoNivel, setAvisoPagoNivel] = useState(null);
 
   useEffect(() => {
     if (!token) return;
     fetchEstadoSuscripcion(token)
-      .then((data) => setPendientePago(data.estado === 'PENDIENTE_PAGO'))
+      .then((data) => setAvisoPagoNivel(data.avisoPagoNivel))
       .catch(() => {}); // si falla la consulta, simplemente no se muestra el banner
   }, [token]);
 
+  const TEXTO_AVISO = {
+    verde: 'Tu suscripción está pendiente de pago — el acceso sigue habilitado, pero para no perder el servicio activa tu plan cuanto antes.',
+    amarillo: 'Tu suscripción sigue pendiente de pago. Actívala pronto para no perder el acceso al sistema.',
+    rojo: 'Tu suscripción lleva varios días pendiente de pago — activa tu plan ahora para no perder el acceso al sistema.',
+  };
+
   return (
-    <div className={pendientePago ? 'layout layout-con-banner' : 'layout'}>
-      {pendientePago && (
-        <div className="banner-pago-pendiente">
-          Tu suscripción está pendiente de pago — el acceso sigue habilitado, pero para no perder el servicio activa tu plan cuanto antes.
+    <div className={avisoPagoNivel ? 'layout layout-con-banner' : 'layout'}>
+      {avisoPagoNivel && (
+        <div className={`banner-pago-pendiente banner-pago-${avisoPagoNivel}`}>
+          {TEXTO_AVISO[avisoPagoNivel]}
           <a href="/suscripcion/elegir-plan">Activar plan →</a>
         </div>
       )}
