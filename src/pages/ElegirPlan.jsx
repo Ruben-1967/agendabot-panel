@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
+// Mismos montos que DETALLE_PLANES en src/services/contratoHtml.js (backend)
+// — fuente única de verdad real al momento de cobrar; esto es solo para
+// mostrar el precio antes de elegir. El texto de "Excedente: $X/cita" se arma
+// desde el propio campo `excedente` de cada plan más abajo, para que no
+// puedan quedar desincronizados como pasó acá antes (excedente:70 vs texto
+// "$60/cita").
 const PLANES = {
   A: {
     nombre: 'Plan A',
@@ -7,7 +13,7 @@ const PLANES = {
     citas: 100,
     excedente: 150,
     descripcion: 'Ideal para pequeños negocios',
-    features: ['100 citas/mes', 'Excedente: $150/cita', 'Dashboard básico', 'Soporte por email'],
+    featuresExtra: ['Dashboard básico', 'Soporte por email'],
   },
   B: {
     nombre: 'Plan B',
@@ -15,15 +21,15 @@ const PLANES = {
     citas: 300,
     excedente: 90,
     descripcion: 'El más popular',
-    features: ['300 citas/mes', 'Excedente: $90/cita', 'Dashboard avanzado', 'Soporte prioritario', 'Campañas proactivas'],
+    featuresExtra: ['Dashboard avanzado', 'Soporte prioritario', 'Campañas proactivas'],
   },
   C: {
     nombre: 'Plan C',
-    precio: 39900,
+    precio: 49900,
     citas: 700,
     excedente: 60,
     descripcion: 'Para negocios en crecimiento',
-    features: ['700 citas/mes', 'Excedente: $60/cita', 'Múltiples profesionales', 'Historial de clientes', 'Todas las features'],
+    featuresExtra: ['Múltiples profesionales', 'Historial de clientes', 'Todas las features'],
   },
 };
 
@@ -171,7 +177,9 @@ export default function ElegirPlan() {
               </div>
 
               <ul style={styles.features}>
-                {planData.features.map((f, i) => (
+                <li style={styles.feature}>✓ {planData.citas.toLocaleString()} citas/mes</li>
+                <li style={styles.feature}>✓ Excedente: ${planData.excedente.toLocaleString()}/cita</li>
+                {planData.featuresExtra.map((f, i) => (
                   <li key={i} style={styles.feature}>✓ {f}</li>
                 ))}
               </ul>
