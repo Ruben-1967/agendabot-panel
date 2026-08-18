@@ -221,7 +221,12 @@ export default function ConectarWhatsApp() {
         config_id: configId,
         response_type: 'code',
         override_default_response_type: true,
-        extras: { setup: {}, featureType: '', sessionInfoVersion: '3' },
+        // featureType vacío hacía que Meta tratara cualquier número que ya
+        // tuviera la app de WhatsApp Business activa como un conflicto a
+        // resolver "migrando o desconectando" en vez de ofrecer conectar la
+        // cuenta existente (Coexistence) — este valor es el que habilita esa
+        // opción, según documentación de Meta.
+        extras: { setup: {}, featureType: 'whatsapp_business_app_onboarding', sessionInfoVersion: '3' },
       }
     );
   }
