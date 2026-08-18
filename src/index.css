@@ -218,6 +218,34 @@ button {
   overflow-y: auto;
 }
 
+/* ---------- Aviso de suscripción pendiente de pago ---------- */
+.banner-pago-pendiente {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: var(--brass-soft);
+  color: var(--ink);
+  padding: 10px 24px;
+  font-size: 0.85rem;
+  text-align: center;
+  border-bottom: 1px solid var(--brass);
+}
+
+.layout-con-banner { padding-top: 40px; }
+
+.banner-pago-pendiente a {
+  color: var(--brass);
+  font-weight: 600;
+  text-decoration: none;
+  margin-left: 10px;
+}
+
+.banner-pago-pendiente a:hover {
+  text-decoration: underline;
+}
+
 /* ---------- Placeholder de sección ---------- */
 .placeholder-pagina h1 {
   font-size: 1.3rem;

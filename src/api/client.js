@@ -156,6 +156,11 @@ export function fetchDashboard(token, empresaId, recursoId) {
   return apiFetch(`/agenda/dashboard/${empresaId}${query}`, { token });
 }
 
+// ---------- Suscripción ----------
+export function fetchEstadoSuscripcion(token) {
+  return apiFetch('/suscripcion/estado', { token });
+}
+
 // ---------- Agenda: multi-profesional ----------
 export function fetchProfesionales(token) {
   return apiFetch('/agenda/profesionales', { token });
