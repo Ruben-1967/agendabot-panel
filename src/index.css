@@ -181,6 +181,11 @@ button {
   font-weight: 600;
 }
 
+.nav-suscribir-plan {
+  color: var(--brass) !important;
+  font-weight: 600;
+}
+
 .sidebar-footer {
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   padding-top: 14px;

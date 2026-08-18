@@ -11,12 +11,18 @@ export default function AdminLayout() {
   // null = sin aviso (o todavía dentro de las primeras 12h desde que activó
   // la cuenta) — 'verde'/'amarillo'/'rojo' según cuántos días lleva sin pagar.
   const [avisoPagoNivel, setAvisoPagoNivel] = useState(null);
+  // A diferencia del banner, el botón del menú no espera las 12h — aparece
+  // apenas la Suscripcion queda en PENDIENTE_PAGO y desaparece al pagar.
+  const [pendientePago, setPendientePago] = useState(false);
 
   useEffect(() => {
     if (!token) return;
     fetchEstadoSuscripcion(token)
-      .then((data) => setAvisoPagoNivel(data.avisoPagoNivel))
-      .catch(() => {}); // si falla la consulta, simplemente no se muestra el banner
+      .then((data) => {
+        setAvisoPagoNivel(data.avisoPagoNivel);
+        setPendientePago(data.estado === 'PENDIENTE_PAGO');
+      })
+      .catch(() => {}); // si falla la consulta, simplemente no se muestra el banner/botón
   }, [token]);
 
   const TEXTO_AVISO = {
@@ -60,6 +66,9 @@ export default function AdminLayout() {
             </>
           )}
           <NavLink to="/admin/conectar-whatsapp">Conectar WhatsApp</NavLink>
+          {pendientePago && (
+            <NavLink to="/suscripcion/elegir-plan" className="nav-suscribir-plan">Suscribir plan</NavLink>
+          )}
         </nav>
         <div className="sidebar-footer">
           <div className="usuario-info">
