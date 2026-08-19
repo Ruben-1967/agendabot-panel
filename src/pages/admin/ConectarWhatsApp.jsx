@@ -94,6 +94,11 @@ export default function ConectarWhatsApp() {
   const [conectando, setConectando] = useState(false);
   const [error, setError] = useState('');
   const [resultado, setResultado] = useState(null);
+  // null hasta que el usuario elige — evita disparar el flujo con un modo
+  // por defecto incorrecto (ver conversación 2026-08-20 sobre error #3441045:
+  // Coexistence exige ~7 días de actividad previa en la app de WhatsApp
+  // Business, que un número nuevo dedicado al bot nunca va a tener).
+  const [usaWhatsappBusinessApp, setUsaWhatsappBusinessApp] = useState(null);
 
   const appId = import.meta.env.VITE_META_APP_ID;
   const configId = import.meta.env.VITE_META_CONFIG_ID;
@@ -225,8 +230,13 @@ export default function ConectarWhatsApp() {
         // tuviera la app de WhatsApp Business activa como un conflicto a
         // resolver "migrando o desconectando" en vez de ofrecer conectar la
         // cuenta existente (Coexistence) — este valor es el que habilita esa
-        // opción, según documentación de Meta.
-        extras: { setup: {}, featureType: 'whatsapp_business_app_onboarding', sessionInfoVersion: '3' },
+        // opción, según documentación de Meta. Pero Coexistence exige que el
+        // número tenga actividad real reciente en la app (error #3441045 si
+        // no la tiene) — para un número nuevo dedicado solo al bot hay que
+        // omitir featureType y usar el registro estándar de Cloud API.
+        extras: usaWhatsappBusinessApp
+          ? { setup: {}, featureType: 'whatsapp_business_app_onboarding', sessionInfoVersion: '3' }
+          : { setup: {}, sessionInfoVersion: '3' },
       }
     );
   }
@@ -246,7 +256,48 @@ export default function ConectarWhatsApp() {
         </p>
       )}
 
-      <button onClick={manejarConectar} disabled={!sdkListo || conectando}>
+      <fieldset style={{ marginBottom: '1rem' }}>
+        <legend>¿Cómo desea conectar su número?</legend>
+        <p style={{ marginTop: 0, marginBottom: '0.75rem' }}>
+          Meta requiere saber si este número ya tiene la app de WhatsApp Business instalada y en
+          uso, o si es un número nuevo dedicado solo al bot — el flujo de registro es distinto
+          para cada caso.
+        </p>
+
+        <label style={{ display: 'block', marginBottom: '0.5rem' }}>
+          <input
+            type="radio"
+            name="modo-conexion"
+            checked={usaWhatsappBusinessApp === true}
+            onChange={() => setUsaWhatsappBusinessApp(true)}
+          />{' '}
+          Sí, ya uso la app de WhatsApp Business con este número
+          <br />
+          <small>
+            Elija esta opción solo si el número tiene actividad real reciente (varios días) en la
+            app de WhatsApp Business — Meta lo exige para conservarla en paralelo con el bot
+            (Coexistencia).
+          </small>
+        </label>
+
+        <label style={{ display: 'block' }}>
+          <input
+            type="radio"
+            name="modo-conexion"
+            checked={usaWhatsappBusinessApp === false}
+            onChange={() => setUsaWhatsappBusinessApp(false)}
+          />{' '}
+          No, quiero un número nuevo dedicado solo al bot
+          <br />
+          <small>
+            Registro directo en Cloud API — no requiere historial previo. Si el número tiene la
+            app de WhatsApp Business instalada, desvincúlela antes de continuar (Configuración
+            &gt; Cuenta &gt; Plataforma empresarial &gt; Desconectar).
+          </small>
+        </label>
+      </fieldset>
+
+      <button onClick={manejarConectar} disabled={!sdkListo || conectando || usaWhatsappBusinessApp === null}>
         {conectando ? 'Conectando…' : 'Conectar WhatsApp Business'}
       </button>
     </div>
