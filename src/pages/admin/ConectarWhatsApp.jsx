@@ -63,6 +63,39 @@ function describirFalloEmbeddedSignup(data) {
     : 'El proceso de conexión con Meta se canceló o falló antes de completarse.';
 }
 
+// A veces Meta responde con `authResponse.code` directo (lo esperado con
+// response_type: 'code'), pero otras veces (visto en producción 2026-08-20,
+// status "connected" tratado como fallo) devuelve accessToken + signedRequest
+// en su lugar, con el code anidado ADENTRO del signedRequest — no ausente,
+// solo en otro lugar. Sin este fallback, un login que sí funcionó se
+// mostraba como error ("No se completó el inicio de sesión") y el flujo se
+// abandonaba antes de llegar al paso de selección de WABA/número.
+function extraerCodeDeSignedRequest(signedRequest) {
+  if (!signedRequest) return null;
+  try {
+    const payload = signedRequest.split('.')[1];
+    if (!payload) return null;
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const conPadding = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    const binario = atob(conPadding);
+    // atob() decodifica a Latin1 — este paso lo reinterpreta como UTF-8 para
+    // no corromper caracteres no-ASCII si algún día aparecen en el payload.
+    const json = decodeURIComponent(
+      binario
+        .split('')
+        .map((c) => '%' + c.charCodeAt(0).toString(16).padStart(2, '0'))
+        .join('')
+    );
+    return JSON.parse(json).code || null;
+  } catch {
+    return null;
+  }
+}
+
+function extraerCode(response) {
+  return response.authResponse?.code || extraerCodeDeSignedRequest(response.authResponse?.signedRequest);
+}
+
 function cargarSdkFacebook(appId) {
   if (sdkFacebookPromise) return sdkFacebookPromise;
 
@@ -201,8 +234,9 @@ export default function ConectarWhatsApp() {
         // status/error de la API de Facebook que ayuda a diagnosticar.
         console.log('[EMBEDDED SIGNUP] Respuesta de FB.login():', JSON.stringify(response));
 
-        if (response.authResponse?.code) {
-          datosSignupRef.current.code = response.authResponse.code;
+        const code = extraerCode(response);
+        if (code) {
+          datosSignupRef.current.code = code;
           // A partir de acá lo único que falta es el postMessage con
           // waba_id/phone_number_id — si nunca llega, avisamos en vez de
           // dejar el botón "Conectando…" pegado para siempre.
