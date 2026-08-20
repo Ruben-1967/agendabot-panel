@@ -96,6 +96,36 @@ function extraerCode(response) {
   return response.authResponse?.code || extraerCodeDeSignedRequest(response.authResponse?.signedRequest);
 }
 
+// --- Diagnóstico del salto de apps en Coexistence (fase 1, solo lectura) ---
+//
+// Hipótesis a confirmar/descartar: cuando el usuario vuelve de confirmar el
+// pairing en la app de WhatsApp Business, FB.login() a veces entrega
+// status "unknown" en vez de "connected". No sabemos todavía si eso pasa
+// porque (a) Safari recarga la página al volver del salto (perdiendo el
+// contexto/callback pendiente) o (b) es una respuesta legítima del SDK sin
+// pérdida de contexto. Esta sección solo agrega logging — ningún cambio de
+// comportamiento.
+//
+// MARCADOR_INTENTO_KEY se graba en sessionStorage justo antes de invocar
+// FB.login(), con un id único y el timestamp de inicio. Si el componente se
+// vuelve a montar (ej. tras un reload) con ese marcador todavía presente y
+// sin limpiar, es indicio de que el intento anterior nunca llegó a
+// resolverse en el mismo contexto de página (ni éxito, ni CANCEL/ERROR).
+const MARCADOR_INTENTO_KEY = 'agendabot_embedded_signup_intento_diag';
+
+// performance.getEntriesByType('navigation')[0].type distingue 'navigate'
+// (carga normal), 'reload' (recarga) y 'back_forward' — es la forma más
+// directa de confirmar si el documento actual viene de una recarga real.
+// document.visibilityState complementa esto para correlacionar con el
+// momento exacto del salto de apps.
+function capturarContextoPagina() {
+  const navEntry = performance.getEntriesByType('navigation')[0];
+  return {
+    visibilityState: document.visibilityState,
+    navigationType: navEntry?.type || null,
+  };
+}
+
 function cargarSdkFacebook(appId) {
   if (sdkFacebookPromise) return sdkFacebookPromise;
 
@@ -144,6 +174,9 @@ export default function ConectarWhatsApp() {
   const datosSignupRef = useRef({ code: null, wabaId: null, phoneNumberId: null });
   const yaEnviadoRef = useRef(false);
   const timeoutEsperaRef = useRef(null);
+  // Diagnóstico del salto de apps: { id, iniciadoEn } del intento de
+  // FB.login() en curso — ver sección "Diagnóstico del salto de apps" arriba.
+  const intentoActualRef = useRef(null);
 
   function limpiarTimeoutEspera() {
     if (timeoutEsperaRef.current) {
@@ -163,6 +196,59 @@ export default function ConectarWhatsApp() {
   }, [appId]);
 
   useEffect(() => limpiarTimeoutEspera, []);
+
+  // Diagnóstico del salto de apps (fase 1): al montar, registra si el
+  // documento actual viene de una recarga (performance navigation type) y si
+  // quedó un marcador de un intento anterior sin limpiar en sessionStorage —
+  // eso último indicaría que un FB.login() previo nunca alcanzó a resolverse
+  // en este mismo contexto de página (ver MARCADOR_INTENTO_KEY arriba).
+  useEffect(() => {
+    const contexto = capturarContextoPagina();
+    console.log('[EMBEDDED SIGNUP][DIAG] Montaje de ConectarWhatsApp:', JSON.stringify(contexto));
+
+    let marcadorPrevio = null;
+    try {
+      marcadorPrevio = sessionStorage.getItem(MARCADOR_INTENTO_KEY);
+    } catch {
+      // sessionStorage puede no estar disponible (ej. modo privado) — no es crítico para el diagnóstico
+    }
+
+    if (marcadorPrevio) {
+      console.warn(
+        '[EMBEDDED SIGNUP][DIAG] Se encontró un marcador de intento previo sin limpiar al montar ' +
+        '(posible indicio de recarga durante el salto de apps):',
+        marcadorPrevio,
+        JSON.stringify(contexto)
+      );
+      try {
+        sessionStorage.removeItem(MARCADOR_INTENTO_KEY);
+      } catch {
+        // no crítico
+      }
+    }
+  }, []);
+
+  // Diagnóstico del salto de apps (fase 1): registra transiciones de
+  // visibilidad y eventos pageshow con su timestamp, para correlacionar el
+  // momento exacto en que el usuario vuelve de la app de WhatsApp Business
+  // con la respuesta status:"unknown" que llega al callback de FB.login().
+  // event.persisted en pageshow indica si la página se restauró desde el
+  // caché de retroceso/avance (bfcache) en vez de recargarse.
+  useEffect(() => {
+    function alCambiarVisibilidad() {
+      console.log(`[EMBEDDED SIGNUP][DIAG] visibilitychange -> ${document.visibilityState} @ ${Date.now()}`);
+    }
+    function alMostrarPagina(event) {
+      console.log(`[EMBEDDED SIGNUP][DIAG] pageshow persisted=${event.persisted} @ ${Date.now()}`);
+    }
+
+    document.addEventListener('visibilitychange', alCambiarVisibilidad);
+    window.addEventListener('pageshow', alMostrarPagina);
+    return () => {
+      document.removeEventListener('visibilitychange', alCambiarVisibilidad);
+      window.removeEventListener('pageshow', alMostrarPagina);
+    };
+  }, []);
 
   useEffect(() => {
     function alRecibirMensaje(event) {
@@ -210,6 +296,13 @@ export default function ConectarWhatsApp() {
       setError(err.message);
     } finally {
       setConectando(false);
+      // El intento se resolvió (éxito o rechazo del backend) — limpia el
+      // marcador de diagnóstico para no confundir el próximo intento.
+      try {
+        sessionStorage.removeItem(MARCADOR_INTENTO_KEY);
+      } catch {
+        // no crítico
+      }
     }
   }
 
@@ -225,6 +318,21 @@ export default function ConectarWhatsApp() {
     yaEnviadoRef.current = false;
     limpiarTimeoutEspera();
     setConectando(true);
+
+    // Diagnóstico del salto de apps: registra el inicio de este intento antes
+    // de invocar FB.login() (justo antes de que el usuario deba salir a la
+    // app de WhatsApp Business a confirmar el pairing). Se guarda tanto en un
+    // ref (sobrevive si el contexto de página NO se recarga) como en
+    // sessionStorage (sobrevive incluso si el ref se pierde, siempre que el
+    // navegador no descarte la pestaña por completo).
+    const intentoId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    intentoActualRef.current = { id: intentoId, iniciadoEn: Date.now() };
+    try {
+      sessionStorage.setItem(MARCADOR_INTENTO_KEY, JSON.stringify(intentoActualRef.current));
+    } catch {
+      // sessionStorage puede no estar disponible (ej. modo privado) — no es crítico para el diagnóstico
+    }
+    console.log('[EMBEDDED SIGNUP][DIAG] Iniciando FB.login() — a punto de saltar a la app de WhatsApp Business:', JSON.stringify(intentoActualRef.current));
 
     window.FB.login(
       (response) => {
@@ -253,6 +361,35 @@ export default function ConectarWhatsApp() {
         } else {
           setConectando(false);
           const detalle = response?.status ? ` (status: ${response.status})` : '';
+
+          // Diagnóstico ampliado del salto de apps (fase 1) — no cambia el
+          // mensaje que ve el usuario, solo agrega contexto en consola para
+          // confirmar o descartar si hubo pérdida de contexto de página
+          // (reload) entre el momento en que se invocó FB.login() y esta
+          // respuesta. Compara el intento guardado en el ref (sobrevive solo
+          // si NO hubo reload) contra el mismo dato guardado en sessionStorage
+          // (sobrevive salvo que el navegador haya descartado la pestaña).
+          const contexto = capturarContextoPagina();
+          const intento = intentoActualRef.current;
+          let marcadorSessionStorage = null;
+          try {
+            marcadorSessionStorage = sessionStorage.getItem(MARCADOR_INTENTO_KEY);
+          } catch {
+            // no crítico
+          }
+          console.warn('[EMBEDDED SIGNUP][DIAG] FB.login() no entregó code — contexto completo:', JSON.stringify({
+            response,
+            contexto,
+            intento,
+            elapsedMsDesdeInicioDelSalto: intento ? Date.now() - intento.iniciadoEn : null,
+            marcadorSessionStorageIntacto: intento ? marcadorSessionStorage === JSON.stringify(intento) : null,
+          }));
+          try {
+            sessionStorage.removeItem(MARCADOR_INTENTO_KEY);
+          } catch {
+            // no crítico
+          }
+
           setError(`No se completó el inicio de sesión con Meta${detalle}. Revisa la consola para el detalle completo.`);
         }
       },
