@@ -30,6 +30,9 @@ export default function NavVendedor() {
           <NavLink to="/vendedor/admin/vendedores" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
             Vendedores
           </NavLink>
+          <NavLink to="/vendedor/admin/catalogo-demo" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
+            Catálogo visual
+          </NavLink>
         </>
       )}
       <button className="nav-vendedor-salir" onClick={cerrarSesionVendedor}>

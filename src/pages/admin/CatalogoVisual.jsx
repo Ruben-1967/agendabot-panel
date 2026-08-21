@@ -10,6 +10,7 @@ import {
   eliminarCatalogoItem,
   actualizarCatalogoVisualActivo,
 } from '../../api/client';
+import CatalogoImagenesGrid from '../../components/CatalogoImagenesGrid';
 import './CatalogoVisual.css';
 
 export default function CatalogoVisual() {
@@ -30,26 +31,6 @@ export default function CatalogoVisual() {
   const [mostrandoFormCategoria, setMostrandoFormCategoria] = useState(false);
   const [nombreCategoriaNueva, setNombreCategoriaNueva] = useState('');
   const [creandoCategoria, setCreandoCategoria] = useState(false);
-
-  const [archivoPendiente, setArchivoPendiente] = useState(null);
-  const [previewArchivoPendiente, setPreviewArchivoPendiente] = useState(null);
-  const [nombreImagenNueva, setNombreImagenNueva] = useState('');
-  const [descripcionImagenNueva, setDescripcionImagenNueva] = useState('');
-  const [subiendo, setSubiendo] = useState(false);
-
-  useEffect(() => {
-    if (!archivoPendiente) {
-      setPreviewArchivoPendiente(null);
-      return;
-    }
-    const url = URL.createObjectURL(archivoPendiente);
-    setPreviewArchivoPendiente(url);
-    return () => URL.revokeObjectURL(url);
-  }, [archivoPendiente]);
-
-  const [itemEditandoId, setItemEditandoId] = useState(null);
-  const [nombreEdicion, setNombreEdicion] = useState('');
-  const [descripcionEdicion, setDescripcionEdicion] = useState('');
 
   async function cargarCategorias() {
     setCargandoCategorias(true);
@@ -131,43 +112,29 @@ export default function CatalogoVisual() {
     }
   }
 
-  function manejarSeleccionArchivo(e) {
-    const archivo = e.target.files?.[0];
-    if (!archivo) return;
-    setArchivoPendiente(archivo);
-    setNombreImagenNueva('');
-    setDescripcionImagenNueva('');
-    e.target.value = '';
-  }
-
-  function cancelarSubida() {
-    setArchivoPendiente(null);
-    setNombreImagenNueva('');
-    setDescripcionImagenNueva('');
-  }
-
-  async function confirmarSubida(e) {
-    e.preventDefault();
-    if (!nombreImagenNueva.trim() || !archivoPendiente) return;
-    setSubiendo(true);
+  async function manejarSubir({ nombre, descripcion, archivo }) {
     setError('');
     try {
-      await subirCatalogoItem(token, {
-        nombre: nombreImagenNueva.trim(),
-        categoriaId: categoriaSeleccionadaId,
-        descripcion: descripcionImagenNueva.trim() || undefined,
-        archivo: archivoPendiente,
-      });
-      cancelarSubida();
+      await subirCatalogoItem(token, { nombre, categoriaId: categoriaSeleccionadaId, descripcion, archivo });
       await Promise.all([cargarCategorias(), cargarItems(categoriaSeleccionadaId)]);
     } catch (err) {
       setError(err.message);
-    } finally {
-      setSubiendo(false);
+      throw err;
     }
   }
 
-  async function alternarActivoItem(item) {
+  async function manejarEditar(item, datos) {
+    setError('');
+    try {
+      await actualizarCatalogoItem(token, item.id, datos);
+      await cargarItems(categoriaSeleccionadaId);
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  }
+
+  async function manejarAlternarActivo(item) {
     setError('');
     try {
       await actualizarCatalogoItem(token, item.id, { activo: !item.activo });
@@ -177,28 +144,7 @@ export default function CatalogoVisual() {
     }
   }
 
-  function empezarEdicion(item) {
-    setItemEditandoId(item.id);
-    setNombreEdicion(item.nombre);
-    setDescripcionEdicion(item.descripcion || '');
-  }
-
-  async function guardarEdicion(item) {
-    if (!nombreEdicion.trim()) return;
-    setError('');
-    try {
-      await actualizarCatalogoItem(token, item.id, {
-        nombre: nombreEdicion.trim(),
-        descripcion: descripcionEdicion.trim() || null,
-      });
-      setItemEditandoId(null);
-      await cargarItems(categoriaSeleccionadaId);
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  async function eliminarItem(item) {
+  async function manejarEliminar(item) {
     if (!confirm(`¿Eliminar "${item.nombre}"?`)) return;
     setError('');
     try {
@@ -293,86 +239,15 @@ export default function CatalogoVisual() {
             ) : cargandoItems ? (
               <p className="texto-muted">Cargando…</p>
             ) : (
-              <div className="catalogo-grid">
-                {items.map((item) => (
-                  <div key={item.id} className={`tarjeta-imagen ${!item.activo ? 'inactiva' : ''}`}>
-                    <img className="tarjeta-imagen-thumb" src={item.imagenUrl} alt={item.nombre} />
-                    <div className="tarjeta-imagen-body">
-                      {itemEditandoId === item.id ? (
-                        <>
-                          <input
-                            autoFocus
-                            value={nombreEdicion}
-                            onChange={(e) => setNombreEdicion(e.target.value)}
-                          />
-                          <input
-                            placeholder="Descripción (opcional)"
-                            value={descripcionEdicion}
-                            onChange={(e) => setDescripcionEdicion(e.target.value)}
-                          />
-                          <div className="tarjeta-imagen-acciones">
-                            <button className="btn-link" onClick={() => guardarEdicion(item)}>Guardar</button>
-                            <button className="btn-link" onClick={() => setItemEditandoId(null)}>Cancelar</button>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <span className="tarjeta-imagen-nombre">
-                            <span className="indicador-estado" />
-                            {item.nombre}
-                          </span>
-                          <div className="tarjeta-imagen-acciones">
-                            <button className="btn-link" onClick={() => empezarEdicion(item)}>Editar</button>
-                            <button className="btn-link" onClick={() => alternarActivoItem(item)}>
-                              {item.activo ? 'Pausar' : 'Activar'}
-                            </button>
-                            <button className="btn-link btn-danger" onClick={() => eliminarItem(item)}>Eliminar</button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                {archivoPendiente ? (
-                  <div className="tarjeta-imagen">
-                    <img
-                      className="tarjeta-imagen-thumb"
-                      src={previewArchivoPendiente}
-                      alt="Vista previa"
-                    />
-                    <form className="tarjeta-imagen-body" onSubmit={confirmarSubida}>
-                      <input
-                        autoFocus
-                        placeholder="Nombre de la imagen"
-                        value={nombreImagenNueva}
-                        onChange={(e) => setNombreImagenNueva(e.target.value)}
-                        required
-                      />
-                      <input
-                        placeholder="Descripción (opcional)"
-                        value={descripcionImagenNueva}
-                        onChange={(e) => setDescripcionImagenNueva(e.target.value)}
-                      />
-                      <div className="tarjeta-imagen-acciones">
-                        <button type="submit" className="btn-link" disabled={subiendo}>{subiendo ? 'Subiendo…' : 'Subir'}</button>
-                        <button type="button" className="btn-link" onClick={cancelarSubida} disabled={subiendo}>Cancelar</button>
-                      </div>
-                    </form>
-                  </div>
-                ) : (
-                  <label className={`tarjeta-subir ${limiteAlcanzado ? 'disabled' : ''}`}>
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png"
-                      disabled={limiteAlcanzado}
-                      onChange={manejarSeleccionArchivo}
-                    />
-                    <span className="tarjeta-subir-icono">+</span>
-                    <span>{limiteAlcanzado ? 'Límite del plan alcanzado' : 'Subir imagen'}</span>
-                  </label>
-                )}
-              </div>
+              <CatalogoImagenesGrid
+                items={items}
+                limiteAlcanzado={limiteAlcanzado}
+                mensajeLimite="Límite del plan alcanzado"
+                onSubir={manejarSubir}
+                onEditar={manejarEditar}
+                onEliminar={manejarEliminar}
+                onAlternarActivo={manejarAlternarActivo}
+              />
             )}
           </div>
         </div>

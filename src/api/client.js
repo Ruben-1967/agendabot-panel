@@ -417,4 +417,29 @@ export function guardarHorarioModalidad(token, vendedorId, dias) {
   return apiFetch(`/admin-vendedores/vendedores/${vendedorId}/horario-modalidad`, { method: 'PUT', body: { horario: dias }, token, tipoSesion: 'vendedor' });
 }
 
+// ---------- Catálogo visual de la demo (por rubro, solo Vendedor ADMIN) ----------
+export function fetchRubrosCatalogoDemo(token) {
+  return apiFetch('/admin-vendedores/catalogo-demo/rubros', { token, tipoSesion: 'vendedor' });
+}
+export function actualizarRubroCatalogoDemoActivo(token, rubroTemplateId, catalogoVisualDemoActivo) {
+  return apiFetch(`/admin-vendedores/catalogo-demo/rubros/${rubroTemplateId}/activo`, {
+    method: 'PATCH', body: { catalogoVisualDemoActivo }, token, tipoSesion: 'vendedor',
+  });
+}
+export function fetchCatalogoDemoItems(token, rubroTemplateId) {
+  return apiFetch(`/admin-vendedores/catalogo-demo/items?rubroTemplateId=${rubroTemplateId}`, { token, tipoSesion: 'vendedor' });
+}
+export async function subirCatalogoDemoItem(token, { rubroTemplateId, categoria, nombre, descripcion, archivo }) {
+  const imagenBase64 = await leerArchivoComoBase64(archivo);
+  return apiFetch('/admin-vendedores/catalogo-demo/items', {
+    method: 'POST', body: { rubroTemplateId, categoria, nombre, descripcion, imagenBase64 }, token, tipoSesion: 'vendedor',
+  });
+}
+export function actualizarCatalogoDemoItem(token, id, data) {
+  return apiFetch(`/admin-vendedores/catalogo-demo/items/${id}`, { method: 'PATCH', body: data, token, tipoSesion: 'vendedor' });
+}
+export function eliminarCatalogoDemoItem(token, id) {
+  return apiFetch(`/admin-vendedores/catalogo-demo/items/${id}`, { method: 'DELETE', token, tipoSesion: 'vendedor' });
+}
+
 export { API_URL };
