@@ -63,6 +63,7 @@ export default function AdminLayout() {
               {/* <NavLink to="/admin/campanas">Campañas</NavLink> */}
               {/* <NavLink to="/admin/chats">Chats en vivo</NavLink> */}
               <NavLink to="/admin/lista-espera">Lista de espera</NavLink>
+              <NavLink to="/admin/catalogo-visual">Catálogo visual</NavLink>
             </>
           )}
           <NavLink to="/admin/conectar-whatsapp">Conectar WhatsApp</NavLink>

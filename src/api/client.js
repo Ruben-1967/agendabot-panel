@@ -61,6 +61,48 @@ export function eliminarProducto(token, id) {
   return apiFetch(`/productos/${id}`, { method: 'DELETE', token });
 }
 
+// ---------- Catálogo visual (imágenes que el bot ofrece durante indagación) ----------
+export function fetchCatalogoCategorias(token) {
+  return apiFetch('/empresa/catalogo/categorias', { token });
+}
+export function crearCatalogoCategoria(token, nombre) {
+  return apiFetch('/empresa/catalogo/categorias', { method: 'POST', body: { nombre }, token });
+}
+export function eliminarCatalogoCategoria(token, id) {
+  return apiFetch(`/empresa/catalogo/categorias/${id}`, { method: 'DELETE', token });
+}
+export function fetchCatalogoItems(token, categoriaId) {
+  const query = categoriaId ? `?categoriaId=${categoriaId}` : '';
+  return apiFetch(`/empresa/catalogo/items${query}`, { token });
+}
+// Lee el File como data URI base64 antes de mandarlo — el backend espera
+// JSON, no multipart (apiFetch siempre manda Content-Type: application/json).
+function leerArchivoComoBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('No se pudo leer el archivo'));
+    reader.readAsDataURL(file);
+  });
+}
+export async function subirCatalogoItem(token, { nombre, categoriaId, descripcion, archivo }) {
+  const imagenBase64 = await leerArchivoComoBase64(archivo);
+  return apiFetch('/empresa/catalogo/items', {
+    method: 'POST',
+    body: { nombre, categoriaId, descripcion, imagenBase64 },
+    token,
+  });
+}
+export function actualizarCatalogoItem(token, id, data) {
+  return apiFetch(`/empresa/catalogo/items/${id}`, { method: 'PATCH', body: data, token });
+}
+export function eliminarCatalogoItem(token, id) {
+  return apiFetch(`/empresa/catalogo/items/${id}`, { method: 'DELETE', token });
+}
+export function actualizarCatalogoVisualActivo(token, catalogoVisualActivo) {
+  return apiFetch('/empresa/catalogo-visual-activo', { method: 'PATCH', body: { catalogoVisualActivo }, token });
+}
+
 // ---------- Campañas (catálogo rotativo Y negocios reactivos) ----------
 export function fetchConfigCampanas(token) {
   return apiFetch('/campanas/config', { token });
