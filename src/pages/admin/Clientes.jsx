@@ -58,12 +58,17 @@ function setValorAnidado(obj, path, valor) {
 }
 
 // ------------------------------------------------------------
-// Formulario reutilizable de una atención clínica (receta OD/OI/DP +
-// diagnóstico + profesional + fecha + próxima cita). Se usa tanto para
-// crear una atención nueva (tab "Ficha clínica") como para editar una
-// existente inline (tab "Historial Clínico").
+// Formulario reutilizable de una atención clínica. Los campos propios del
+// rubro (receta óptica, ficha estética, ficha de salud, etc.) se arman
+// dinámicamente desde RubroTemplate.camposFicha (prop `camposFicha`,
+// formato {grupos: [{titulo, campos: [{path, label, tipo, step?,
+// placeholder?}]}]}) — nunca hardcodeados a un rubro en particular.
+// Diagnóstico/profesional/próxima cita sí son fijos: aplican a cualquier
+// rubro por igual. Se usa tanto para crear una atención nueva (tab "Ficha
+// clínica") como para editar una existente inline (tab "Historial Clínico").
 // ------------------------------------------------------------
-function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, mostrarFecha = true }) {
+function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, camposFicha, mostrarFecha = true }) {
+  const grupos = camposFicha?.grupos || [];
   return (
     <>
       {mostrarFecha && (
@@ -80,105 +85,34 @@ function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, mostrarFech
         </div>
       )}
 
-      <div className="ficha-seccion">
-        <h4 className="ficha-seccion-titulo">OD (Ojo Derecho)</h4>
-        <div className="ficha-campos-grid">
-          <label className="ficha-field">
-            Esfera
-            <input
-              type="number"
-              step="0.25"
-              value={obtenerValorAnidado(valores.fichaJson, ['od', 'esfera']) ?? ''}
-              onChange={(e) => onCambioFicha(['od', 'esfera'], e.target.value)}
-            />
-          </label>
-          <label className="ficha-field">
-            Cilindro
-            <input
-              type="number"
-              step="0.25"
-              value={obtenerValorAnidado(valores.fichaJson, ['od', 'cilindro']) ?? ''}
-              onChange={(e) => onCambioFicha(['od', 'cilindro'], e.target.value)}
-            />
-          </label>
-          <label className="ficha-field">
-            Eje (°)
-            <input
-              type="number"
-              value={obtenerValorAnidado(valores.fichaJson, ['od', 'eje']) ?? ''}
-              onChange={(e) => onCambioFicha(['od', 'eje'], e.target.value)}
-            />
-          </label>
-          <label className="ficha-field">
-            Adición
-            <input
-              type="number"
-              step="0.25"
-              value={obtenerValorAnidado(valores.fichaJson, ['od', 'adicion']) ?? ''}
-              onChange={(e) => onCambioFicha(['od', 'adicion'], e.target.value)}
-            />
-          </label>
+      {grupos.map((grupo, i) => (
+        <div className="ficha-seccion" key={grupo.titulo || i}>
+          {grupo.titulo && <h4 className="ficha-seccion-titulo">{grupo.titulo}</h4>}
+          <div className="ficha-campos-grid">
+            {grupo.campos.map((campo) => (
+              <label className="ficha-field" key={campo.path.join('.')}>
+                {campo.label}
+                <input
+                  type={campo.tipo === 'number' ? 'number' : 'text'}
+                  step={campo.tipo === 'number' ? campo.step ?? 'any' : undefined}
+                  placeholder={campo.placeholder}
+                  value={obtenerValorAnidado(valores.fichaJson, campo.path) ?? ''}
+                  onChange={(e) => onCambioFicha(campo.path, e.target.value)}
+                />
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      ))}
 
       <div className="ficha-seccion">
-        <h4 className="ficha-seccion-titulo">OI (Ojo Izquierdo)</h4>
-        <div className="ficha-campos-grid">
-          <label className="ficha-field">
-            Esfera
-            <input
-              type="number"
-              step="0.25"
-              value={obtenerValorAnidado(valores.fichaJson, ['oi', 'esfera']) ?? ''}
-              onChange={(e) => onCambioFicha(['oi', 'esfera'], e.target.value)}
-            />
-          </label>
-          <label className="ficha-field">
-            Cilindro
-            <input
-              type="number"
-              step="0.25"
-              value={obtenerValorAnidado(valores.fichaJson, ['oi', 'cilindro']) ?? ''}
-              onChange={(e) => onCambioFicha(['oi', 'cilindro'], e.target.value)}
-            />
-          </label>
-          <label className="ficha-field">
-            Eje (°)
-            <input
-              type="number"
-              value={obtenerValorAnidado(valores.fichaJson, ['oi', 'eje']) ?? ''}
-              onChange={(e) => onCambioFicha(['oi', 'eje'], e.target.value)}
-            />
-          </label>
-          <label className="ficha-field">
-            Adición
-            <input
-              type="number"
-              step="0.25"
-              value={obtenerValorAnidado(valores.fichaJson, ['oi', 'adicion']) ?? ''}
-              onChange={(e) => onCambioFicha(['oi', 'adicion'], e.target.value)}
-            />
-          </label>
-        </div>
-      </div>
-
-      <div className="ficha-seccion">
-        <h4 className="ficha-seccion-titulo">Otros parámetros</h4>
+        <h4 className="ficha-seccion-titulo">Seguimiento</h4>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <label className="ficha-field">
-            DP (Distancia Pupilar)
-            <input
-              type="text"
-              placeholder="ej. 64"
-              value={obtenerValorAnidado(valores.fichaJson, ['dp']) ?? ''}
-              onChange={(e) => onCambioFicha(['dp'], e.target.value)}
-            />
-          </label>
           <label className="ficha-field">
             Diagnóstico
             <input
               type="text"
-              placeholder="ej. Miopía, Hipermetropía"
+              placeholder="Diagnóstico o notas de esta atención"
               value={valores.diagnostico || ''}
               onChange={(e) => onCambioCampo('diagnostico', e.target.value)}
             />
@@ -206,7 +140,7 @@ function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, mostrarFech
   );
 }
 
-function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, onCerrar, onCambio }) {
+function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposFicha, onCerrar, onCambio }) {
   const [cliente, setCliente] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
@@ -620,6 +554,7 @@ async function guardarFechaVenta(ventaId) {
             valores={nuevaAtencion}
             onCambioFicha={actualizarFichaNuevaAtencion}
             onCambioCampo={actualizarCampoNuevaAtencion}
+            camposFicha={camposFicha}
           />
           <button type="submit" disabled={guardandoAtencion} className="btn-guardar">
             {guardandoAtencion ? 'Guardando…' : 'Registrar atención'}
@@ -646,6 +581,7 @@ async function guardarFechaVenta(ventaId) {
                           valores={atencionEnEdicion}
                           onCambioFicha={actualizarFichaEdicion}
                           onCambioCampo={actualizarCampoEdicion}
+                          camposFicha={camposFicha}
                         />
                         <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                           <button
@@ -686,26 +622,16 @@ async function guardarFechaVenta(ventaId) {
                             <p><strong>Próxima cita:</strong> {formatearFecha(a.fechaProximaCitaFijada)}</p>
                           )}
                           <div className="historial-item-clinico-receta">
-                            <div>
-                              <span className="receta-ojo-label">OD</span>
-                              <span>Esf: {obtenerValorAnidado(a.fichaJson, ['od', 'esfera']) ?? '—'}</span>
-                              <span>Cil: {obtenerValorAnidado(a.fichaJson, ['od', 'cilindro']) ?? '—'}</span>
-                              <span>Eje: {obtenerValorAnidado(a.fichaJson, ['od', 'eje']) ?? '—'}</span>
-                              <span>Ad: {obtenerValorAnidado(a.fichaJson, ['od', 'adicion']) ?? '—'}</span>
-                            </div>
-                            <div>
-                              <span className="receta-ojo-label">OI</span>
-                              <span>Esf: {obtenerValorAnidado(a.fichaJson, ['oi', 'esfera']) ?? '—'}</span>
-                              <span>Cil: {obtenerValorAnidado(a.fichaJson, ['oi', 'cilindro']) ?? '—'}</span>
-                              <span>Eje: {obtenerValorAnidado(a.fichaJson, ['oi', 'eje']) ?? '—'}</span>
-                              <span>Ad: {obtenerValorAnidado(a.fichaJson, ['oi', 'adicion']) ?? '—'}</span>
-                            </div>
-                            {obtenerValorAnidado(a.fichaJson, ['dp']) && (
-                              <div>
-                                <span className="receta-ojo-label">DP</span>
-                                <span>{obtenerValorAnidado(a.fichaJson, ['dp'])}</span>
+                            {(camposFicha?.grupos || []).map((grupo, i) => (
+                              <div key={grupo.titulo || i}>
+                                {grupo.titulo && <span className="receta-ojo-label">{grupo.titulo}</span>}
+                                {grupo.campos.map((campo) => (
+                                  <span key={campo.path.join('.')}>
+                                    {campo.label}: {obtenerValorAnidado(a.fichaJson, campo.path) ?? '—'}
+                                  </span>
+                                ))}
                               </div>
-                            )}
+                            ))}
                           </div>
                         </div>
                       </>
@@ -725,6 +651,7 @@ export default function Clientes() {
   const { token } = useAuth();
   const [clientes, setClientes] = useState([]);
   const [categoriasProductoSugeridas, setCategoriasProductoSugeridas] = useState([]);
+  const [camposFicha, setCamposFicha] = useState({ grupos: [] });
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState(null);
@@ -741,6 +668,7 @@ export default function Clientes() {
       .then(([dataClientes, dataConfig]) => {
         setClientes(dataClientes.clientes);
         setCategoriasProductoSugeridas(dataConfig.categoriasProductoSugeridas || []);
+        setCamposFicha(dataConfig.camposFicha || { grupos: [] });
       })
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
@@ -873,6 +801,7 @@ export default function Clientes() {
           clienteId={clienteSeleccionadoId}
           token={token}
           categoriasProductoSugeridas={categoriasProductoSugeridas}
+          camposFicha={camposFicha}
           onCerrar={() => setClienteSeleccionadoId(null)}
           onCambio={cargar}
         />
