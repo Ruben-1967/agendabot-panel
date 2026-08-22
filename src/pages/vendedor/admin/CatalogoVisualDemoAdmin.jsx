@@ -75,10 +75,10 @@ export default function CatalogoVisualDemoAdmin() {
     }
   }
 
-  async function manejarSubir({ nombre, descripcion, archivo, categoria }) {
+  async function manejarSubir({ nombre, descripcion, imagenBase64, categoria }) {
     setError('');
     try {
-      await subirCatalogoDemoItem(token, { rubroTemplateId: rubroSeleccionadoId, categoria, nombre, descripcion, archivo });
+      await subirCatalogoDemoItem(token, { rubroTemplateId: rubroSeleccionadoId, categoria, nombre, descripcion, imagenBase64 });
       await Promise.all([cargarRubros(), cargarItems(rubroSeleccionadoId)]);
     } catch (err) {
       setError(err.message);

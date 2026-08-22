@@ -75,9 +75,13 @@ export function fetchCatalogoItems(token, categoriaId) {
   const query = categoriaId ? `?categoriaId=${categoriaId}` : '';
   return apiFetch(`/empresa/catalogo/items${query}`, { token });
 }
-// Lee el File como data URI base64 antes de mandarlo — el backend espera
-// JSON, no multipart (apiFetch siempre manda Content-Type: application/json).
-function leerArchivoComoBase64(file) {
+// Lee el File como data URI base64 — el backend espera JSON, no multipart
+// (apiFetch siempre manda Content-Type: application/json). Se exporta
+// porque CatalogoImagenesGrid la usa apenas se selecciona el archivo, no
+// recién al confirmar la subida — en algunos navegadores/PWA instalada de
+// Android, esperar a que el usuario termine de escribir el nombre antes de
+// leer el archivo hace que la referencia ya no sea legible.
+export function leerArchivoComoBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
@@ -85,8 +89,7 @@ function leerArchivoComoBase64(file) {
     reader.readAsDataURL(file);
   });
 }
-export async function subirCatalogoItem(token, { nombre, categoriaId, descripcion, archivo }) {
-  const imagenBase64 = await leerArchivoComoBase64(archivo);
+export function subirCatalogoItem(token, { nombre, categoriaId, descripcion, imagenBase64 }) {
   return apiFetch('/empresa/catalogo/items', {
     method: 'POST',
     body: { nombre, categoriaId, descripcion, imagenBase64 },
@@ -429,8 +432,7 @@ export function actualizarRubroCatalogoDemoActivo(token, rubroTemplateId, catalo
 export function fetchCatalogoDemoItems(token, rubroTemplateId) {
   return apiFetch(`/admin-vendedores/catalogo-demo/items?rubroTemplateId=${rubroTemplateId}`, { token, tipoSesion: 'vendedor' });
 }
-export async function subirCatalogoDemoItem(token, { rubroTemplateId, categoria, nombre, descripcion, archivo }) {
-  const imagenBase64 = await leerArchivoComoBase64(archivo);
+export function subirCatalogoDemoItem(token, { rubroTemplateId, categoria, nombre, descripcion, imagenBase64 }) {
   return apiFetch('/admin-vendedores/catalogo-demo/items', {
     method: 'POST', body: { rubroTemplateId, categoria, nombre, descripcion, imagenBase64 }, token, tipoSesion: 'vendedor',
   });

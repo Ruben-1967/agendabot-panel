@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { leerArchivoComoBase64 } from '../api/client';
 
 /**
  * Grilla de imágenes del Catálogo Visual — thumbnail, nombre, indicador
@@ -25,6 +26,8 @@ export default function CatalogoImagenesGrid({
 }) {
   const [archivoPendiente, setArchivoPendiente] = useState(null);
   const [previewArchivoPendiente, setPreviewArchivoPendiente] = useState(null);
+  const [imagenBase64Pendiente, setImagenBase64Pendiente] = useState(null);
+  const [errorArchivo, setErrorArchivo] = useState('');
   const [nombreImagenNueva, setNombreImagenNueva] = useState('');
   const [descripcionImagenNueva, setDescripcionImagenNueva] = useState('');
   const [valoresExtraNueva, setValoresExtraNueva] = useState({});
@@ -45,18 +48,35 @@ export default function CatalogoImagenesGrid({
     return () => URL.revokeObjectURL(url);
   }, [archivoPendiente]);
 
-  function manejarSeleccionArchivo(e) {
+  async function manejarSeleccionArchivo(e) {
     const archivo = e.target.files?.[0];
     if (!archivo) return;
+    e.target.value = '';
+    setErrorArchivo('');
     setArchivoPendiente(archivo);
+    setImagenBase64Pendiente(null);
     setNombreImagenNueva('');
     setDescripcionImagenNueva('');
     setValoresExtraNueva({});
-    e.target.value = '';
+
+    // Leer el archivo AL TOQUE, apenas se elige — no esperar a que el
+    // usuario termine de escribir el nombre y confirme. En algunas PWA
+    // instaladas de Android, esperar ese rato hace que la referencia al
+    // archivo ya no sea legible (falla con "No se pudo leer el archivo"
+    // recién al subir, sin relación aparente con el archivo en sí).
+    try {
+      const base64 = await leerArchivoComoBase64(archivo);
+      setImagenBase64Pendiente(base64);
+    } catch {
+      setErrorArchivo('No se pudo leer este archivo — probá elegirlo de nuevo.');
+      setArchivoPendiente(null);
+    }
   }
 
   function cancelarSubida() {
     setArchivoPendiente(null);
+    setImagenBase64Pendiente(null);
+    setErrorArchivo('');
     setNombreImagenNueva('');
     setDescripcionImagenNueva('');
     setValoresExtraNueva({});
@@ -64,7 +84,7 @@ export default function CatalogoImagenesGrid({
 
   async function confirmarSubida(e) {
     e.preventDefault();
-    if (!nombreImagenNueva.trim() || !archivoPendiente) return;
+    if (!nombreImagenNueva.trim() || !imagenBase64Pendiente) return;
     if (camposExtra.some((c) => c.requerido && !valoresExtraNueva[c.key]?.trim())) return;
 
     setSubiendo(true);
@@ -72,7 +92,7 @@ export default function CatalogoImagenesGrid({
       await onSubir({
         nombre: nombreImagenNueva.trim(),
         descripcion: descripcionImagenNueva.trim() || undefined,
-        archivo: archivoPendiente,
+        imagenBase64: imagenBase64Pendiente,
         ...valoresExtraNueva,
       });
       cancelarSubida();
@@ -181,7 +201,9 @@ export default function CatalogoImagenesGrid({
               onChange={(e) => setDescripcionImagenNueva(e.target.value)}
             />
             <div className="tarjeta-imagen-acciones">
-              <button type="submit" className="btn-link" disabled={subiendo}>{subiendo ? 'Subiendo…' : 'Subir'}</button>
+              <button type="submit" className="btn-link" disabled={subiendo || !imagenBase64Pendiente}>
+                {subiendo ? 'Subiendo…' : imagenBase64Pendiente ? 'Subir' : 'Leyendo archivo…'}
+              </button>
               <button type="button" className="btn-link" onClick={cancelarSubida} disabled={subiendo}>Cancelar</button>
             </div>
           </form>
@@ -198,6 +220,7 @@ export default function CatalogoImagenesGrid({
           <span>{limiteAlcanzado ? (mensajeLimite || 'Límite alcanzado') : 'Subir imagen'}</span>
         </label>
       )}
+      {errorArchivo && <p className="mensaje-error">{errorArchivo}</p>}
     </div>
   );
 }

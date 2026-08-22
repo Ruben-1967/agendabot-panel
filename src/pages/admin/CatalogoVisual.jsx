@@ -112,10 +112,10 @@ export default function CatalogoVisual() {
     }
   }
 
-  async function manejarSubir({ nombre, descripcion, archivo }) {
+  async function manejarSubir({ nombre, descripcion, imagenBase64 }) {
     setError('');
     try {
-      await subirCatalogoItem(token, { nombre, categoriaId: categoriaSeleccionadaId, descripcion, archivo });
+      await subirCatalogoItem(token, { nombre, categoriaId: categoriaSeleccionadaId, descripcion, imagenBase64 });
       await Promise.all([cargarCategorias(), cargarItems(categoriaSeleccionadaId)]);
     } catch (err) {
       setError(err.message);
