@@ -154,6 +154,7 @@ function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposF
   const [rut, setRut] = useState('');
   const [telefono, setTelefono] = useState('');
   const [email, setEmail] = useState('');
+  const [fechaProximaCita, setFechaProximaCita] = useState('');
   const [guardandoDatos, setGuardandoDatos] = useState(false);
 
   // ---- Tab Atenciones (ventas) ----
@@ -193,6 +194,7 @@ function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposF
         setRut(data.cliente.rut || '');
         setTelefono(data.cliente.telefono || '');
         setEmail(data.cliente.email || '');
+        setFechaProximaCita(aFechaInput(data.cliente.fechaProximaCita));
 
         // Prellenar el formulario de "Ficha clínica" con el último valor
         // conocido (el caché en Cliente), para que el profesional solo
@@ -233,7 +235,13 @@ function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposF
     setGuardandoDatos(true);
     setError('');
     try {
-      await actualizarCliente(token, clienteId, { nombre, rut, telefono, email });
+      await actualizarCliente(token, clienteId, {
+        nombre,
+        rut,
+        telefono,
+        email,
+        fechaProximaCita: fechaProximaCita || null,
+      });
       cargar();
       onCambio();
     } catch (err) {
@@ -444,6 +452,14 @@ async function guardarFechaVenta(ventaId) {
           <div className="form-group">
             <label>Email</label>
             <input value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label>Fecha de la próxima visita</label>
+            <input
+              type="date"
+              value={fechaProximaCita}
+              onChange={(e) => setFechaProximaCita(e.target.value)}
+            />
           </div>
           <button type="submit" disabled={guardandoDatos} className="btn-guardar">
             {guardandoDatos ? 'Guardando…' : 'Guardar cambios'}
@@ -782,11 +798,10 @@ export default function Clientes() {
                     Última visita:{' '}
                     {c.ultimaCompraFecha ? formatearFechaCorta(c.ultimaCompraFecha) : '—'}
                   </p>
-                  {c.fechaProximaCita && (
-                    <p className="cliente-card-meta">
-                      Fecha de la próxima visita: {formatearFechaCorta(c.fechaProximaCita)}
-                    </p>
-                  )}
+                  <p className="cliente-card-meta">
+                    Fecha de la próxima visita:{' '}
+                    {c.fechaProximaCita ? formatearFechaCorta(c.fechaProximaCita) : '—'}
+                  </p>
                   {c.numVentas > 0 && (
                     <span className="cliente-card-badge">
                       {c.numVentas} {c.numVentas === 1 ? 'venta' : 'ventas'}
