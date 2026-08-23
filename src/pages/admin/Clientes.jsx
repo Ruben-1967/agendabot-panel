@@ -141,6 +141,9 @@ function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, camposFicha
 }
 
 function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposFicha, onCerrar, onCambio }) {
+  const nombreRegistro = camposFicha?.nombreRegistro || 'Registro';
+  const nombreHistorial = camposFicha?.nombreHistorial || 'Historial';
+
   const [cliente, setCliente] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
@@ -412,14 +415,14 @@ async function guardarFechaVenta(ventaId) {
           className={`tab ${tabActiva === 'fichaClinica' ? 'active' : ''}`}
           onClick={() => setTabActiva('fichaClinica')}
         >
-          Ficha clínica
+          {nombreRegistro}
         </button>
         <button
           type="button"
           className={`tab ${tabActiva === 'historialClinico' ? 'active' : ''}`}
           onClick={() => setTabActiva('historialClinico')}
         >
-          Historial Clínico
+          {nombreHistorial}
         </button>
       </div>
 
@@ -547,8 +550,8 @@ async function guardarFechaVenta(ventaId) {
       {tabActiva === 'fichaClinica' && (
         <form className="cliente-tab-content cliente-ficha-form" onSubmit={guardarNuevaAtencion}>
           <p className="texto-muted" style={{ marginBottom: '12px' }}>
-            Registrar esta atención la agrega como un nuevo registro al Historial Clínico —
-            no sobrescribe atenciones anteriores.
+            Guardar esto lo agrega como un nuevo registro a {nombreHistorial} — no
+            sobrescribe los anteriores.
           </p>
           <FormularioAtencion
             valores={nuevaAtencion}
@@ -779,6 +782,11 @@ export default function Clientes() {
                     Última visita:{' '}
                     {c.ultimaCompraFecha ? formatearFechaCorta(c.ultimaCompraFecha) : '—'}
                   </p>
+                  {c.fechaProximaCita && (
+                    <p className="cliente-card-meta">
+                      Próxima cita: {formatearFechaCorta(c.fechaProximaCita)}
+                    </p>
+                  )}
                   {c.numVentas > 0 && (
                     <span className="cliente-card-badge">
                       {c.numVentas} {c.numVentas === 1 ? 'venta' : 'ventas'}
