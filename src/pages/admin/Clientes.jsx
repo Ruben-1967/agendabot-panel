@@ -127,7 +127,7 @@ function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, camposFicha
             />
           </label>
           <label className="ficha-field">
-            <strong>Fecha próxima cita</strong>
+            <strong>Fecha de la próxima visita</strong>
             <input
               type="date"
               value={valores.fechaProximaCitaFijada || ''}
@@ -622,7 +622,7 @@ async function guardarFechaVenta(ventaId) {
                           {a.diagnostico && <p><strong>Diagnóstico:</strong> {a.diagnostico}</p>}
                           {a.profesionalAtendio && <p><strong>Profesional:</strong> {a.profesionalAtendio}</p>}
                           {a.fechaProximaCitaFijada && (
-                            <p><strong>Próxima cita:</strong> {formatearFecha(a.fechaProximaCitaFijada)}</p>
+                            <p><strong>Fecha de la próxima visita:</strong> {formatearFecha(a.fechaProximaCitaFijada)}</p>
                           )}
                           <div className="historial-item-clinico-receta">
                             {(camposFicha?.grupos || []).map((grupo, i) => (
@@ -784,7 +784,7 @@ export default function Clientes() {
                   </p>
                   {c.fechaProximaCita && (
                     <p className="cliente-card-meta">
-                      Próxima cita: {formatearFechaCorta(c.fechaProximaCita)}
+                      Fecha de la próxima visita: {formatearFechaCorta(c.fechaProximaCita)}
                     </p>
                   )}
                   {c.numVentas > 0 && (
