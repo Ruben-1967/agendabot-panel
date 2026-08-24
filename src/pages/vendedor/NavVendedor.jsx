@@ -18,6 +18,9 @@ export default function NavVendedor() {
       </NavLink>
       {esAdmin && (
         <>
+          <NavLink to="/vendedor/admin/pool-leads" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
+            Pool de leads
+          </NavLink>
           <NavLink to="/vendedor/admin/pagos" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
             Pagos pendientes
           </NavLink>

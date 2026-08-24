@@ -420,6 +420,14 @@ export function guardarHorarioModalidad(token, vendedorId, dias) {
   return apiFetch(`/admin-vendedores/vendedores/${vendedorId}/horario-modalidad`, { method: 'PUT', body: { horario: dias }, token, tipoSesion: 'vendedor' });
 }
 
+// ---------- Pool de leads sin asignar (solo Vendedor ADMIN, distribución manual) ----------
+export function fetchLeadsPool(token) {
+  return apiFetch('/leads/pool', { token, tipoSesion: 'vendedor' });
+}
+export function asignarLeadAVendedor(token, leadId, vendedorId) {
+  return apiFetch(`/leads/pool/${leadId}/asignar`, { method: 'POST', body: { vendedorId }, token, tipoSesion: 'vendedor' });
+}
+
 // ---------- Catálogo visual de la demo (por rubro, solo Vendedor ADMIN) ----------
 export function fetchRubrosCatalogoDemo(token) {
   return apiFetch('/admin-vendedores/catalogo-demo/rubros', { token, tipoSesion: 'vendedor' });
