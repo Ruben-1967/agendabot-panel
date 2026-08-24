@@ -171,7 +171,7 @@ export default function ConectarWhatsApp() {
   // vía postMessage (evento WA_EMBEDDED_SIGNUP). Pueden llegar en cualquier
   // orden, así que los acumulamos en un ref y disparamos el backend recién
   // cuando están los tres.
-  const datosSignupRef = useRef({ code: null, wabaId: null, phoneNumberId: null });
+  const datosSignupRef = useRef({ code: null, wabaId: null, phoneNumberId: null, requierePhoneNumberId: true });
   const yaEnviadoRef = useRef(false);
   const timeoutEsperaRef = useRef(null);
   // Diagnóstico del salto de apps: { id, iniciadoEn } del intento de
@@ -268,7 +268,12 @@ export default function ConectarWhatsApp() {
       // que Meta mandó acá, no solo con el mensaje amigable que ve el usuario.
       console.log('[EMBEDDED SIGNUP] postMessage recibido de Meta:', JSON.stringify(datos));
 
-      if (datos.event === 'FINISH') {
+      if (datos.event === 'FINISH' || datos.event === 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING') {
+        // FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING es el evento de Coexistence
+        // ("conectar app existente") — Meta solo manda waba_id, nunca
+        // phone_number_id. No es un caso incompleto: requierePhoneNumberId
+        // (fijado en manejarConectar según usaWhatsappBusinessApp) ya le dice
+        // a intentarEnviarAlBackend() que no debe esperarlo.
         datosSignupRef.current.wabaId = datos.data?.waba_id || null;
         datosSignupRef.current.phoneNumberId = datos.data?.phone_number_id || null;
         intentarEnviarAlBackend();
@@ -284,8 +289,9 @@ export default function ConectarWhatsApp() {
   }, []);
 
   async function intentarEnviarAlBackend() {
-    const { code, wabaId, phoneNumberId } = datosSignupRef.current;
-    if (!code || !wabaId || !phoneNumberId || yaEnviadoRef.current) return;
+    const { code, wabaId, phoneNumberId, requierePhoneNumberId } = datosSignupRef.current;
+    if (!code || !wabaId || yaEnviadoRef.current) return;
+    if (requierePhoneNumberId && !phoneNumberId) return;
 
     limpiarTimeoutEspera();
     yaEnviadoRef.current = true;
@@ -314,7 +320,18 @@ export default function ConectarWhatsApp() {
 
     setError('');
     setResultado(null);
-    datosSignupRef.current = { code: null, wabaId: null, phoneNumberId: null };
+    datosSignupRef.current = {
+      code: null,
+      wabaId: null,
+      phoneNumberId: null,
+      // Fijado acá (no al recibir el postMessage) porque intentarEnviarAlBackend()
+      // también se llama desde el callback de FB.login() más abajo, que puede
+      // disparar antes de que llegue el evento — no hay orden garantizado entre
+      // ambos. usaWhatsappBusinessApp ya es la elección del usuario que decide
+      // el featureType de FB.login(), así que refleja el flujo real sin
+      // depender de qué llegó primero.
+      requierePhoneNumberId: !usaWhatsappBusinessApp,
+    };
     yaEnviadoRef.current = false;
     limpiarTimeoutEspera();
     setConectando(true);
