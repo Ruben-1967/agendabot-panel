@@ -18,6 +18,7 @@ export default function NavVendedor() {
       </NavLink>
       {esAdmin && (
         <>
+          <div className="nav-vendedor-separador" />
           <NavLink to="/vendedor/admin/pool-leads" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
             Pool de leads
           </NavLink>
