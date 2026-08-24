@@ -301,42 +301,56 @@
 .badge-exito { background: var(--teal); color: #fff; }
 .badge-pendiente { background: var(--naranja); color: #fff; }
 
-/* ---------- Nav compartido del panel de vendedor ---------- */
+/* ---------- Nav compartido del panel de vendedor (pestañas, colores Multidigital) ---------- */
 .nav-vendedor {
+  --md-navy: #14263B;
+  --md-blue: #1E93D4;
+  --md-text-muted: #9FB8CC;
+
   max-width: 480px;
   margin: 0 auto 22px;
+  background: var(--md-navy);
+  border-radius: 14px;
+  padding: 10px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: center;
+  flex-direction: column;
+  gap: 2px;
+}
+.nav-vendedor-separador {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  margin: 6px 6px;
 }
 .nav-vendedor-link {
   font-family: 'Inter', sans-serif;
-  font-size: 0.82rem;
+  font-size: 0.86rem;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--md-text-muted);
   text-decoration: none;
-  padding: 6px 11px;
-  border-radius: 6px;
-  border: 1px solid transparent;
+  padding: 10px 14px;
+  border-radius: 9px;
 }
-.nav-vendedor-link:hover { color: var(--ink); }
+.nav-vendedor-link:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
 .nav-vendedor-link.activo {
-  color: var(--teal-deep);
-  background: var(--teal-soft);
-  border-color: var(--teal-soft);
+  color: #fff;
+  background: var(--md-blue);
 }
 .nav-vendedor-salir {
-  margin-left: auto;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
   background: none;
-  border: none;
-  color: var(--red);
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  color: #FF9B86;
   font-family: 'Inter', sans-serif;
-  font-size: 0.8rem;
+  font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
-  padding: 6px 8px;
+  text-align: left;
+  padding: 12px 14px 6px;
+  border-radius: 0;
 }
+.nav-vendedor-salir:hover { color: #fff; }
 
 /* ---------- Semáforo SLA/aging ---------- */
 .badge-sla {
