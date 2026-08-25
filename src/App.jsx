@@ -32,6 +32,8 @@ import ConfigSLA from './pages/vendedor/admin/ConfigSLA';
 import MarcarPagos from './pages/vendedor/admin/MarcarPagos';
 import AdminVendedores from './pages/vendedor/admin/AdminVendedores';
 import PoolLeads from './pages/vendedor/admin/PoolLeads';
+import LeadsEmails from './pages/vendedor/admin/LeadsEmails';
+import ReporteOrigenCaso from './pages/vendedor/ReporteOrigenCaso';
 import CatalogoVisualDemoAdmin from './pages/vendedor/admin/CatalogoVisualDemoAdmin';
 import ActivarCuenta from './pages/ActivarCuenta';
 import ElegirPlan from './pages/ElegirPlan';
@@ -162,6 +164,22 @@ function AppRoutes() {
           <ProtectedRouteVendedorAdmin>
             <PoolLeads />
           </ProtectedRouteVendedorAdmin>
+        }
+      />
+      <Route
+        path="/vendedor/admin/leads-emails"
+        element={
+          <ProtectedRouteVendedorAdmin>
+            <LeadsEmails />
+          </ProtectedRouteVendedorAdmin>
+        }
+      />
+      <Route
+        path="/vendedor/reporte-origen-caso"
+        element={
+          <ProtectedRouteVendedor>
+            <ReporteOrigenCaso />
+          </ProtectedRouteVendedor>
         }
       />
       <Route

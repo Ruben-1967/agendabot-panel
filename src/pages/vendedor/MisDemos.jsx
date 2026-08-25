@@ -549,6 +549,11 @@ export default function MisDemos() {
                         <span className={c.activado ? 'badge-exito' : 'badge-pendiente'}>
                           {c.activado ? '✓ Activada' : 'Pendiente de activar'}
                         </span>
+                        {c.origenCaso && (
+                          <span className={c.origenCaso === 'heredado' ? 'badge-sla badge-sla-amarillo' : 'badge-sla badge-sla-ok'}>
+                            {c.origenCaso === 'heredado' ? '🎁 Heredado' : '🌱 Orgánico'}
+                          </span>
+                        )}
                         {c.diasSinPago != null && (
                           <span className="badge-sla badge-sla-amarillo">
                             🕒 {c.diasSinPago} día{c.diasSinPago === 1 ? '' : 's'} sin pago
