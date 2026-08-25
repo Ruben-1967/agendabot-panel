@@ -9,21 +9,25 @@ function formatFechaHora(iso) {
   return new Date(iso).toLocaleString('es-CL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
-const ETIQUETAS_ORIGEN = { whatsapp_demo: 'WhatsApp (demo)', email_campana: 'Email (campaña)' };
+const ETIQUETAS_NIVEL_INTERES = {
+  clic: { texto: 'Hizo clic', clase: 'badge-sla-amarillo' },
+  formulario: { texto: 'Llenó formulario', clase: 'badge-sla-ok' },
+  respuesta: { texto: 'Respondió el email', clase: 'badge-exito' },
+};
 
-function TarjetaLeadPool({ lead, vendedoresActivos, vendedorElegidoId, onCambiarVendedorElegido, onAsignar, procesando, expandido, onToggle }) {
+function TarjetaLeadEmail({ lead, vendedoresActivos, vendedorElegidoId, onCambiarVendedorElegido, onAsignar, procesando, expandido, onToggle }) {
+  const nivel = lead.nivelInteresEmail ? ETIQUETAS_NIVEL_INTERES[lead.nivelInteresEmail] : null;
+
   return (
     <div className="tarjeta-vendedor-admin-wrap">
       <div className="tarjeta-vendedor-admin" onClick={onToggle} role="button" tabIndex={0}>
         <div className="tarjeta-vendedor-admin-info">
-          <strong>{lead.nombreProspecto || lead.telefono || lead.email || 'Sin nombre'}</strong>
-          <span className="texto-muted">{lead.rubro || 'Rubro sin registrar'} · {ETIQUETAS_ORIGEN[lead.origen] || lead.origen}</span>
-          <span className="texto-muted">
-            {lead.diasInteraccion} día{lead.diasInteraccion === 1 ? '' : 's'} de interacción · última vez {formatFechaHora(lead.ultimaInteraccionEn)}
-          </span>
+          <strong>{lead.nombreProspecto || lead.email || 'Sin nombre'}</strong>
+          <span className="texto-muted">{lead.rubro || 'Rubro sin registrar'}</span>
+          <span className="texto-muted">Último evento: {formatFechaHora(lead.ultimoEventoEmailEn)}</span>
         </div>
         <div className="tarjeta-vendedor-admin-derecha">
-          {lead.intencionDetectada && <span className="badge-exito">Preguntó precio</span>}
+          {nivel && <span className={`badge-sla ${nivel.clase}`}>{nivel.texto}</span>}
           <span className="btn-link">{expandido ? 'Ocultar' : 'Ver más'}</span>
         </div>
       </div>
@@ -32,23 +36,13 @@ function TarjetaLeadPool({ lead, vendedoresActivos, vendedorElegidoId, onCambiar
           <h3 className="subtitulo-tarjeta">Resumen</h3>
           <p className="texto-ayuda" style={{ margin: '0 0 4px' }}>Teléfono: {lead.telefono || '—'}</p>
           <p className="texto-ayuda" style={{ margin: '0 0 4px' }}>Email: {lead.email || '—'}</p>
-          <p className="texto-ayuda" style={{ margin: '0 0 4px' }}>Motivo de derivación: {lead.motivoDerivacion || '—'}</p>
           <p className="texto-ayuda" style={{ marginBottom: 16 }}>Último mensaje: {lead.ultimoMensajeResumen || '—'}</p>
 
-          {Array.isArray(lead.ultimosTurnos) && lead.ultimosTurnos.length > 0 && (
-            <>
-              <h3 className="subtitulo-tarjeta">Últimos turnos de la conversación</h3>
-              <div className="lista-vendedores-admin" style={{ marginBottom: 16 }}>
-                {lead.ultimosTurnos.map((turno, i) => (
-                  <p key={i} className="texto-ayuda" style={{ margin: '0 0 6px' }}>
-                    <strong>{turno.rol === 'prospecto' ? 'Cliente' : 'Bot'}:</strong> {turno.texto}
-                  </p>
-                ))}
-              </div>
-            </>
-          )}
-
           <h3 className="subtitulo-tarjeta">Asignar a un vendedor</h3>
+          <p className="texto-ayuda" style={{ marginBottom: 10 }}>
+            Al asignar, se crea automáticamente un caso de trabajo en "Mis casos" del vendedor
+            (si el lead tiene un teléfono válido) — no queda como una tarea suelta.
+          </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
             <select
               value={vendedorElegidoId || ''}
@@ -76,7 +70,7 @@ function TarjetaLeadPool({ lead, vendedoresActivos, vendedorElegidoId, onCambiar
   );
 }
 
-export default function PoolLeads() {
+export default function LeadsEmails() {
   const { token } = useVendedorAuth();
   const [leads, setLeads] = useState([]);
   const [vendedores, setVendedores] = useState([]);
@@ -85,16 +79,17 @@ export default function PoolLeads() {
   const [expandidoId, setExpandidoId] = useState(null);
   const [vendedorElegidoPorLead, setVendedorElegidoPorLead] = useState({});
   const [procesandoId, setProcesandoId] = useState(null);
+  const [avisoCasoManual, setAvisoCasoManual] = useState('');
 
   function cargar() {
     setCargando(true);
     setError('');
-    Promise.all([fetchLeadsPool(token, 'whatsapp_demo'), fetchVendedores(token)])
+    Promise.all([fetchLeadsPool(token, 'email_campana'), fetchVendedores(token)])
       .then(([datosLeads, datosVendedores]) => {
         setLeads(datosLeads.leads || []);
         setVendedores(datosVendedores.vendedores || []);
       })
-      .catch((err) => setError(err.message || 'No se pudo cargar el pool de leads'))
+      .catch((err) => setError(err.message || 'No se pudo cargar los leads de email'))
       .finally(() => setCargando(false));
   }
 
@@ -108,8 +103,12 @@ export default function PoolLeads() {
 
     setProcesandoId(lead.id);
     setError('');
+    setAvisoCasoManual('');
     try {
-      await asignarLeadAVendedor(token, lead.id, vendedorId);
+      const resultado = await asignarLeadAVendedor(token, lead.id, vendedorId);
+      if (resultado.requiereCasoManual) {
+        setAvisoCasoManual(`"${lead.nombreProspecto || lead.email}" quedó asignado, pero no tenía un teléfono válido — el vendedor debe crear el caso a mano desde "+ Nueva demo".`);
+      }
       setLeads((prev) => prev.filter((l) => l.id !== lead.id));
     } catch (err) {
       if (err.status === 409) {
@@ -127,21 +126,22 @@ export default function PoolLeads() {
     <div className="pantalla-vendedor">
       <NavVendedor />
       <div className="vendedor-inner">
-        <h1>Leads fonos</h1>
+        <h1>Leads emails</h1>
         <p className="texto-ayuda">
-          Leads orgánicos de WhatsApp sin asignar todavía. Distribúyelos manualmente a un
+          Leads de campañas de email sin asignar todavía. Distribúyelos manualmente a un
           vendedor — los vendedores no ven ni toman leads de este pool por su cuenta.
         </p>
 
         {error && <p className="login-error">{error}</p>}
+        {avisoCasoManual && <p className="texto-ayuda" style={{ color: 'var(--naranja)' }}>{avisoCasoManual}</p>}
 
         {cargando && <p>Cargando…</p>}
-        {!cargando && leads.length === 0 && <p className="texto-ayuda">No hay leads sin asignar por el momento.</p>}
+        {!cargando && leads.length === 0 && <p className="texto-ayuda">No hay leads de email sin asignar por el momento.</p>}
 
         {!cargando && leads.length > 0 && (
           <div className="lista-vendedores-admin">
             {leads.map((lead) => (
-              <TarjetaLeadPool
+              <TarjetaLeadEmail
                 key={lead.id}
                 lead={lead}
                 vendedoresActivos={vendedoresActivos}

@@ -16,11 +16,17 @@ export default function NavVendedor() {
       <NavLink to="/vendedor/ranking" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
         Ranking
       </NavLink>
+      <NavLink to="/vendedor/reporte-origen-caso" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
+        Heredado / orgánico
+      </NavLink>
       {esAdmin && (
         <>
           <div className="nav-vendedor-separador" />
           <NavLink to="/vendedor/admin/pool-leads" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
-            Pool de leads
+            Leads fonos
+          </NavLink>
+          <NavLink to="/vendedor/admin/leads-emails" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
+            Leads emails
           </NavLink>
           <NavLink to="/vendedor/admin/pagos" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
             Pagos pendientes

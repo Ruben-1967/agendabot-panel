@@ -421,11 +421,18 @@ export function guardarHorarioModalidad(token, vendedorId, dias) {
 }
 
 // ---------- Pool de leads sin asignar (solo Vendedor ADMIN, distribución manual) ----------
-export function fetchLeadsPool(token) {
-  return apiFetch('/leads/pool', { token, tipoSesion: 'vendedor' });
+export function fetchLeadsPool(token, origen) {
+  const query = origen ? `?origen=${origen}` : '';
+  return apiFetch(`/leads/pool${query}`, { token, tipoSesion: 'vendedor' });
 }
 export function asignarLeadAVendedor(token, leadId, vendedorId) {
   return apiFetch(`/leads/pool/${leadId}/asignar`, { method: 'POST', body: { vendedorId }, token, tipoSesion: 'vendedor' });
+}
+
+// ---------- Reporte heredado/organico por vendedor ----------
+export function fetchReporteOrigenCaso(token, vendedorId) {
+  const query = vendedorId ? `?vendedorId=${vendedorId}` : '';
+  return apiFetch(`/demos/reporte-origen-caso${query}`, { token, tipoSesion: 'vendedor' });
 }
 
 // ---------- Catálogo visual de la demo (por rubro, solo Vendedor ADMIN) ----------
