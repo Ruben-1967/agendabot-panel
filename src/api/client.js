@@ -329,6 +329,12 @@ export function convertirClienteReal(token, demoId, { email, plan }) {
   return apiFetch('/demos/convertir-a-cliente-real', { method: 'POST', body: { demoId, email, plan }, token, tipoSesion: 'vendedor' });
 }
 
+export function guardarTerminosEspeciales(token, empresaId, datos) {
+  return apiFetch(`/admin-vendedores/suscripciones/${empresaId}/terminos-especiales`, {
+    method: 'PATCH', body: datos, token, tipoSesion: 'vendedor',
+  });
+}
+
 export function fetchClientesConvertidos(token, filtros = {}) {
   const params = new URLSearchParams();
   if (filtros.vendedorId) params.set('vendedorId', filtros.vendedorId);

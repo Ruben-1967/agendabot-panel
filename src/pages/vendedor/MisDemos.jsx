@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVendedorAuth } from '../../context/VendedorAuthContext';
-import { fetchProspectosDemo, eliminarProspectoDemo, convertirClienteReal, fetchClientesConvertidos, eliminarClienteConvertido, editarPlanCliente, bloquearClienteConvertido, desbloquearClienteConvertido, fetchVendedoresKPI, fetchKpisDiarios } from '../../api/client';
+import { fetchProspectosDemo, eliminarProspectoDemo, convertirClienteReal, guardarTerminosEspeciales, fetchClientesConvertidos, eliminarClienteConvertido, editarPlanCliente, bloquearClienteConvertido, desbloquearClienteConvertido, fetchVendedoresKPI, fetchKpisDiarios } from '../../api/client';
 import NavVendedor from './NavVendedor';
 import './vendedor.css';
 
@@ -38,11 +38,19 @@ function formatoCLP(n) {
   return `$${n.toLocaleString('es-CL')}`;
 }
 
-function ModalConvertirCliente({ demo, token, onCerrar, onConvertido }) {
+function ModalConvertirCliente({ demo, token, esAdmin, onCerrar, onConvertido }) {
   const [email, setEmail] = useState(demo.email || '');
   const [plan, setPlan] = useState('A');
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
+
+  // Términos especiales — solo un vendedor ADMIN los ve/aplica (ver
+  // PATCH /admin-vendedores/suscripciones/:empresaId/terminos-especiales).
+  // Un vendedor normal siempre convierte con el plan elegido, sin excepciones.
+  const [mostrarTerminos, setMostrarTerminos] = useState(false);
+  const [exentoDePlan, setExentoDePlan] = useState(false);
+  const [exentoDeHosting, setExentoDeHosting] = useState(false);
+  const [mesesGratisPlan, setMesesGratisPlan] = useState('0');
 
   async function manejarGuardar(e) {
     e.preventDefault();
@@ -50,7 +58,26 @@ function ModalConvertirCliente({ demo, token, onCerrar, onConvertido }) {
     setEnviando(true);
     try {
       const resultado = await convertirClienteReal(token, demo.id, { email: email.trim(), plan });
-      onConvertido(resultado);
+
+      const hayTerminosEspeciales = esAdmin && mostrarTerminos
+        && (exentoDePlan || exentoDeHosting || Number(mesesGratisPlan) > 0);
+      let avisoTerminosEspeciales = null;
+      if (hayTerminosEspeciales) {
+        try {
+          await guardarTerminosEspeciales(token, resultado.empresaId, {
+            exentoDePlan,
+            exentoDeHosting,
+            mesesGratisPlan: Number(mesesGratisPlan) || 0,
+          });
+        } catch (errTerminos) {
+          // El cliente ya quedó creado — no se revierte la conversión por
+          // esto, solo se avisa para que se aplique a mano si hace falta.
+          console.error('No se pudieron aplicar los términos especiales:', errTerminos);
+          avisoTerminosEspeciales = 'No se pudieron aplicar los términos especiales de cobro — aplícalos a mano desde la ficha del cliente.';
+        }
+      }
+
+      onConvertido({ ...resultado, avisoTerminosEspeciales });
     } catch (err) {
       setError(err.message || 'No se pudo convertir a cliente real');
     } finally {
@@ -85,6 +112,45 @@ function ModalConvertirCliente({ demo, token, onCerrar, onConvertido }) {
               ))}
             </select>
           </label>
+
+          {esAdmin && (
+            <div style={{ marginTop: 8, paddingTop: 12, borderTop: '1px solid var(--line)' }}>
+              {!mostrarTerminos ? (
+                <button type="button" className="btn-link" onClick={() => setMostrarTerminos(true)}>
+                  + Aplicar términos especiales de cobro
+                </button>
+              ) : (
+                <>
+                  <p className="campo-seccion-titulo">Términos especiales (solo admin)</p>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 400 }}>
+                    <input type="checkbox" checked={exentoDePlan} onChange={(e) => setExentoDePlan(e.target.checked)} />
+                    Exento del cobro del plan
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 400 }}>
+                    <input type="checkbox" checked={exentoDeHosting} onChange={(e) => setExentoDeHosting(e.target.checked)} />
+                    Exento del cobro de hosting (1 UF)
+                  </label>
+                  <label>
+                    Meses de gracia del plan (0 = cobra normal desde el mes 1)
+                    <input
+                      type="number"
+                      min="0"
+                      value={mesesGratisPlan}
+                      onChange={(e) => setMesesGratisPlan(e.target.value)}
+                      disabled={exentoDePlan}
+                    />
+                  </label>
+                  {exentoDePlan && exentoDeHosting && (
+                    <p className="texto-ayuda">Con ambas exenciones marcadas, la cuenta queda 100% gratis y se activa directo, sin pedirle tarjeta al cliente.</p>
+                  )}
+                  <button type="button" className="btn-link" onClick={() => setMostrarTerminos(false)}>
+                    Cancelar términos especiales
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
           {error && <p className="login-error">{error}</p>}
           <div className="tarjeta-demo-acciones">
             <button type="submit" className="cta-primaria" disabled={enviando}>
@@ -247,6 +313,7 @@ export default function MisDemos() {
       nombreNegocio: demo.nombreNegocio,
       link: resultado.linkActivacion,
       whatsappEnviado: resultado.whatsappEnviado,
+      avisoTerminosEspeciales: resultado.avisoTerminosEspeciales,
     });
     setModalConvertir(null);
     cargar();
@@ -375,6 +442,9 @@ export default function MisDemos() {
               <code>{avisoLinkManual.link}</code>
               <button className="cta-secundaria" onClick={copiarLinkManual}>Copiar</button>
             </div>
+            {avisoLinkManual.avisoTerminosEspeciales && (
+              <p className="login-error" style={{ marginTop: 8 }}>{avisoLinkManual.avisoTerminosEspeciales}</p>
+            )}
             <button className="btn-link" onClick={() => setAvisoLinkManual(null)}>Cerrar</button>
           </div>
         )}
@@ -623,6 +693,7 @@ export default function MisDemos() {
         <ModalConvertirCliente
           demo={modalConvertir}
           token={token}
+          esAdmin={esAdmin}
           onCerrar={() => setModalConvertir(null)}
           onConvertido={(resultado) => manejarConvertido(modalConvertir, resultado)}
         />
