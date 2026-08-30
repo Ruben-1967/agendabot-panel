@@ -379,6 +379,12 @@ export function fetchConfigSLA(token) {
 export function guardarConfigSLA(token, config) {
   return apiFetch('/admin-vendedores/sla/config', { method: 'POST', body: { config }, token, tipoSesion: 'vendedor' });
 }
+export function fetchConfigDistribucion(token) {
+  return apiFetch('/admin-vendedores/distribucion/config', { token, tipoSesion: 'vendedor' });
+}
+export function guardarConfigDistribucion(token, cupoMaximoCasosActivos) {
+  return apiFetch('/admin-vendedores/distribucion/config', { method: 'POST', body: { cupoMaximoCasosActivos }, token, tipoSesion: 'vendedor' });
+}
 export function fetchSuscripcionesPendientes(token) {
   return apiFetch('/admin-vendedores/suscripciones/pendientes', { token, tipoSesion: 'vendedor' });
 }

@@ -30,6 +30,7 @@ import Ranking from './pages/vendedor/Ranking';
 import GestionVenta from './pages/vendedor/GestionVenta';
 import ConfigRanking from './pages/vendedor/admin/ConfigRanking';
 import ConfigSLA from './pages/vendedor/admin/ConfigSLA';
+import ConfigDistribucion from './pages/vendedor/admin/ConfigDistribucion';
 import MarcarPagos from './pages/vendedor/admin/MarcarPagos';
 import AdminVendedores from './pages/vendedor/admin/AdminVendedores';
 import PoolLeads from './pages/vendedor/admin/PoolLeads';
@@ -141,6 +142,14 @@ function AppRoutes() {
         element={
           <ProtectedRouteVendedorAdmin>
             <ConfigSLA />
+          </ProtectedRouteVendedorAdmin>
+        }
+      />
+      <Route
+        path="/vendedor/admin/distribucion-leads"
+        element={
+          <ProtectedRouteVendedorAdmin>
+            <ConfigDistribucion />
           </ProtectedRouteVendedorAdmin>
         }
       />

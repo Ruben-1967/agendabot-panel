@@ -37,6 +37,9 @@ export default function NavVendedor() {
           <NavLink to="/vendedor/admin/sla" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
             Config. SLA
           </NavLink>
+          <NavLink to="/vendedor/admin/distribucion-leads" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
+            Config. distribución
+          </NavLink>
           <NavLink to="/vendedor/admin/vendedores" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
             Vendedores
           </NavLink>
