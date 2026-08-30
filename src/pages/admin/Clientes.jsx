@@ -7,10 +7,12 @@ import {
   crearCliente,
   actualizarCliente,
   registrarVenta,
+  editarVenta,
   fetchAtenciones,
   crearAtencion,
   actualizarAtencion,
   eliminarAtencion,
+  fetchProfesionales,
 } from '../../api/client';
 import './Clientes.css';
 
@@ -67,7 +69,7 @@ function setValorAnidado(obj, path, valor) {
 // rubro por igual. Se usa tanto para crear una atención nueva (tab "Ficha
 // clínica") como para editar una existente inline (tab "Historial Clínico").
 // ------------------------------------------------------------
-function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, camposFicha, mostrarFecha = true }) {
+function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, camposFicha, profesionales = [], mostrarFecha = true }) {
   const grupos = camposFicha?.grupos || [];
   return (
     <>
@@ -119,12 +121,21 @@ function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, camposFicha
           </label>
           <label className="ficha-field">
             Profesional que lo atendió
-            <input
-              type="text"
-              placeholder="Nombre del profesional"
+            <select
               value={valores.profesionalAtendio || ''}
               onChange={(e) => onCambioCampo('profesionalAtendio', e.target.value)}
-            />
+            >
+              <option value="">— Selecciona —</option>
+              {profesionales.map((p) => (
+                <option key={p.id} value={p.nombre}>{p.nombre}</option>
+              ))}
+              {/* Registros antiguos escritos a mano que no calzan con ningún
+                  profesional actual — se mantienen como opción para no
+                  borrar el dato al abrir el formulario. */}
+              {valores.profesionalAtendio && !profesionales.some((p) => p.nombre === valores.profesionalAtendio) && (
+                <option value={valores.profesionalAtendio}>{valores.profesionalAtendio}</option>
+              )}
+            </select>
           </label>
           <label className="ficha-field">
             <strong>Fecha de la próxima visita</strong>
@@ -140,7 +151,7 @@ function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, camposFicha
   );
 }
 
-function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposFicha, onCerrar, onCambio }) {
+function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposFicha, profesionales, onCerrar, onCambio }) {
   const nombreRegistro = camposFicha?.nombreRegistro || 'Registro';
   const nombreHistorial = camposFicha?.nombreHistorial || 'Historial';
 
@@ -161,6 +172,7 @@ function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposF
   const [descripcionVenta, setDescripcionVenta] = useState('');
   const [montoVenta, setMontoVenta] = useState('');
   const [categoriaVenta, setCategoriaVenta] = useState('');
+  const [recursoAgendableIdVenta, setRecursoAgendableIdVenta] = useState('');
   const [fechaVenta, setFechaVenta] = useState(() => new Date().toISOString().slice(0, 10));
   const [editandoVentaId, setEditandoVentaId] = useState(null);
   const [fechaEditVenta, setFechaEditVenta] = useState('');
@@ -268,11 +280,13 @@ function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposF
         descripcion: descripcionVenta.trim(),
         monto: Number(montoVenta),
         categoriaProducto: categoriaVenta || null,
+        recursoAgendableId: recursoAgendableIdVenta || null,
         fecha: fechaVenta,
       });
       setDescripcionVenta('');
       setMontoVenta('');
       setCategoriaVenta('');
+      setRecursoAgendableIdVenta('');
       setFechaVenta(new Date().toISOString().slice(0, 10));
       cargar();
       onCambio();
@@ -516,6 +530,17 @@ async function guardarFechaVenta(ventaId) {
                   ))}
                 </select>
               )}
+              {profesionales.length > 0 && (
+                <select
+                  value={recursoAgendableIdVenta}
+                  onChange={(e) => setRecursoAgendableIdVenta(e.target.value)}
+                >
+                  <option value="">Profesional (opt.)</option>
+                  {profesionales.map((p) => (
+                    <option key={p.id} value={p.id}>{p.nombre}</option>
+                  ))}
+                </select>
+              )}
               <button type="submit" disabled={registrandoVenta} className="btn-guardar">
                 {registrandoVenta ? 'Registrando…' : 'Registrar atención'}
               </button>
@@ -586,6 +611,7 @@ async function guardarFechaVenta(ventaId) {
             onCambioFicha={actualizarFichaNuevaAtencion}
             onCambioCampo={actualizarCampoNuevaAtencion}
             camposFicha={camposFicha}
+            profesionales={profesionales}
           />
           <button type="submit" disabled={guardandoAtencion} className="btn-guardar">
             {guardandoAtencion ? 'Guardando…' : 'Registrar atención'}
@@ -613,6 +639,7 @@ async function guardarFechaVenta(ventaId) {
                           onCambioFicha={actualizarFichaEdicion}
                           onCambioCampo={actualizarCampoEdicion}
                           camposFicha={camposFicha}
+                          profesionales={profesionales}
                         />
                         <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                           <button
@@ -683,6 +710,7 @@ export default function Clientes() {
   const [clientes, setClientes] = useState([]);
   const [categoriasProductoSugeridas, setCategoriasProductoSugeridas] = useState([]);
   const [camposFicha, setCamposFicha] = useState({ grupos: [] });
+  const [profesionales, setProfesionales] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState(null);
@@ -695,11 +723,12 @@ export default function Clientes() {
 
   function cargar() {
     setCargando(true);
-    Promise.all([fetchClientes(token), fetchConfigClientes(token)])
-      .then(([dataClientes, dataConfig]) => {
+    Promise.all([fetchClientes(token), fetchConfigClientes(token), fetchProfesionales(token)])
+      .then(([dataClientes, dataConfig, dataProfesionales]) => {
         setClientes(dataClientes.clientes);
         setCategoriasProductoSugeridas(dataConfig.categoriasProductoSugeridas || []);
         setCamposFicha(dataConfig.camposFicha || { grupos: [] });
+        setProfesionales(dataProfesionales.profesionales || []);
       })
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
@@ -837,6 +866,7 @@ export default function Clientes() {
           token={token}
           categoriasProductoSugeridas={categoriasProductoSugeridas}
           camposFicha={camposFicha}
+          profesionales={profesionales}
           onCerrar={() => setClienteSeleccionadoId(null)}
           onCambio={cargar}
         />

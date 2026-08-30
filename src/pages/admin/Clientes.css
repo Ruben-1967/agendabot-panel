@@ -560,7 +560,8 @@
 }
 
 .ficha-field input,
-.ficha-field textarea {
+.ficha-field textarea,
+.ficha-field select {
   padding: 8px 10px;
   border: 1px solid var(--color-arena);
   border-radius: 4px;
@@ -569,7 +570,8 @@
 }
 
 .ficha-field input:focus,
-.ficha-field textarea:focus {
+.ficha-field textarea:focus,
+.ficha-field select:focus {
   outline: none;
   border-color: var(--color-teal);
   box-shadow: 0 0 0 3px rgba(15, 110, 86, 0.1);
