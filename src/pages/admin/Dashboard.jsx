@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { fetchDashboard, fetchProfesionales } from '../../api/client';
+import { BarChartSerie, LineChartSerie, BarChartCategorias, formatoCLP, COLOR_DINERO } from './DashboardCharts';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -45,6 +46,12 @@ export default function Dashboard() {
     asistencia30dias: 0,
     agendaHoy: [],
     listaEsperaItems: [],
+    montoHoy: 0,
+    montoSemana: 0,
+    citasPorDia: [],
+    atencionesPorTipo: [],
+    citasPorMes: [],
+    dineroPorMes: [],
   };
 
   // Obtener fecha de hoy formateada
@@ -111,6 +118,56 @@ export default function Dashboard() {
           <span className="metric-description">
             {citasAsistidas} de {datos_seguros.citasHoy} citas asistidas
           </span>
+        </div>
+
+        <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
+          <span className="metric-label">Monto hoy</span>
+          <span className="metric-value">{formatoCLP.format(datos_seguros.montoHoy)}</span>
+          <span className="metric-description">registrado en atenciones/ventas de hoy</span>
+        </div>
+
+        <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
+          <span className="metric-label">Monto esta semana</span>
+          <span className="metric-value">{formatoCLP.format(datos_seguros.montoSemana)}</span>
+          <span className="metric-description">de lunes a hoy</span>
+        </div>
+      </div>
+
+      {/* Gráficos de negocio */}
+      <div className="dashboard-graficos">
+        <div className="grafico-card">
+          <h2>Citas — últimos 14 días</h2>
+          <BarChartSerie
+            datos={datos_seguros.citasPorDia.map((d) => ({ label: d.fecha, value: d.cantidad }))}
+            etiquetaEje="Citas por día, últimos 14 días"
+            formatoEtiqueta={(v) => `${v} cita${v === 1 ? '' : 's'}`}
+          />
+        </div>
+
+        <div className="grafico-card">
+          <h2>Atenciones por tipo de servicio</h2>
+          <BarChartCategorias
+            datos={datos_seguros.atencionesPorTipo.map((d) => ({ categoria: d.categoria, cantidad: d.cantidad }))}
+          />
+        </div>
+
+        <div className="grafico-card">
+          <h2>Evolución mensual de citas</h2>
+          <LineChartSerie
+            datos={datos_seguros.citasPorMes.map((d) => ({ label: d.mes, value: d.cantidad }))}
+            etiquetaEje="Citas por mes, últimos 6 meses"
+            formatoEtiqueta={(v) => `${v} cita${v === 1 ? '' : 's'}`}
+          />
+        </div>
+
+        <div className="grafico-card">
+          <h2>Evolución mensual de dinero</h2>
+          <LineChartSerie
+            datos={datos_seguros.dineroPorMes.map((d) => ({ label: d.mes, value: d.monto }))}
+            color={COLOR_DINERO}
+            etiquetaEje="Monto en ventas por mes, últimos 6 meses"
+            formatoEtiqueta={(v) => formatoCLP.format(v)}
+          />
         </div>
       </div>
 
