@@ -46,6 +46,7 @@ export default function Dashboard() {
     asistencia30dias: 0,
     agendaHoy: [],
     listaEsperaItems: [],
+    atencionesHoy: 0,
     montoHoy: 0,
     montoSemana: 0,
     citasPorDia: [],
@@ -105,10 +106,10 @@ export default function Dashboard() {
         </div>
 
         <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
-          <span className="metric-label">Lista de espera</span>
-          <span className="metric-value">{datos_seguros.listaEspera}</span>
+          <span className="metric-label">Atenciones hoy</span>
+          <span className="metric-value">{datos_seguros.atencionesHoy}</span>
           <span className="metric-description">
-            clientes esperando cupo
+            ventas/atenciones registradas hoy
           </span>
         </div>
 

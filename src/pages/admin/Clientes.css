@@ -430,6 +430,14 @@
   cursor: not-allowed;
 }
 
+.historial-form-inline button.btn-guardar {
+  background: var(--color-teal);
+}
+
+.historial-form-inline button.btn-guardar:hover:not(:disabled) {
+  background: #0a4d3f;
+}
+
 .historial-items {
   display: flex;
   flex-direction: column;

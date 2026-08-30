@@ -232,6 +232,12 @@ function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposF
   // ---- Datos ----
   async function guardarDatos(e) {
     e.preventDefault();
+    if (!fechaProximaCita) {
+      const continuar = window.confirm(
+        'No indicaste la fecha de la próxima visita. ¿Deseas guardar de todos modos sin esa fecha?'
+      );
+      if (!continuar) return;
+    }
     setGuardandoDatos(true);
     setError('');
     try {
@@ -304,6 +310,12 @@ async function guardarFechaVenta(ventaId) {
 
   async function guardarNuevaAtencion(e) {
     e.preventDefault();
+    if (!nuevaAtencion.fechaProximaCitaFijada) {
+      const continuar = window.confirm(
+        'No indicaste la fecha de la próxima visita. ¿Deseas guardar de todos modos sin esa fecha?'
+      );
+      if (!continuar) return;
+    }
     setGuardandoAtencion(true);
     setError('');
     try {
@@ -462,7 +474,7 @@ async function guardarFechaVenta(ventaId) {
             />
           </div>
           <button type="submit" disabled={guardandoDatos} className="btn-guardar">
-            {guardandoDatos ? 'Guardando…' : 'Guardar cambios'}
+            {guardandoDatos ? 'Registrando…' : 'Registrar atención'}
           </button>
         </form>
       )}
@@ -504,8 +516,8 @@ async function guardarFechaVenta(ventaId) {
                   ))}
                 </select>
               )}
-              <button type="submit" disabled={registrandoVenta}>
-                {registrandoVenta ? 'Registrando…' : 'Registrar'}
+              <button type="submit" disabled={registrandoVenta} className="btn-guardar">
+                {registrandoVenta ? 'Registrando…' : 'Registrar atención'}
               </button>
             </form>
           </div>

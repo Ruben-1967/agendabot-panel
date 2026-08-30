@@ -53,10 +53,6 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
       .then((data) => {
         const plantillas = data.plantillas || [];
         setPlantillasFicha(plantillas);
-        // Ya no existe la opción "sin ficha" — el select queda controlado y
-        // requiere un valor real, así que precargamos la primera plantilla
-        // apenas llegan, para que coincida con lo que el navegador muestra.
-        if (plantillas.length > 0) setPlantillaFichaId((actual) => actual || plantillas[0].id);
       })
       .catch(() => {});
   }, [token]);
@@ -81,7 +77,7 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
       });
       setNombre('');
       setDuracionMinutos('');
-      setPlantillaFichaId(plantillasFicha[0]?.id || '');
+      setPlantillaFichaId('');
       await onCambio();
       if (bloqueado) setMostrarFormNuevo(false);
     } catch (err) {
@@ -114,10 +110,7 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
     setEditandoId(servicio.id);
     setNombreEdicion(servicio.nombre);
     setDuracionEdicion(servicio.duracionMinutos ?? '');
-    // "Sin ficha" ya no es una opción — si el servicio quedó así de antes
-    // (creado previo a este cambio), se precarga la primera plantilla real
-    // disponible en vez de dejar el select sin nada seleccionado.
-    setPlantillaFichaIdEdicion(servicio.plantillaFichaId || plantillasFicha[0]?.id || '');
+    setPlantillaFichaIdEdicion(servicio.plantillaFichaId || '');
   }
 
   function cancelarEdicion() {
@@ -192,7 +185,8 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
           <form className="form-inline" onSubmit={manejarCrear} style={{ flexWrap: 'wrap' }}>
             <input placeholder="Nombre (ej. Examen visual)" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
             <input type="number" min="1" placeholder="Duración (min, opcional)" value={duracionMinutos} onChange={(e) => setDuracionMinutos(e.target.value)} />
-            <select value={plantillaFichaId} onChange={(e) => setPlantillaFichaId(e.target.value)} required>
+            <select value={plantillaFichaId} onChange={(e) => setPlantillaFichaId(e.target.value)}>
+              <option value="">Hereda del rubro</option>
               {plantillasFicha.map((p) => (
                 <option key={p.id} value={p.id}>{p.nombre}</option>
               ))}
@@ -244,7 +238,8 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
                           />
                         </td>
                         <td>
-                          <select value={plantillaFichaIdEdicion} onChange={(e) => setPlantillaFichaIdEdicion(e.target.value)} required>
+                          <select value={plantillaFichaIdEdicion} onChange={(e) => setPlantillaFichaIdEdicion(e.target.value)}>
+                            <option value="">Hereda del rubro</option>
                             {plantillasFicha.map((p) => (
                               <option key={p.id} value={p.id}>{p.nombre}</option>
                             ))}
