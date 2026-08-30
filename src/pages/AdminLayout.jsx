@@ -61,7 +61,7 @@ export default function AdminLayout() {
               <NavLink to="/admin/clientes">Pacientes / Clientes</NavLink>
               <NavLink to="/admin/profesionales">Profesionales</NavLink>
               {/* <NavLink to="/admin/campanas">Campañas</NavLink> */}
-              {/* <NavLink to="/admin/chats">Chats en vivo</NavLink> */}
+              <NavLink to="/admin/chats">Chats en vivo</NavLink>
               <NavLink to="/admin/lista-espera">Lista de espera</NavLink>
               <NavLink to="/admin/catalogo-visual">Catálogo visual</NavLink>
             </>

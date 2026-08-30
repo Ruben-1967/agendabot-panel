@@ -21,6 +21,7 @@ import Clientes from './pages/admin/Clientes';
 import AgendaDia from './pages/admin/AgendaDia';
 import ListaEspera from './pages/admin/ListaEspera';
 import CatalogoVisual from './pages/admin/CatalogoVisual';
+import ChatsEnVivo from './pages/admin/ChatsEnVivo';
 import MiPerfil from './pages/admin/MiPerfil';
 import LoginVendedor from './pages/vendedor/LoginVendedor';
 import NuevaDemo from './pages/vendedor/NuevaDemo';
@@ -75,6 +76,7 @@ function AppRoutes() {
         <Route path="clientes" element={<Clientes />} />
         <Route path="lista-espera" element={<ListaEspera />} />
         <Route path="catalogo-visual" element={<CatalogoVisual />} />
+        <Route path="chats" element={<ChatsEnVivo />} />
         <Route path="productos" element={<Productos />} />
         <Route path="campanas" element={<Campanas />} />
         <Route path="pedidos" element={<PedidosHoy />} />

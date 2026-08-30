@@ -188,7 +188,10 @@ export default function ChatsEnVivo() {
                 onClick={() => cargarConversacion(conv.id)}
               >
                 <div className="chat-item-header">
-                  <div className="chat-nombre">{conv.clienteNombre}</div>
+                  <div className="chat-nombre">
+                    {conv.clienteNombre}
+                    {conv.esEjemplo && <span className="badge-ejemplo">Ejemplo</span>}
+                  </div>
                   <div className="chat-hora">
                     {formatearHora(conv.ultimoMensajeTimestamp)}
                   </div>
@@ -204,7 +207,11 @@ export default function ChatsEnVivo() {
             <>
               <div className="chat-expandido-header">
                 <h2>{conversacionSeleccionada.clienteNombre}</h2>
-                <span className="status-online">● En linea</span>
+                {conversacionSeleccionada.esEjemplo ? (
+                  <span className="badge-ejemplo">Ejemplo</span>
+                ) : (
+                  <span className="status-online">● En linea</span>
+                )}
               </div>
 
               <div className="mensajes-container">
@@ -219,24 +226,32 @@ export default function ChatsEnVivo() {
                   ))}
               </div>
 
-              <form onSubmit={handleEnviarMensaje} className="mensaje-input-form">
-                <input
-                  type="text"
-                  className="mensaje-input"
-                  placeholder="Escribe tu respuesta..."
-                  value={nuevoMensaje}
-                  onChange={(e) => setNuevoMensaje(e.target.value)}
-                  disabled={enviando}
-                />
-                <button type="submit" className="btn-enviar" disabled={enviando}>
-                  Enviar
-                </button>
-              </form>
+              {conversacionSeleccionada.esEjemplo ? (
+                <div className="aviso-ejemplo">
+                  Esta es una conversación de ejemplo — así se vería tu panel con clientes reales escribiéndote.
+                </div>
+              ) : (
+                <>
+                  <form onSubmit={handleEnviarMensaje} className="mensaje-input-form">
+                    <input
+                      type="text"
+                      className="mensaje-input"
+                      placeholder="Escribe tu respuesta..."
+                      value={nuevoMensaje}
+                      onChange={(e) => setNuevoMensaje(e.target.value)}
+                      disabled={enviando}
+                    />
+                    <button type="submit" className="btn-enviar" disabled={enviando}>
+                      Enviar
+                    </button>
+                  </form>
 
-              <div className="mensaje-botones">
-                <button className="btn-plantilla">plantilla rapida</button>
-                <button className="btn-agendar">agendar cita</button>
-              </div>
+                  <div className="mensaje-botones">
+                    <button className="btn-plantilla">plantilla rapida</button>
+                    <button className="btn-agendar">agendar cita</button>
+                  </div>
+                </>
+              )}
             </>
           ) : (
             <div className="chat-vacio">

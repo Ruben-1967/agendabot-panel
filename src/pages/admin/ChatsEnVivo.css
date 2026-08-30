@@ -80,6 +80,29 @@
   font-size: 0.9rem;
   font-weight: 600;
   color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge-ejemplo {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #8a6d1f;
+  background: #f5e6b8;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.aviso-ejemplo {
+  padding: 12px 16px;
+  border-top: 1px solid #e8ddd2;
+  background: #faf6ec;
+  color: #8a6d1f;
+  font-size: 0.8rem;
+  text-align: center;
 }
 
 .chat-hora {
