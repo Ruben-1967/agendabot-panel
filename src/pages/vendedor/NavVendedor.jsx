@@ -31,6 +31,9 @@ export default function NavVendedor() {
           <NavLink to="/vendedor/admin/pagos" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
             Pagos pendientes
           </NavLink>
+          <NavLink to="/vendedor/admin/excedente-citas" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
+            Excedente citas
+          </NavLink>
           <NavLink to="/vendedor/admin/ranking" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
             Config. ranking
           </NavLink>

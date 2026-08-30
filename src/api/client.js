@@ -397,6 +397,9 @@ export function fetchSuscripcionesPendientes(token) {
 export function marcarSuscripcionActiva(token, empresaId) {
   return apiFetch(`/admin-vendedores/suscripciones/${empresaId}/marcar-activa`, { method: 'POST', token, tipoSesion: 'vendedor' });
 }
+export function fetchExcedenteCitas(token) {
+  return apiFetch('/admin-vendedores/excedente-citas', { token, tipoSesion: 'vendedor' });
+}
 
 // ---------- Árbol de gestión de ventas ----------
 export function fetchCatalogoGestion(token) {
