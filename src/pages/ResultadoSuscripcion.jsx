@@ -37,6 +37,14 @@ export default function ResultadoSuscripcion() {
           </>
         )}
 
+        {estado === 'exito' && (
+          <>
+            <p className="login-sub">¡Listo!</p>
+            <p>Tu cuenta ya está activa — no correspondía ningún cobro en este ciclo.</p>
+            <a href="/login" className="login-link">Ir a iniciar sesión →</a>
+          </>
+        )}
+
         {estado === 'error' && (
           <>
             <p className="login-sub">No pudimos completar el pago</p>
