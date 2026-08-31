@@ -453,8 +453,8 @@ export default function ConectarWhatsApp() {
       </button>
 
       <p className="nota-numero-nuevo">
-        ¿Necesitas un número nuevo dedicado solo al bot? Ese registro deja sin WhatsApp normal al
-        negocio en ese número — conversa primero con el cliente, no se hace desde acá.
+        Si deseas un número nuevo, dedicado exclusivamente al chat de IA, por favor nos comentas y
+        lo implementamos.
       </p>
     </div>
   );
