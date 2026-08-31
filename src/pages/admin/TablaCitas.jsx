@@ -81,26 +81,30 @@ export default function TablaCitas() {
     fetchClientes(token).then((data) => setClientes(data.clientes || [])).catch(() => {});
   }, [token]);
 
+  // Con UN profesional puntual (elegido a mano, o porque la empresa solo
+  // tiene uno) el backend además arma la grilla completa del día — todas
+  // las horas configuradas, tengan o no paciente (ver GET /agenda/citas).
+  // Con "todos los profesionales" eso no aplica (cada uno tiene su propio
+  // horario en paralelo, mezclar huecos de varios sería engañoso), así que
+  // solo se listan las citas reales.
+  const recursoParaGrilla = recursoFiltro || (profesionales.length === 1 ? profesionales[0].id : '');
+
   function cargarCitas() {
     if (!token) return;
     setCargando(true);
     setError(null);
-    // Trae el día completo sin filtrar en el servidor — profesional y
-    // servicio se filtran acá abajo sobre esa misma lista, así cambiar de
-    // filtro no pide de nuevo al backend.
-    fetchCitasDia(token, fecha)
+    fetchCitasDia(token, fecha, recursoParaGrilla || undefined)
       .then((data) => setCitas(data.citas || []))
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
   }
 
-  useEffect(cargarCitas, [token, fecha]);
+  useEffect(cargarCitas, [token, fecha, recursoParaGrilla]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const citasFiltradas = citas.filter(
-    (c) =>
-      (!recursoFiltro || c.recursoAgendableId === recursoFiltro) &&
-      (!servicioFiltro || c.servicioId === servicioFiltro)
-  );
+  // El filtro de servicio no aplica a las filas vacías de la grilla — un
+  // horario libre sirve para cualquier servicio, no tiene sentido que
+  // desaparezca solo porque hay un filtro de servicio activo.
+  const citasFiltradas = citas.filter((c) => c.vacio || !servicioFiltro || c.servicioId === servicioFiltro);
 
   async function marcarConfirmado(cita, valor) {
     if (cita.estado === 'CANCELADA' || cita.estado === 'COMPLETADA' || cita.estado === 'NO_ASISTIO') return;
@@ -128,9 +132,27 @@ export default function TablaCitas() {
     }
   }
 
-  function abrirFormulario() {
+  // Libera el cupo aunque el paciente ya haya confirmado (o incluso
+  // asistido) — a diferencia de los toggles de arriba, que se bloquean una
+  // vez resuelto el estado, esto siempre está disponible como salida de
+  // emergencia (el paciente avisó que no puede ir, hubo un error al
+  // agendar, etc.).
+  async function liberarHora(cita) {
+    if (!window.confirm(`¿Liberar la hora ${cita.hora} de ${cita.nombre}? Queda disponible para otro paciente.`)) return;
+    setActualizandoId(cita.id);
+    try {
+      await actualizarEstadoCita(token, cita.id, 'CANCELADA');
+      cargarCitas();
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    } finally {
+      setActualizandoId(null);
+    }
+  }
+
+  function abrirFormulario(horaPrellenada = '') {
     setErrorForm(null);
-    setFormHora('');
+    setFormHora(horaPrellenada);
     setFormServicioId('');
     setFormRecursoId('');
     setFormClienteId('');
@@ -207,7 +229,7 @@ export default function TablaCitas() {
               ))}
             </select>
           )}
-          <button className="btn-primario" onClick={abrirFormulario}>+ Agregar cita</button>
+          <button className="btn-primario" onClick={() => abrirFormulario()}>+ Agregar cita</button>
         </div>
       </div>
 
@@ -240,8 +262,13 @@ export default function TablaCitas() {
             {profesionales.length !== 1 && (
               <label>
                 Profesional
-                <select value={formRecursoId} onChange={(e) => setFormRecursoId(e.target.value)} required>
-                  <option value="">Elegir…</option>
+                {/* Sin "required": dejarlo en "No especificar" es válido — el
+                    backend asigna automáticamente al menos ocupado que esté
+                    libre a esa hora (ver POST /agenda/citas). Antes esto era
+                    obligatorio y bloqueaba guardar cuando no importaba quién
+                    o no se sabía de antemano quién estaba libre. */}
+                <select value={formRecursoId} onChange={(e) => setFormRecursoId(e.target.value)}>
+                  <option value="">No especificar (asigna automático)</option>
                   {profesionales.map((p) => (
                     <option key={p.id} value={p.id}>{p.nombre}</option>
                   ))}
@@ -301,15 +328,28 @@ export default function TablaCitas() {
               <th>Confirmado</th>
               <th>Fono</th>
               <th>Asistió</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {cargando ? (
-              <tr><td colSpan={8} className="tabla-citas-vacio">Cargando…</td></tr>
+              <tr><td colSpan={9} className="tabla-citas-vacio">Cargando…</td></tr>
             ) : citasFiltradas.length === 0 ? (
-              <tr><td colSpan={8} className="tabla-citas-vacio">Sin citas agendadas este día.</td></tr>
+              <tr><td colSpan={9} className="tabla-citas-vacio">Sin citas agendadas este día.</td></tr>
             ) : (
               citasFiltradas.map((cita, i) => {
+                if (cita.vacio) {
+                  return (
+                    <tr key={cita.id} className="fila-vacia">
+                      <td>{i + 1}</td>
+                      <td>{cita.hora}</td>
+                      <td colSpan={5} className="tabla-citas-disponible">Disponible</td>
+                      <td>
+                        <button className="btn-link" onClick={() => abrirFormulario(cita.hora)}>+ Agendar</button>
+                      </td>
+                    </tr>
+                  );
+                }
                 const confirmado = confirmadoDeEstado(cita.estado);
                 const asistio = asistioDeEstado(cita.estado);
                 const bloqueado = actualizandoId === cita.id;
@@ -345,6 +385,12 @@ export default function TablaCitas() {
                         />
                       )}
                     </td>
+                    <td className="tabla-citas-acciones-celda">
+                      <a href={`/admin/clientes?clienteId=${cita.clienteId}`} className="btn-link">Ver ficha</a>
+                      {cita.estado !== 'CANCELADA' && (
+                        <button className="btn-link btn-danger" disabled={bloqueado} onClick={() => liberarHora(cita)}>Liberar</button>
+                      )}
+                    </td>
                   </tr>
                 );
               })
@@ -360,6 +406,18 @@ export default function TablaCitas() {
           <p className="tabla-citas-vacio">Sin citas agendadas este día.</p>
         ) : (
           citasFiltradas.map((cita, i) => {
+            if (cita.vacio) {
+              return (
+                <div key={cita.id} className="tabla-citas-card">
+                  <div className="tabla-citas-card-top">
+                    <span className="tabla-citas-card-numero">{i + 1}</span>
+                    <span className="tabla-citas-card-hora">{cita.hora}</span>
+                    <span className="tabla-citas-disponible">Disponible</span>
+                  </div>
+                  <button className="btn-link" onClick={() => abrirFormulario(cita.hora)}>+ Agendar esta hora</button>
+                </div>
+              );
+            }
             const confirmado = confirmadoDeEstado(cita.estado);
             const asistio = asistioDeEstado(cita.estado);
             const bloqueado = actualizandoId === cita.id;
@@ -397,6 +455,12 @@ export default function TablaCitas() {
                     </div>
                   </div>
                 )}
+                <div className="tabla-citas-card-links">
+                  <a href={`/admin/clientes?clienteId=${cita.clienteId}`} className="btn-link">Ver ficha</a>
+                  {cita.estado !== 'CANCELADA' && (
+                    <button className="btn-link btn-danger" disabled={bloqueado} onClick={() => liberarHora(cita)}>Liberar hora</button>
+                  )}
+                </div>
               </div>
             );
           })

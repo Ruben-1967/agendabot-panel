@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   fetchConfigClientes,
@@ -151,7 +152,7 @@ function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, camposFicha
   );
 }
 
-function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposFicha, profesionales, onCerrar, onCambio }) {
+function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposFicha, profesionales, onCerrar, onCambio, volverATablaCitas }) {
   const nombreRegistro = camposFicha?.nombreRegistro || 'Registro';
   const nombreHistorial = camposFicha?.nombreHistorial || 'Historial';
 
@@ -424,6 +425,9 @@ async function guardarFechaVenta(ventaId) {
     <div className="cliente-detalle-panel">
       <div className="cliente-detalle-header">
         <h3>{cliente.nombre}</h3>
+        {volverATablaCitas && (
+          <a href="/admin/tabla-citas" className="btn-link">← Volver a Tabla de citas</a>
+        )}
         <button type="button" className="btn-cerrar" onClick={onCerrar}>✕</button>
       </div>
 
@@ -707,13 +711,17 @@ async function guardarFechaVenta(ventaId) {
 
 export default function Clientes() {
   const { token } = useAuth();
+  const [searchParams] = useSearchParams();
+  // Deep link desde "Tabla de citas" (?clienteId=...) — abre la ficha
+  // directo al entrar, sin que el admin tenga que buscarlo en la lista.
+  const clienteIdDesdeUrl = searchParams.get('clienteId');
   const [clientes, setClientes] = useState([]);
   const [categoriasProductoSugeridas, setCategoriasProductoSugeridas] = useState([]);
   const [camposFicha, setCamposFicha] = useState({ grupos: [] });
   const [profesionales, setProfesionales] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
-  const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState(null);
+  const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState(clienteIdDesdeUrl);
   const [busqueda, setBusqueda] = useState('');
 
   const [nombreNuevo, setNombreNuevo] = useState('');
@@ -869,6 +877,7 @@ export default function Clientes() {
           profesionales={profesionales}
           onCerrar={() => setClienteSeleccionadoId(null)}
           onCambio={cargar}
+          volverATablaCitas={clienteSeleccionadoId === clienteIdDesdeUrl}
         />
       )}
     </div>

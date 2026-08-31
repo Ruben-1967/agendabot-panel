@@ -80,6 +80,30 @@
   font-style: italic;
 }
 
+.tabla-citas-disponible {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.fila-vacia {
+  background: rgba(0, 0, 0, 0.015);
+}
+
+.tabla-citas-acciones-celda {
+  display: flex;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.tabla-citas-card-links {
+  display: flex;
+  gap: 16px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+  margin-top: 2px;
+}
+
 .tabla-citas-form {
   background: var(--card);
   border: 1px solid var(--line);
