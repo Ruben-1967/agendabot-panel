@@ -19,6 +19,7 @@ import ConectarWhatsApp from './pages/admin/ConectarWhatsApp';
 import Dashboard from './pages/admin/Dashboard';
 import Clientes from './pages/admin/Clientes';
 import AgendaDia from './pages/admin/AgendaDia';
+import TablaCitas from './pages/admin/TablaCitas';
 import ListaEspera from './pages/admin/ListaEspera';
 import CatalogoVisual from './pages/admin/CatalogoVisual';
 import ChatsEnVivo from './pages/admin/ChatsEnVivo';
@@ -71,6 +72,7 @@ function AppRoutes() {
       >
         <Route index element={<Dashboard />} />
         <Route path="agenda" element={<AgendaDia />} />
+        <Route path="tabla-citas" element={<TablaCitas />} />
         <Route path="configuracion-agenda" element={<ConfiguracionAgenda />} />
         <Route path="profesionales" element={<GestionProfesionales />} />
         <Route path="informacion-negocio" element={<InformacionNegocio />} />

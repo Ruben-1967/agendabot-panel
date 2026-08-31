@@ -201,6 +201,19 @@ export function fetchDashboard(token, empresaId, recursoId) {
   return apiFetch(`/agenda/dashboard/${empresaId}${query}`, { token });
 }
 
+// ---------- Agenda: tabla de citas por día ----------
+export function fetchCitasDia(token, fecha, recursoId) {
+  const params = new URLSearchParams({ fecha });
+  if (recursoId) params.set('recursoId', recursoId);
+  return apiFetch(`/agenda/citas?${params.toString()}`, { token });
+}
+export function crearCitaManual(token, data) {
+  return apiFetch('/agenda/citas', { method: 'POST', body: data, token });
+}
+export function actualizarEstadoCita(token, citaId, estado) {
+  return apiFetch(`/agenda/citas/${citaId}/estado`, { method: 'PATCH', body: { estado }, token });
+}
+
 // ---------- Suscripción ----------
 export function fetchEstadoSuscripcion(token) {
   return apiFetch('/suscripcion/estado', { token });

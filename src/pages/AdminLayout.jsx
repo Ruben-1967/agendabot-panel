@@ -54,6 +54,7 @@ export default function AdminLayout() {
           ) : (
             <>
               <NavLink to="/admin/agenda">Agenda del día</NavLink>
+              <NavLink to="/admin/tabla-citas">Tabla de citas</NavLink>
               <NavLink to="/admin/informacion-negocio">Información del negocio</NavLink>
               {!ocultarConfiguracionAgenda && (
                 <NavLink to="/admin/configuracion-agenda">Configuración de agenda</NavLink>

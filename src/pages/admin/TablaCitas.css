@@ -1,0 +1,126 @@
+.tabla-citas-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.tabla-citas-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.tabla-citas-fecha {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: #fff;
+  color: var(--ink);
+}
+
+.btn-primario {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: var(--teal-deep);
+  color: var(--paper);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.btn-primario:hover:not(:disabled) { background: var(--teal); }
+.btn-primario:disabled { opacity: 0.6; cursor: default; }
+
+.tabla-citas-wrap {
+  overflow-x: auto;
+}
+
+.tabla-citas th:first-child, .tabla-citas td:first-child {
+  width: 36px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla-citas-vacio {
+  text-align: center;
+  color: var(--muted);
+  padding: 24px !important;
+}
+
+.tabla-citas-toggle {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.tabla-citas-toggle button {
+  border: none;
+  background: #fff;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.tabla-citas-toggle button:not(:first-child) { border-left: 1px solid var(--line); }
+.tabla-citas-toggle button:disabled { cursor: default; }
+.tabla-citas-toggle button.activo-si { background: var(--teal-soft); color: var(--teal-deep); font-weight: 600; }
+.tabla-citas-toggle button.activo-no { background: var(--red-soft); color: var(--red); font-weight: 600; }
+
+.tabla-citas-cancelada {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.tabla-citas-form {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tabla-citas-form h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.tabla-citas-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  flex: 1;
+}
+
+.tabla-citas-form input, .tabla-citas-form select {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--ink);
+  background: #fff;
+}
+
+.tabla-citas-form-fila {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.tabla-citas-form-acciones {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+}
