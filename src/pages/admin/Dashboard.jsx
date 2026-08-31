@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { fetchDashboard, fetchProfesionales } from '../../api/client';
-import { BarChartSerie, LineChartSerie, BarChartCategorias, formatoCLP, COLOR_DINERO } from './DashboardCharts';
+import { BarChartSerie, LineChartSerie, BarChartCategorias, formatoCLP, COLOR_DINERO, formatearDiaSemanaCorto } from './DashboardCharts';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -49,6 +49,7 @@ export default function Dashboard() {
     atencionesHoy: 0,
     montoHoy: 0,
     montoSemana: 0,
+    citasProximosDias: [],
     citasPorDia: [],
     atencionesPorTipo: [],
     citasPorMes: [],
@@ -136,6 +137,17 @@ export default function Dashboard() {
 
       {/* Gráficos de negocio */}
       <div className="dashboard-graficos">
+        <div className="grafico-card">
+          <h2>Citas — próximos 6 días</h2>
+          <BarChartSerie
+            datos={datos_seguros.citasProximosDias.map((d) => ({ label: d.fecha, value: d.cantidad }))}
+            etiquetaEje="Citas agendadas por día, próximos 6 días"
+            formatoEtiqueta={(v) => `${v} cita${v === 1 ? '' : 's'}`}
+            formatoEtiquetaEje={formatearDiaSemanaCorto}
+            todasLasEtiquetas
+          />
+        </div>
+
         <div className="grafico-card">
           <h2>Citas — últimos 14 días</h2>
           <BarChartSerie

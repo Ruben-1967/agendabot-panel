@@ -22,6 +22,16 @@ function formatearFechaCorta(fechaISO) {
   return `${dia}/${mes}`;
 }
 
+const DIAS_SEMANA_CORTOS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+
+// new Date('YYYY-MM-DD') interpreta la fecha en UTC — sumarle mediodía evita
+// que un huso horario con offset negativo (como Chile) la corra al día
+// anterior antes de leer getDay().
+function formatearDiaSemanaCorto(fechaISO) {
+  const fecha = new Date(`${fechaISO}T12:00:00`);
+  return DIAS_SEMANA_CORTOS[fecha.getDay()];
+}
+
 function formatearMesCorto(mesISO) {
   const nombres = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
   const [, mes] = mesISO.split('-');
@@ -31,7 +41,14 @@ function formatearMesCorto(mesISO) {
 // ------------------------------------------------------------
 // Gráfico de barras de una sola serie (citas por día)
 // ------------------------------------------------------------
-export function BarChartSerie({ datos, color = COLOR_CITAS, etiquetaEje, formatoEtiqueta }) {
+export function BarChartSerie({
+  datos,
+  color = COLOR_CITAS,
+  etiquetaEje,
+  formatoEtiqueta,
+  formatoEtiquetaEje = formatearFechaCorta,
+  todasLasEtiquetas = false,
+}) {
   const [hover, setHover] = useState(null);
   const ancho = 560;
   const alto = 200;
@@ -75,7 +92,7 @@ export function BarChartSerie({ datos, color = COLOR_CITAS, etiquetaEje, formato
                 onMouseEnter={() => setHover(i)}
                 onMouseLeave={() => setHover(null)}
               />
-              {i % 2 === 0 && (
+              {(todasLasEtiquetas || i % 2 === 0) && (
                 <text
                   x={x + anchoBarraReal / 2}
                   y={alto - 8}
@@ -83,7 +100,7 @@ export function BarChartSerie({ datos, color = COLOR_CITAS, etiquetaEje, formato
                   fontSize="9"
                   fill={COLOR_TEXTO_MUTED}
                 >
-                  {formatearFechaCorta(d.label)}
+                  {formatoEtiquetaEje(d.label)}
                 </text>
               )}
             </g>
@@ -100,7 +117,7 @@ export function BarChartSerie({ datos, color = COLOR_CITAS, etiquetaEje, formato
       </svg>
       {hover !== null && (
         <div className="grafico-tooltip">
-          <strong>{formatearFechaCorta(datos[hover].label)}</strong>
+          <strong>{formatoEtiquetaEje(datos[hover].label)}</strong>
           {': '}
           {formatoEtiqueta ? formatoEtiqueta(datos[hover].value) : datos[hover].value}
         </div>
@@ -238,4 +255,4 @@ export function BarChartCategorias({ datos }) {
   );
 }
 
-export { formatoCLP, COLOR_CITAS, COLOR_DINERO, COLOR_TEXTO_SECUNDARIO };
+export { formatoCLP, COLOR_CITAS, COLOR_DINERO, COLOR_TEXTO_SECUNDARIO, formatearDiaSemanaCorto };
