@@ -29,6 +29,17 @@ function asistioDeEstado(estado) {
   return null;
 }
 
+// Compartido entre la tabla (desktop) y las tarjetas (móvil) — mismas
+// celdas Confirmado/Asistió, dos layouts distintos alrededor.
+function ToggleSiNo({ valor, deshabilitado, onSi, onNo }) {
+  return (
+    <div className="tabla-citas-toggle">
+      <button className={valor === true ? 'activo-si' : ''} disabled={deshabilitado} onClick={onSi}>Sí</button>
+      <button className={valor === false ? 'activo-no' : ''} disabled={deshabilitado} onClick={onNo}>No</button>
+    </div>
+  );
+}
+
 export default function TablaCitas() {
   const { token } = useAuth();
   const [fecha, setFecha] = useState(fechaHoyLocal());
@@ -281,18 +292,12 @@ export default function TablaCitas() {
                       {cita.estado === 'CANCELADA' ? (
                         <span className="tabla-citas-cancelada">Cancelada</span>
                       ) : (
-                        <div className="tabla-citas-toggle">
-                          <button
-                            className={confirmado === true ? 'activo-si' : ''}
-                            disabled={bloqueado || asistio !== null}
-                            onClick={() => marcarConfirmado(cita, true)}
-                          >Sí</button>
-                          <button
-                            className={confirmado === false ? 'activo-no' : ''}
-                            disabled={bloqueado || asistio !== null}
-                            onClick={() => marcarConfirmado(cita, false)}
-                          >No</button>
-                        </div>
+                        <ToggleSiNo
+                          valor={confirmado}
+                          deshabilitado={bloqueado || asistio !== null}
+                          onSi={() => marcarConfirmado(cita, true)}
+                          onNo={() => marcarConfirmado(cita, false)}
+                        />
                       )}
                     </td>
                     <td>{cita.telefono || '—'}</td>
@@ -300,18 +305,12 @@ export default function TablaCitas() {
                       {cita.estado === 'CANCELADA' ? (
                         <span className="tabla-citas-cancelada">—</span>
                       ) : (
-                        <div className="tabla-citas-toggle">
-                          <button
-                            className={asistio === true ? 'activo-si' : ''}
-                            disabled={bloqueado}
-                            onClick={() => marcarAsistio(cita, true)}
-                          >Sí</button>
-                          <button
-                            className={asistio === false ? 'activo-no' : ''}
-                            disabled={bloqueado}
-                            onClick={() => marcarAsistio(cita, false)}
-                          >No</button>
-                        </div>
+                        <ToggleSiNo
+                          valor={asistio}
+                          deshabilitado={bloqueado}
+                          onSi={() => marcarAsistio(cita, true)}
+                          onNo={() => marcarAsistio(cita, false)}
+                        />
                       )}
                     </td>
                   </tr>
@@ -320,6 +319,56 @@ export default function TablaCitas() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="tabla-citas-cards">
+        {cargando ? (
+          <p className="tabla-citas-vacio">Cargando…</p>
+        ) : citas.length === 0 ? (
+          <p className="tabla-citas-vacio">Sin citas agendadas este día.</p>
+        ) : (
+          citas.map((cita, i) => {
+            const confirmado = confirmadoDeEstado(cita.estado);
+            const asistio = asistioDeEstado(cita.estado);
+            const bloqueado = actualizandoId === cita.id;
+            return (
+              <div key={cita.id} className={`tabla-citas-card ${cita.estado === 'CANCELADA' ? 'inactiva' : ''}`}>
+                <div className="tabla-citas-card-top">
+                  <span className="tabla-citas-card-numero">{i + 1}</span>
+                  <span className="tabla-citas-card-hora">{cita.hora}</span>
+                  <span className="tabla-citas-card-nombre">{cita.nombre}</span>
+                </div>
+                <div className="tabla-citas-card-detalle">
+                  {cita.servicio} · {cita.rut || 'sin rut'} · {cita.telefono || 'sin fono'}
+                </div>
+                {cita.estado === 'CANCELADA' ? (
+                  <span className="tabla-citas-cancelada">Cancelada</span>
+                ) : (
+                  <div className="tabla-citas-card-acciones">
+                    <div className="tabla-citas-card-accion">
+                      <span>Confirmado</span>
+                      <ToggleSiNo
+                        valor={confirmado}
+                        deshabilitado={bloqueado || asistio !== null}
+                        onSi={() => marcarConfirmado(cita, true)}
+                        onNo={() => marcarConfirmado(cita, false)}
+                      />
+                    </div>
+                    <div className="tabla-citas-card-accion">
+                      <span>Asistió</span>
+                      <ToggleSiNo
+                        valor={asistio}
+                        deshabilitado={bloqueado}
+                        onSi={() => marcarAsistio(cita, true)}
+                        onNo={() => marcarAsistio(cita, false)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

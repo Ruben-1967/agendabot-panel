@@ -39,6 +39,10 @@
   overflow-x: auto;
 }
 
+.tabla-citas-cards {
+  display: none;
+}
+
 .tabla-citas th:first-child, .tabla-citas td:first-child {
   width: 36px;
   color: var(--muted);
@@ -123,4 +127,87 @@
   justify-content: flex-end;
   align-items: center;
   gap: 16px;
+}
+
+/* ---------- Móvil: tarjetas en vez de tabla ---------- */
+@media (max-width: 700px) {
+  .tabla-citas-wrap {
+    display: none;
+  }
+
+  .tabla-citas-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tabla-citas-form-fila {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+.tabla-citas-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tabla-citas-card.inactiva {
+  opacity: 0.6;
+}
+
+.tabla-citas-card-top {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.tabla-citas-card-numero {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla-citas-card-hora {
+  font-weight: 700;
+  color: var(--teal-deep);
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla-citas-card-nombre {
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabla-citas-card-detalle {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.tabla-citas-card-acciones {
+  display: flex;
+  gap: 18px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+  margin-top: 2px;
+}
+
+.tabla-citas-card-accion {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
