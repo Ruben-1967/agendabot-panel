@@ -49,7 +49,9 @@ export default function TablaCitas() {
   const [actualizandoId, setActualizandoId] = useState(null);
 
   const [profesionales, setProfesionales] = useState([]);
+  const [errorProfesionales, setErrorProfesionales] = useState(null);
   const [recursoFiltro, setRecursoFiltro] = useState('');
+  const [servicioFiltro, setServicioFiltro] = useState('');
 
   const [servicios, setServicios] = useState([]);
   const [clientes, setClientes] = useState([]);
@@ -67,7 +69,14 @@ export default function TablaCitas() {
 
   useEffect(() => {
     if (!token) return;
-    fetchProfesionales(token).then((data) => setProfesionales(data.profesionales || [])).catch(() => {});
+    fetchProfesionales(token)
+      .then((data) => setProfesionales(data.profesionales || []))
+      // Antes esto se tragaba en silencio — si esta llamada fallaba, el
+      // selector de profesional quedaba oculto (profesionales.length === 0)
+      // y "Agregar cita" mandaba la cita sin recursoAgendableId, que el
+      // backend rechazaba con "la empresa tiene más de un profesional" sin
+      // que en el formulario se viera ninguna pista de qué pasó.
+      .catch((err) => setErrorProfesionales(err.message));
     fetchServicios(token).then((data) => setServicios(data.servicios || [])).catch(() => {});
     fetchClientes(token).then((data) => setClientes(data.clientes || [])).catch(() => {});
   }, [token]);
@@ -76,13 +85,22 @@ export default function TablaCitas() {
     if (!token) return;
     setCargando(true);
     setError(null);
-    fetchCitasDia(token, fecha, recursoFiltro || undefined)
+    // Trae el día completo sin filtrar en el servidor — profesional y
+    // servicio se filtran acá abajo sobre esa misma lista, así cambiar de
+    // filtro no pide de nuevo al backend.
+    fetchCitasDia(token, fecha)
       .then((data) => setCitas(data.citas || []))
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
   }
 
-  useEffect(cargarCitas, [token, fecha, recursoFiltro]);
+  useEffect(cargarCitas, [token, fecha]);
+
+  const citasFiltradas = citas.filter(
+    (c) =>
+      (!recursoFiltro || c.recursoAgendableId === recursoFiltro) &&
+      (!servicioFiltro || c.servicioId === servicioFiltro)
+  );
 
   async function marcarConfirmado(cita, valor) {
     if (cita.estado === 'CANCELADA' || cita.estado === 'COMPLETADA' || cita.estado === 'NO_ASISTIO') return;
@@ -173,6 +191,14 @@ export default function TablaCitas() {
             onChange={(e) => setFecha(e.target.value)}
             className="tabla-citas-fecha"
           />
+          {servicios.length > 1 && (
+            <select value={servicioFiltro} onChange={(e) => setServicioFiltro(e.target.value)}>
+              <option value="">Todos los servicios</option>
+              {servicios.map((s) => (
+                <option key={s.id} value={s.id}>{s.nombre}</option>
+              ))}
+            </select>
+          )}
           {profesionales.length > 1 && (
             <select value={recursoFiltro} onChange={(e) => setRecursoFiltro(e.target.value)}>
               <option value="">Todos los profesionales</option>
@@ -186,6 +212,9 @@ export default function TablaCitas() {
       </div>
 
       {error && <p className="mensaje-error">{error}</p>}
+      {errorProfesionales && (
+        <p className="mensaje-error">No se pudo cargar la lista de profesionales: {errorProfesionales}</p>
+      )}
 
       {mostrarForm && (
         <form className="tabla-citas-form" onSubmit={guardarCitaNueva}>
@@ -208,7 +237,7 @@ export default function TablaCitas() {
               </select>
             </label>
 
-            {profesionales.length > 1 && (
+            {profesionales.length !== 1 && (
               <label>
                 Profesional
                 <select value={formRecursoId} onChange={(e) => setFormRecursoId(e.target.value)} required>
@@ -217,6 +246,9 @@ export default function TablaCitas() {
                     <option key={p.id} value={p.id}>{p.nombre}</option>
                   ))}
                 </select>
+                {errorProfesionales && (
+                  <small className="mensaje-error">No se pudo cargar la lista de profesionales: {errorProfesionales}</small>
+                )}
               </label>
             )}
           </div>
@@ -274,10 +306,10 @@ export default function TablaCitas() {
           <tbody>
             {cargando ? (
               <tr><td colSpan={8} className="tabla-citas-vacio">Cargando…</td></tr>
-            ) : citas.length === 0 ? (
+            ) : citasFiltradas.length === 0 ? (
               <tr><td colSpan={8} className="tabla-citas-vacio">Sin citas agendadas este día.</td></tr>
             ) : (
-              citas.map((cita, i) => {
+              citasFiltradas.map((cita, i) => {
                 const confirmado = confirmadoDeEstado(cita.estado);
                 const asistio = asistioDeEstado(cita.estado);
                 const bloqueado = actualizandoId === cita.id;
@@ -324,10 +356,10 @@ export default function TablaCitas() {
       <div className="tabla-citas-cards">
         {cargando ? (
           <p className="tabla-citas-vacio">Cargando…</p>
-        ) : citas.length === 0 ? (
+        ) : citasFiltradas.length === 0 ? (
           <p className="tabla-citas-vacio">Sin citas agendadas este día.</p>
         ) : (
-          citas.map((cita, i) => {
+          citasFiltradas.map((cita, i) => {
             const confirmado = confirmadoDeEstado(cita.estado);
             const asistio = asistioDeEstado(cita.estado);
             const bloqueado = actualizandoId === cita.id;
