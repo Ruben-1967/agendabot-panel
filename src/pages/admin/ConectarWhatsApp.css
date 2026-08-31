@@ -1,0 +1,27 @@
+.conectar-whatsapp {
+  max-width: 480px;
+}
+
+.boton-conectar-whatsapp {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 18px 24px;
+  border: none;
+  border-radius: 10px;
+  background: var(--teal-deep);
+  color: var(--paper);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.boton-conectar-whatsapp:hover:not(:disabled) { background: var(--teal); }
+.boton-conectar-whatsapp:disabled { opacity: 0.6; cursor: default; }
+
+.nota-numero-nuevo {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.82rem;
+}

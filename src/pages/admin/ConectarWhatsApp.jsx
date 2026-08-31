@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { conectarWhatsApp } from '../../api/client';
+import './ConectarWhatsApp.css';
 
 const SDK_SRC = 'https://connect.facebook.net/es_LA/sdk.js';
 const GRAPH_API_VERSION = 'v21.0';
@@ -157,11 +158,14 @@ export default function ConectarWhatsApp() {
   const [conectando, setConectando] = useState(false);
   const [error, setError] = useState('');
   const [resultado, setResultado] = useState(null);
-  // null hasta que el usuario elige — evita disparar el flujo con un modo
-  // por defecto incorrecto (ver conversación 2026-08-20 sobre error #3441045:
-  // Coexistence exige ~7 días de actividad previa en la app de WhatsApp
-  // Business, que un número nuevo dedicado al bot nunca va a tener).
-  const [usaWhatsappBusinessApp, setUsaWhatsappBusinessApp] = useState(null);
+  // Esta pantalla ya no ofrece el modo "número nuevo dedicado al bot": ese
+  // registro deja sin WhatsApp normal al negocio en ese número, así que debe
+  // acordarse antes por una conversación directa con el cliente (fuera de
+  // este flujo de self-service), no elegirse con un click acá. Por eso el
+  // único modo posible en esta pantalla es Coexistence (true) — ver
+  // conversación 2026-08-20 sobre error #3441045: Coexistence exige ~7 días
+  // de actividad previa en la app de WhatsApp Business.
+  const usaWhatsappBusinessApp = true;
 
   const appId = import.meta.env.VITE_META_APP_ID;
   const configId = import.meta.env.VITE_META_CONFIG_ID;
@@ -430,11 +434,11 @@ export default function ConectarWhatsApp() {
   }
 
   return (
-    <div>
+    <div className="conectar-whatsapp">
       <h1>Conectar WhatsApp</h1>
       <p className="pagina-sub">
-        Conecta el número de WhatsApp Business de esta empresa usando el flujo oficial de Meta
-        (Embedded Signup). Usa primero un número de prueba antes de conectar el número real.
+        Requisito: el número debe tener la app de WhatsApp Business instalada y en uso real desde
+        hace varios días.
       </p>
 
       {error && <p className="mensaje-error">{error}</p>}
@@ -444,50 +448,14 @@ export default function ConectarWhatsApp() {
         </p>
       )}
 
-      <fieldset style={{ marginBottom: '1rem' }}>
-        <legend>¿Cómo desea conectar su número?</legend>
-        <p style={{ marginTop: 0, marginBottom: '0.75rem' }}>
-          Meta requiere saber si este número ya tiene la app de WhatsApp Business instalada y en
-          uso, o si es un número nuevo dedicado solo al bot — el flujo de registro es distinto
-          para cada caso.
-        </p>
-
-        <label style={{ display: 'block', marginBottom: '0.5rem' }}>
-          <input
-            type="radio"
-            name="modo-conexion"
-            checked={usaWhatsappBusinessApp === true}
-            onChange={() => setUsaWhatsappBusinessApp(true)}
-          />{' '}
-          Sí, ya uso la app de WhatsApp Business con este número
-          <br />
-          <small>
-            Elija esta opción solo si el número tiene actividad real reciente (varios días) en la
-            app de WhatsApp Business — Meta lo exige para conservarla en paralelo con el bot
-            (Coexistencia).
-          </small>
-        </label>
-
-        <label style={{ display: 'block' }}>
-          <input
-            type="radio"
-            name="modo-conexion"
-            checked={usaWhatsappBusinessApp === false}
-            onChange={() => setUsaWhatsappBusinessApp(false)}
-          />{' '}
-          No, quiero un número nuevo dedicado solo al bot
-          <br />
-          <small>
-            Registro directo en Cloud API — no requiere historial previo. Si el número tiene la
-            app de WhatsApp Business instalada, desvincúlela antes de continuar (Configuración
-            &gt; Cuenta &gt; Plataforma empresarial &gt; Desconectar).
-          </small>
-        </label>
-      </fieldset>
-
-      <button onClick={manejarConectar} disabled={!sdkListo || conectando || usaWhatsappBusinessApp === null}>
+      <button className="boton-conectar-whatsapp" onClick={manejarConectar} disabled={!sdkListo || conectando}>
         {conectando ? 'Conectando…' : 'Conectar WhatsApp Business'}
       </button>
+
+      <p className="nota-numero-nuevo">
+        ¿Necesitas un número nuevo dedicado solo al bot? Ese registro deja sin WhatsApp normal al
+        negocio en ese número — conversa primero con el cliente, no se hace desde acá.
+      </p>
     </div>
   );
 }
