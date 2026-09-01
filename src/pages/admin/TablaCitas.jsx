@@ -164,7 +164,10 @@ export default function TablaCitas() {
   // las filas vacías de la grilla (no tienen estado).
   const citasReales = citas.filter((c) => !c.vacio);
   const contadores = {
-    todas: citasReales.length,
+    // "Todas" no cuenta las canceladas: una hora liberada vuelve a verse
+    // como disponible, no como un remanente — el conteo debe coincidir con
+    // lo que efectivamente se muestra bajo ese filtro.
+    todas: citasReales.filter((c) => c.estado !== 'CANCELADA').length,
     confirmadas: citasReales.filter((c) => c.estado === 'CONFIRMADA').length,
     pendientes: citasReales.filter((c) => c.estado === 'PENDIENTE').length,
     completadas: citasReales.filter((c) => c.estado === 'COMPLETADA').length,
@@ -184,7 +187,11 @@ export default function TablaCitas() {
   // "confirmadas/pendientes/...", mostrarlo ahí sería confuso.
   const citasFiltradas = citas.filter((c) => {
     if (!(c.vacio || !servicioFiltro || c.servicioId === servicioFiltro)) return false;
-    if (filtroEstado === 'todas') return true;
+    // "Todas" excluye las canceladas — esa hora ya está libre de nuevo (el
+    // backend genera su fila "Disponible" en su lugar), no debe verse como
+    // un remanente permanente. Para revisar canceladas está el filtro
+    // dedicado.
+    if (filtroEstado === 'todas') return c.vacio || c.estado !== 'CANCELADA';
     if (c.vacio) return false;
     return c.estado === ESTADO_POR_FILTRO[filtroEstado];
   });
