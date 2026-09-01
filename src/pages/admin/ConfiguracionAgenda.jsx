@@ -9,10 +9,18 @@ import {
   guardarRecurso,
   crearBloqueo,
   eliminarBloqueo,
+  guardarExcepcion,
+  eliminarExcepcion,
   fetchServicios,
 } from '../../api/client';
 
-const NOMBRES_DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+// "YYYY-MM-DD" -> "3 de septiembre", sin pasar por Date/zona horaria — la
+// fecha de una excepción es un valor de calendario puro, no un instante.
+function formatearFechaLarga(fechaISO) {
+  const [, mes, dia] = fechaISO.split('-').map(Number);
+  return `${dia} de ${MESES[mes - 1]}`;
+}
 
 function generarClave() {
   return Math.random().toString(36).slice(2);
@@ -147,6 +155,96 @@ function Bloqueos({ bloqueos, token, onCambio, setError }) {
 }
 
 
+// ------------------------------------------------------------
+// Excepciones de horario: horario variable por fecha puntual (negocios
+// cuyos días de atención rotan semana a semana). Un día se rige por esta
+// excepción en vez del horario semanal solo si tiene una cargada acá — el
+// resto de los días sigue funcionando exactamente igual que siempre.
+// ------------------------------------------------------------
+function Excepciones({ excepciones, recursoId, token, onCambio, setError }) {
+  const [fecha, setFecha] = useState('');
+  const [horaInicio, setHoraInicio] = useState('09:00');
+  const [horaFin, setHoraFin] = useState('13:00');
+  const [guardando, setGuardando] = useState(false);
+  const [citasEnConflicto, setCitasEnConflicto] = useState(null);
+
+  async function manejarGuardar(e) {
+    e.preventDefault();
+    if (!fecha) return;
+    setGuardando(true);
+    setError('');
+    setCitasEnConflicto(null);
+    try {
+      const data = await guardarExcepcion(token, { recursoAgendableId: recursoId, fecha, horaInicio, horaFin });
+      setFecha('');
+      if (data.citasEnConflicto?.length > 0) {
+        setCitasEnConflicto(data.citasEnConflicto);
+      }
+      await onCambio();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  async function manejarEliminar(id) {
+    if (!confirm('¿Quitar esta excepción? Ese día vuelve a regirse por el horario semanal normal.')) return;
+    try {
+      await eliminarExcepcion(token, id);
+      await onCambio();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  return (
+    <div>
+      <p className="texto-muted">
+        Para negocios cuyo horario cambia semana a semana: elige una fecha puntual y su horario para ese día — el resto de los días sigue usando el horario semanal de arriba sin cambios.
+      </p>
+      <form className="form-inline" onSubmit={manejarGuardar}>
+        <label className="campo-segmento">Fecha <SimpleDatePicker value={fecha} onChange={setFecha} /></label>
+        <label className="campo-segmento">
+          Desde
+          <input type="time" value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} />
+        </label>
+        <label className="campo-segmento">
+          Hasta
+          <input type="time" value={horaFin} onChange={(e) => setHoraFin(e.target.value)} />
+        </label>
+        <button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar excepción'}</button>
+      </form>
+
+      {citasEnConflicto && (
+        <p className="mensaje-error">
+          Este horario deja fuera a {citasEnConflicto.length} cita{citasEnConflicto.length > 1 ? 's' : ''} ya agendada{citasEnConflicto.length > 1 ? 's' : ''} ese día —
+          no se cancelaron, reagéndalas desde Tabla de citas: {citasEnConflicto.map((c) => `${c.nombre} (${c.hora})`).join(', ')}.
+        </p>
+      )}
+
+      {excepciones.length === 0 ? (
+        <p className="texto-muted">No hay excepciones cargadas — todos los días siguen el horario semanal.</p>
+      ) : (
+        <table className="tabla-simple">
+          <thead><tr><th>Fecha</th><th>Horario</th><th></th></tr></thead>
+          <tbody>
+            {excepciones.map((ex) => (
+              <tr key={ex.id}>
+                <td>{formatearFechaLarga(ex.fecha)}</td>
+                <td>{ex.horaInicio} – {ex.horaFin}</td>
+                <td className="acciones">
+                  <button className="btn-link btn-danger" onClick={() => manejarEliminar(ex.id)}>Quitar</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
 
 // ------------------------------------------------------------
 // Página principal
@@ -190,6 +288,9 @@ export default function ConfiguracionAgenda() {
         <>
           <h2 className="subtitulo">Horario semanal</h2>
           <EditorHorario horarios={recurso.horarios} token={token} onGuardado={cargar} setError={setError} />
+
+          <h2 className="subtitulo">Excepciones de horario (días variables)</h2>
+          <Excepciones excepciones={recurso.excepciones || []} recursoId={recurso.id} token={token} onCambio={cargar} setError={setError} />
 
           <h2 className="subtitulo">Servicios</h2>
           <Servicios servicios={servicios} token={token} onCambio={cargar} setError={setError} />

@@ -195,6 +195,13 @@ export function eliminarBloqueo(token, id) {
   return apiFetch(`/agenda/bloqueos/${id}`, { method: 'DELETE', token });
 }
 
+export function guardarExcepcion(token, data) {
+  return apiFetch('/agenda/excepciones', { method: 'PUT', body: data, token });
+}
+export function eliminarExcepcion(token, id) {
+  return apiFetch(`/agenda/excepciones/${id}`, { method: 'DELETE', token });
+}
+
 // ---------- Agenda: Dashboard ----------
 export function fetchDashboard(token, empresaId, recursoId) {
   const query = recursoId ? `?recursoId=${recursoId}` : '';
