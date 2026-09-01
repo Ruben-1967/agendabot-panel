@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import './ConfiguracionAgenda.css';
 import { useAuth } from '../../context/AuthContext';
 import EditorHorario from '../../components/EditorHorario';
-import Servicios from '../../components/Servicios';
 import SimpleDatePicker from '../../components/SimpleDatePicker';
 import {
   fetchAgenda,
@@ -11,7 +10,6 @@ import {
   eliminarBloqueo,
   guardarExcepcion,
   eliminarExcepcion,
-  fetchServicios,
 } from '../../api/client';
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -252,15 +250,13 @@ function Excepciones({ excepciones, recursoId, token, onCambio, setError }) {
 export default function ConfiguracionAgenda() {
   const { token } = useAuth();
   const [recurso, setRecurso] = useState(null);
-  const [servicios, setServicios] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
   async function cargar() {
     try {
-      const [agenda, serviciosData] = await Promise.all([fetchAgenda(token), fetchServicios(token)]);
+      const agenda = await fetchAgenda(token);
       setRecurso(agenda.recurso);
-      setServicios(serviciosData.servicios);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -275,7 +271,7 @@ export default function ConfiguracionAgenda() {
   return (
     <div>
       <h1>Agenda</h1>
-      <p className="pagina-sub">Horario de atención, vacaciones/feriados y servicios que ofrece el negocio — esto es lo que usa el chatbot para agendar citas reales por WhatsApp.</p>
+      <p className="pagina-sub">Horario de atención y vacaciones/feriados del negocio — esto es lo que usa el chatbot para agendar citas reales por WhatsApp. Los servicios que ofrece el negocio se administran en "Información del negocio".</p>
 
       {error && <p className="mensaje-error">{error}</p>}
 
@@ -283,7 +279,7 @@ export default function ConfiguracionAgenda() {
       <FormRecurso recurso={recurso} token={token} onGuardado={cargar} setError={setError} />
 
       {!recurso ? (
-        <p className="texto-muted">Guarda los datos de arriba primero para poder cargar el horario semanal, los bloqueos y los servicios.</p>
+        <p className="texto-muted">Guarda los datos de arriba primero para poder cargar el horario semanal y los bloqueos.</p>
       ) : (
         <>
           <h2 className="subtitulo">Horario semanal</h2>
@@ -291,9 +287,6 @@ export default function ConfiguracionAgenda() {
 
           <h2 className="subtitulo">Excepciones de horario (días variables)</h2>
           <Excepciones excepciones={recurso.excepciones || []} recursoId={recurso.id} token={token} onCambio={cargar} setError={setError} />
-
-          <h2 className="subtitulo">Servicios</h2>
-          <Servicios servicios={servicios} token={token} onCambio={cargar} setError={setError} />
 
           <h2 className="subtitulo">Vacaciones y feriados</h2>
           <Bloqueos bloqueos={recurso.bloqueos} token={token} onCambio={cargar} setError={setError} />

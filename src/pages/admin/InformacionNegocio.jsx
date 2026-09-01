@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { fetchInfoNegocio, actualizarInfoNegocio } from '../../api/client';
+import { fetchInfoNegocio, actualizarInfoNegocio, fetchServicios } from '../../api/client';
+import Servicios from '../../components/Servicios';
 
 export default function InformacionNegocio() {
   const { token } = useAuth();
@@ -15,6 +16,12 @@ export default function InformacionNegocio() {
   const [requiereRut, setRequiereRut] = useState(false);
   const [tonoComunicacion, setTonoComunicacion] = useState('Neutral');
 
+  const [servicios, setServicios] = useState([]);
+
+  function cargarServicios() {
+    return fetchServicios(token).then((data) => setServicios(data.servicios || [])).catch((err) => setError(err.message));
+  }
+
   useEffect(() => {
     fetchInfoNegocio(token)
       .then((data) => {
@@ -26,7 +33,8 @@ export default function InformacionNegocio() {
       })
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
-  }, [token]);
+    cargarServicios();
+  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function manejarGuardar(e) {
     e.preventDefault();
@@ -101,6 +109,9 @@ export default function InformacionNegocio() {
 
         <button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar cambios'}</button>
       </form>
+
+      <h2 className="subtitulo">Servicios</h2>
+      <Servicios servicios={servicios} token={token} onCambio={cargarServicios} setError={setError} />
     </div>
   );
 }

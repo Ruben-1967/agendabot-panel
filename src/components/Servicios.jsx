@@ -4,9 +4,11 @@ import { crearServicio, actualizarServicio, eliminarServicio } from '../api/clie
 /**
  * Gestión de servicios (tipos de atención que ofrece la empresa). Es una
  * configuración a nivel de negocio completo, no por profesional individual
- * — por eso vive tanto en ConfiguracionAgenda.jsx (negocios de un solo
- * profesional) como en GestionProfesionales.jsx (negocios multi-profesional,
- * como sección general arriba de la lista de profesionales).
+ * — por eso vive tanto en InformacionNegocio.jsx (negocios de un solo
+ * profesional; movido desde ConfiguracionAgenda.jsx el 2026-09-01, ya que
+ * "servicios" es un dato del negocio, no de la agenda/horario) como en
+ * GestionProfesionales.jsx (negocios multi-profesional, como sección
+ * general arriba de la lista de profesionales).
  */
 export default function Servicios({ servicios, profesionales, token, onCambio, setError, bloqueado = false }) {
   const [nombre, setNombre] = useState('');
