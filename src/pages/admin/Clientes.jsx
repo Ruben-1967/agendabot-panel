@@ -15,6 +15,7 @@ import {
   eliminarAtencion,
   fetchProfesionales,
 } from '../../api/client';
+import SimpleDatePicker from '../../components/SimpleDatePicker';
 import './Clientes.css';
 
 function formatearFecha(iso) {
@@ -78,12 +79,7 @@ function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, camposFicha
         <div className="ficha-seccion">
           <label className="ficha-field">
             <strong>Fecha de esta atención</strong>
-            <input
-              type="date"
-              value={valores.fecha || ''}
-              onChange={(e) => onCambioCampo('fecha', e.target.value)}
-              required
-            />
+            <SimpleDatePicker value={valores.fecha || ''} onChange={(v) => onCambioCampo('fecha', v)} />
           </label>
         </div>
       )}
@@ -140,11 +136,7 @@ function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, camposFicha
           </label>
           <label className="ficha-field">
             <strong>Fecha de la próxima visita</strong>
-            <input
-              type="date"
-              value={valores.fechaProximaCitaFijada || ''}
-              onChange={(e) => onCambioCampo('fechaProximaCitaFijada', e.target.value)}
-            />
+            <SimpleDatePicker value={valores.fechaProximaCitaFijada || ''} onChange={(v) => onCambioCampo('fechaProximaCitaFijada', v)} />
           </label>
         </div>
       </div>
@@ -245,12 +237,12 @@ export function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, 
   // ---- Datos ----
   async function guardarDatos(e) {
     e.preventDefault();
-    if (!fechaProximaCita) {
-      const continuar = window.confirm(
-        'No indicaste la fecha de la próxima visita. ¿Deseas guardar de todos modos sin esa fecha?'
-      );
-      if (!continuar) return;
-    }
+    // Antes había un window.confirm() acá — la intención era solo un
+    // recordatorio (ver 2026-08-30), pero en la práctica bloqueaba el
+    // guardado completo si el admin hacía clic en "Cancelar" (por reflejo
+    // o sin entender el diálogo), dando la sensación de campo obligatorio
+    // cuando el backend siempre lo trató como opcional. Reportado por
+    // Ahorróptica 2026-09-01 — sacado, el guardado ya no se interrumpe.
     setGuardandoDatos(true);
     setError('');
     try {
@@ -325,12 +317,8 @@ async function guardarFechaVenta(ventaId) {
 
   async function guardarNuevaAtencion(e) {
     e.preventDefault();
-    if (!nuevaAtencion.fechaProximaCitaFijada) {
-      const continuar = window.confirm(
-        'No indicaste la fecha de la próxima visita. ¿Deseas guardar de todos modos sin esa fecha?'
-      );
-      if (!continuar) return;
-    }
+    // Mismo caso que guardarDatos() más arriba — el confirm() bloqueaba el
+    // guardado si se cancelaba, aunque el campo siempre fue opcional.
     setGuardandoAtencion(true);
     setError('');
     try {
@@ -490,14 +478,14 @@ async function guardarFechaVenta(ventaId) {
           </div>
           <div className="form-group">
             <label>Fecha de la próxima visita</label>
-            <input
-              type="date"
-              value={fechaProximaCita}
-              onChange={(e) => setFechaProximaCita(e.target.value)}
-            />
+            <SimpleDatePicker value={fechaProximaCita} onChange={setFechaProximaCita} />
           </div>
           <button type="submit" disabled={guardandoDatos} className="btn-guardar">
-            {guardandoDatos ? 'Registrando…' : 'Registrar atención'}
+            {/* Antes decía "Registrar atención" — un texto de otra pestaña
+                (Atenciones/ventas) que no tiene nada que ver con editar los
+                datos del paciente acá. Reportado por Ahorróptica: nadie
+                reconocía este botón como el que guarda sus cambios. */}
+            {guardandoDatos ? 'Guardando…' : 'Guardar datos'}
           </button>
         </form>
       )}
@@ -514,12 +502,7 @@ async function guardarFechaVenta(ventaId) {
                 onChange={(e) => setDescripcionVenta(e.target.value)}
                 required
               />
-              <input
-                type="date"
-                value={fechaVenta}
-                onChange={(e) => setFechaVenta(e.target.value)}
-                required
-              />
+              <SimpleDatePicker value={fechaVenta} onChange={setFechaVenta} />
               <input
                 type="number"
                 min="0"
@@ -566,11 +549,7 @@ async function guardarFechaVenta(ventaId) {
                   <div key={v.id} className="historial-item">
                     {editandoVentaId === v.id ? (
                       <>
-                        <input
-                          type="date"
-                          value={fechaEditVenta}
-                          onChange={(e) => setFechaEditVenta(e.target.value)}
-                        />
+                        <SimpleDatePicker value={fechaEditVenta} onChange={setFechaEditVenta} />
                         <button
                           type="button"
                           disabled={guardandoFechaVenta}
