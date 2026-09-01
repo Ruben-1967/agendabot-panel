@@ -3,7 +3,15 @@
   display: inline-block;
 }
 
-.simple-date-picker-boton {
+/* Todos los botones de acá abajo se cualifican con .simple-date-picker
+   (dos clases) a propósito — el componente puede vivir dentro de un
+   formulario que ya estiliza "button" en general (ej. .form-inline en
+   index.css, que pinta cualquier botón de verde sólido) y una sola clase
+   (.simple-date-picker-dia) empataba o perdía en especificidad contra eso,
+   dejando TODOS los días del calendario pintados como si estuvieran
+   seleccionados. Con dos clases siempre gana, sin importar dónde se use. */
+
+.simple-date-picker .simple-date-picker-boton {
   padding: 8px 12px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -13,8 +21,9 @@
   min-width: 110px;
   text-align: left;
 }
-.simple-date-picker-boton:hover {
+.simple-date-picker .simple-date-picker-boton:hover {
   border-color: var(--teal);
+  background: #fff;
 }
 
 .simple-date-picker-popover {
@@ -41,7 +50,7 @@
   text-transform: capitalize;
 }
 
-.simple-date-picker-header button {
+.simple-date-picker .simple-date-picker-header button {
   border: none;
   background: none;
   color: var(--teal-deep);
@@ -49,7 +58,7 @@
   padding: 2px 8px;
   border-radius: 4px;
 }
-.simple-date-picker-header button:hover {
+.simple-date-picker .simple-date-picker-header button:hover {
   background: var(--teal-soft);
 }
 
@@ -68,7 +77,7 @@
   gap: 2px;
 }
 
-.simple-date-picker-dia {
+.simple-date-picker .simple-date-picker-dia {
   border: none;
   background: none;
   padding: 6px 0;
@@ -76,10 +85,10 @@
   font-size: 0.8rem;
   color: var(--ink);
 }
-.simple-date-picker-dia:hover {
+.simple-date-picker .simple-date-picker-dia:hover {
   background: var(--teal-soft);
 }
-.simple-date-picker-dia.activo {
+.simple-date-picker .simple-date-picker-dia.activo {
   background: var(--teal-deep);
   color: var(--paper);
   font-weight: 600;
