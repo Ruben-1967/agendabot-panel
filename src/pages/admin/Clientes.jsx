@@ -152,7 +152,7 @@ function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, camposFicha
   );
 }
 
-function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposFicha, profesionales, onCerrar, onCambio, volverATablaCitas }) {
+export function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposFicha, profesionales, onCerrar, onCambio, volverATablaCitas }) {
   const nombreRegistro = camposFicha?.nombreRegistro || 'Registro';
   const nombreHistorial = camposFicha?.nombreHistorial || 'Historial';
 

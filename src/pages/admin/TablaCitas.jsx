@@ -7,9 +7,12 @@ import {
   fetchProfesionales,
   fetchServicios,
   fetchClientes,
+  fetchConfigClientes,
 } from '../../api/client';
 import SimpleDatePicker from '../../components/SimpleDatePicker';
+import { DetalleCliente } from './Clientes';
 import './TablaCitas.css';
+import './Clientes.css';
 
 function fechaHoyLocal() {
   const hoy = new Date();
@@ -56,6 +59,9 @@ export default function TablaCitas() {
 
   const [servicios, setServicios] = useState([]);
   const [clientes, setClientes] = useState([]);
+  const [categoriasProductoSugeridas, setCategoriasProductoSugeridas] = useState([]);
+  const [camposFicha, setCamposFicha] = useState({ grupos: [] });
+  const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState(null);
 
   const [mostrarForm, setMostrarForm] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -80,7 +86,18 @@ export default function TablaCitas() {
       .catch((err) => setErrorProfesionales(err.message));
     fetchServicios(token).then((data) => setServicios(data.servicios || [])).catch(() => {});
     fetchClientes(token).then((data) => setClientes(data.clientes || [])).catch(() => {});
+    fetchConfigClientes(token)
+      .then((data) => {
+        setCategoriasProductoSugeridas(data.categoriasProductoSugeridas || []);
+        setCamposFicha(data.camposFicha || { grupos: [] });
+      })
+      .catch(() => {});
   }, [token]);
+
+  function recargarTrasCambioDeCliente() {
+    cargarCitas();
+    fetchClientes(token).then((data) => setClientes(data.clientes || [])).catch(() => {});
+  }
 
   // Por defecto se elige el primer profesional apenas carga la lista, así
   // la grilla de horario (ver más abajo) se ve de entrada sin que el admin
@@ -416,7 +433,7 @@ export default function TablaCitas() {
                       )}
                     </td>
                     <td className="tabla-citas-acciones-celda">
-                      <a href={`/admin/clientes?clienteId=${cita.clienteId}`} className="btn-link">Ver ficha</a>
+                      <button className="btn-link" onClick={() => setClienteSeleccionadoId(cita.clienteId)}>Ver ficha</button>
                       {cita.estado !== 'CANCELADA' && (
                         <button className="btn-link btn-danger" disabled={bloqueado} onClick={() => liberarHora(cita)}>Liberar</button>
                       )}
@@ -486,7 +503,7 @@ export default function TablaCitas() {
                   </div>
                 )}
                 <div className="tabla-citas-card-links">
-                  <a href={`/admin/clientes?clienteId=${cita.clienteId}`} className="btn-link">Ver ficha</a>
+                  <button className="btn-link" onClick={() => setClienteSeleccionadoId(cita.clienteId)}>Ver ficha</button>
                   {cita.estado !== 'CANCELADA' && (
                     <button className="btn-link btn-danger" disabled={bloqueado} onClick={() => liberarHora(cita)}>Liberar hora</button>
                   )}
@@ -496,6 +513,18 @@ export default function TablaCitas() {
           })
         )}
       </div>
+
+      {clienteSeleccionadoId && (
+        <DetalleCliente
+          clienteId={clienteSeleccionadoId}
+          token={token}
+          categoriasProductoSugeridas={categoriasProductoSugeridas}
+          camposFicha={camposFicha}
+          profesionales={profesionales}
+          onCerrar={() => setClienteSeleccionadoId(null)}
+          onCambio={recargarTrasCambioDeCliente}
+        />
+      )}
     </div>
   );
 }
