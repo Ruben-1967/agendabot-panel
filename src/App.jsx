@@ -39,6 +39,7 @@ import LeadsEmails from './pages/vendedor/admin/LeadsEmails';
 import ReporteOrigenCaso from './pages/vendedor/ReporteOrigenCaso';
 import CatalogoVisualDemoAdmin from './pages/vendedor/admin/CatalogoVisualDemoAdmin';
 import ActivarCuenta from './pages/ActivarCuenta';
+import OlvidePassword from './pages/OlvidePassword';
 import ElegirPlan from './pages/ElegirPlan';
 import ResultadoSuscripcion from './pages/ResultadoSuscripcion';
 
@@ -212,6 +213,7 @@ function AppRoutes() {
       />
 
       <Route path="/activar-cuenta" element={<ActivarCuenta />} />
+      <Route path="/olvide-password" element={<OlvidePassword />} />
       <Route path="/suscripcion/elegir-plan" element={<ElegirPlan />} />
       <Route path="/suscripcion/resultado" element={<ResultadoSuscripcion />} />
 

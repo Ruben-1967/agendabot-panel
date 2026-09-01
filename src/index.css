@@ -131,6 +131,22 @@ button {
   margin: 0;
 }
 
+.login-link-secundario {
+  display: block;
+  text-align: center;
+  margin-top: 14px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.login-olvide-password {
+  display: block;
+  text-align: right;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: -8px 0 4px;
+}
+
 /* ---------- Layout con sidebar ---------- */
 .layout {
   display: flex;

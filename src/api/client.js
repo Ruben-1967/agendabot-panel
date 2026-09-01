@@ -389,6 +389,9 @@ export function desbloquearClienteConvertido(token, empresaId) {
 export function activarCuenta(tokenActivacion, password) {
   return apiFetch('/auth/activar-cuenta', { method: 'POST', body: { token: tokenActivacion, password } });
 }
+export function solicitarResetPassword(email) {
+  return apiFetch('/auth/solicitar-reset-password', { method: 'POST', body: { email } });
+}
 
 // ---------- Ranking mensual de conversión ----------
 export function fetchRankingActual(token) {

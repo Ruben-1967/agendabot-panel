@@ -7,6 +7,10 @@ import './vendedor/vendedor.css';
 export default function ActivarCuenta() {
   const [searchParams] = useSearchParams();
   const tokenActivacion = searchParams.get('token');
+  // El mismo token/endpoint sirve para la activación inicial de cuenta y
+  // para un reset de contraseña a demanda (ver POST /auth/solicitar-reset-password)
+  // — solo cambia el texto de la pantalla según de dónde vino el link.
+  const esReset = searchParams.get('tipo') === 'reset';
   const { establecerSesion } = useAuth();
   const navigate = useNavigate();
 
@@ -52,10 +56,14 @@ export default function ActivarCuenta() {
         <div className="login-brand">
           Totem<span className="accent">system</span>
         </div>
-        <p className="login-sub">Activar tu cuenta</p>
+        <p className="login-sub">{esReset ? 'Restablecer tu contraseña' : 'Activar tu cuenta'}</p>
 
         {!tokenActivacion ? (
-          <p className="login-error">Este link de activación no es válido. Pídele a tu vendedor que te reenvíe el link.</p>
+          <p className="login-error">
+            {esReset
+              ? 'Este link de recuperación no es válido o ya venció. Solicita uno nuevo.'
+              : 'Este link de activación no es válido. Pídele a tu vendedor que te reenvíe el link.'}
+          </p>
         ) : (
           <form onSubmit={manejarSubmit}>
             <label>
@@ -83,7 +91,7 @@ export default function ActivarCuenta() {
             {error && <p className="login-error">{error}</p>}
 
             <button type="submit" disabled={enviando}>
-              {enviando ? 'Activando…' : 'Activar cuenta y continuar'}
+              {enviando ? 'Guardando…' : (esReset ? 'Guardar nueva contraseña' : 'Activar cuenta y continuar')}
             </button>
           </form>
         )}

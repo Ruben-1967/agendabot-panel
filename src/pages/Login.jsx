@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
@@ -55,6 +55,8 @@ export default function Login() {
               required
             />
           </label>
+
+          <Link to="/olvide-password" className="login-olvide-password">¿Olvidaste tu contraseña?</Link>
 
           {error && <p className="login-error">{error}</p>}
 
