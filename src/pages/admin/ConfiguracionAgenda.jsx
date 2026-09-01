@@ -23,7 +23,7 @@ function generarClave() {
 // ------------------------------------------------------------
 function FormRecurso({ recurso, token, onGuardado, setError }) {
   const [nombre, setNombre] = useState(recurso?.nombre || '');
-  const [duracion] = useState(recurso?.duracionCitaMinutos ?? 30);
+  const [duracion, setDuracion] = useState(recurso?.duracionCitaMinutos ?? 30);
   const [anticipacion, setAnticipacion] = useState(recurso?.anticipacionMinimaMin ?? 120);
   const [horizonte, setHorizonte] = useState(recurso?.horizonteAgendaDias ?? 28);
   const [guardando, setGuardando] = useState(false);
@@ -53,10 +53,16 @@ function FormRecurso({ recurso, token, onGuardado, setError }) {
         Nombre del recurso (negocio o profesional que atiende)
         <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Atención Ahorróptica" required />
       </label>
-      {/* Duración de cada cita: se sigue mandando en el guardado (duracionCitaMinutos
-          es un campo obligatorio del recurso), pero ya no se muestra acá — ese dato
-          vive por servicio (ver sección "Servicios" más abajo), que es donde
-          corresponde configurarlo. */}
+      <label>
+        {/* Restaurado 2026-08-31: esta es la ÚNICA duración real que usa el
+            motor de agendamiento (disponibilidad.js/crearCita nunca miró la
+            duración del Servicio) — un intento anterior de mover esto a
+            "por servicio" solo sacó el campo de acá sin cambiar el motor,
+            dejando la duración real congelada en lo que fuera que tuviera
+            guardado el recurso, sin forma de editarla desde el panel. */}
+        Duración de cada cita (minutos)
+        <input type="number" min="1" value={duracion} onChange={(e) => setDuracion(e.target.value)} required />
+      </label>
       <label>
         Anticipación mínima para agendar (minutos antes)
         <input type="number" min="0" value={anticipacion} onChange={(e) => setAnticipacion(e.target.value)} />
@@ -175,7 +181,7 @@ export default function ConfiguracionAgenda() {
 
       {error && <p className="mensaje-error">{error}</p>}
 
-      <h2 className="subtitulo">Datos del negocio</h2>
+      <h2 className="subtitulo">Datos de la agenda (profesional / calendario único)</h2>
       <FormRecurso recurso={recurso} token={token} onGuardado={cargar} setError={setError} />
 
       {!recurso ? (

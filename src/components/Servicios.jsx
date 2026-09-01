@@ -10,7 +10,6 @@ import { crearServicio, actualizarServicio, eliminarServicio } from '../api/clie
  */
 export default function Servicios({ servicios, profesionales, token, onCambio, setError, bloqueado = false }) {
   const [nombre, setNombre] = useState('');
-  const [duracionMinutos, setDuracionMinutos] = useState('');
   const [guardando, setGuardando] = useState(false);
   // Solo se usa cuando bloqueado=true: el form de creación arranca
   // colapsado detrás de un botón, en vez de mostrarse siempre abierto.
@@ -18,7 +17,6 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
 
   const [editandoId, setEditandoId] = useState(null);
   const [nombreEdicion, setNombreEdicion] = useState('');
-  const [duracionEdicion, setDuracionEdicion] = useState('');
   const [guardandoEdicion, setGuardandoEdicion] = useState(false);
 
   // Vinculación con profesionales: id del servicio cuyo panel de
@@ -34,12 +32,8 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
     setGuardando(true);
     setError('');
     try {
-      await crearServicio(token, {
-        nombre,
-        duracionMinutos: duracionMinutos ? Number(duracionMinutos) : null,
-      });
+      await crearServicio(token, { nombre });
       setNombre('');
-      setDuracionMinutos('');
       await onCambio();
       if (bloqueado) setMostrarFormNuevo(false);
     } catch (err) {
@@ -71,13 +65,11 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
   function comenzarEdicion(servicio) {
     setEditandoId(servicio.id);
     setNombreEdicion(servicio.nombre);
-    setDuracionEdicion(servicio.duracionMinutos ?? '');
   }
 
   function cancelarEdicion() {
     setEditandoId(null);
     setNombreEdicion('');
-    setDuracionEdicion('');
   }
 
   async function alternarRequiereProfesional(servicio) {
@@ -114,10 +106,7 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
     setGuardandoEdicion(true);
     setError('');
     try {
-      await actualizarServicio(token, servicio.id, {
-        nombre: nombreEdicion.trim(),
-        duracionMinutos: duracionEdicion ? Number(duracionEdicion) : null,
-      });
+      await actualizarServicio(token, servicio.id, { nombre: nombreEdicion.trim() });
       cancelarEdicion();
       await onCambio();
     } catch (err) {
@@ -142,7 +131,6 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
       {(!bloqueado || mostrarFormNuevo) && (
         <form className="form-inline" onSubmit={manejarCrear} style={{ flexWrap: 'wrap' }}>
           <input placeholder="Nombre (ej. Examen visual)" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
-          <input type="number" min="1" placeholder="Duración (min, opcional)" value={duracionMinutos} onChange={(e) => setDuracionMinutos(e.target.value)} />
           <button type="submit" disabled={guardando}>{guardando ? 'Agregando…' : 'Agregar servicio'}</button>
           {bloqueado && (
             <button type="button" className="btn-link" onClick={() => setMostrarFormNuevo(false)} disabled={guardando}>Cancelar</button>
@@ -154,7 +142,7 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
         <p className="texto-muted">Todavía no tienes servicios cargados.</p>
       ) : (
         <table className="tabla-simple">
-          <thead><tr><th>Servicio</th><th>Duración</th><th>Estado</th>{hayMultiplesProfesionales && <th>Profesionales</th>}{!bloqueado && <th></th>}</tr></thead>
+          <thead><tr><th>Servicio</th><th>Estado</th>{hayMultiplesProfesionales && <th>Profesionales</th>}{!bloqueado && <th></th>}</tr></thead>
           <tbody>
             {servicios.map((s) => {
               const enEdicion = editandoId === s.id;
@@ -172,16 +160,6 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
                             autoFocus
                           />
                         </td>
-                        <td>
-                          <input
-                            type="number"
-                            min="1"
-                            value={duracionEdicion}
-                            onChange={(e) => setDuracionEdicion(e.target.value)}
-                            placeholder="min"
-                            style={{ width: 70 }}
-                          />
-                        </td>
                         <td>{s.activo ? 'Activo' : 'Inactivo'}</td>
                         {hayMultiplesProfesionales && <td>—</td>}
                         <td className="acciones">
@@ -194,7 +172,6 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
                     ) : (
                       <>
                         <td>{s.nombre}</td>
-                        <td>{s.duracionMinutos ? `${s.duracionMinutos} min` : '—'}</td>
                         <td>{s.activo ? 'Activo' : 'Inactivo'}</td>
                         {hayMultiplesProfesionales && (
                           <td>
