@@ -213,6 +213,12 @@ export function crearCitaManual(token, data) {
 export function actualizarEstadoCita(token, citaId, estado) {
   return apiFetch(`/agenda/citas/${citaId}/estado`, { method: 'PATCH', body: { estado }, token });
 }
+export function fetchDisponibilidadRecurso(token, recursoId, fecha) {
+  return apiFetch(`/agenda/disponibilidad/${recursoId}?fecha=${fecha}`, { token });
+}
+export function reagendarCita(token, citaId, { nuevaFecha, nuevaHora }) {
+  return apiFetch(`/agenda/citas/${citaId}/reagendar`, { method: 'POST', body: { nuevaFecha, nuevaHora }, token });
+}
 
 // ---------- Suscripción ----------
 export function fetchEstadoSuscripcion(token) {

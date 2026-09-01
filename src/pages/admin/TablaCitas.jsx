@@ -4,6 +4,8 @@ import {
   fetchCitasDia,
   crearCitaManual,
   actualizarEstadoCita,
+  fetchDisponibilidadRecurso,
+  reagendarCita,
   fetchProfesionales,
   fetchServicios,
   fetchClientes,
@@ -63,6 +65,14 @@ export default function TablaCitas() {
   const [categoriasProductoSugeridas, setCategoriasProductoSugeridas] = useState([]);
   const [camposFicha, setCamposFicha] = useState({ grupos: [] });
   const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState(null);
+
+  const [citaAReagendar, setCitaAReagendar] = useState(null);
+  const [reagendarFecha, setReagendarFecha] = useState('');
+  const [reagendarHoras, setReagendarHoras] = useState([]);
+  const [reagendarHoraSeleccionada, setReagendarHoraSeleccionada] = useState('');
+  const [cargandoHorasReagendar, setCargandoHorasReagendar] = useState(false);
+  const [guardandoReagendar, setGuardandoReagendar] = useState(false);
+  const [errorReagendar, setErrorReagendar] = useState(null);
 
   const [mostrarForm, setMostrarForm] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -229,6 +239,47 @@ export default function TablaCitas() {
       alert(`Error: ${err.message}`);
     } finally {
       setActualizandoId(null);
+    }
+  }
+
+  // Abre el selector de Reagendar precargado en la fecha que se está viendo
+  // en la tabla — el caso más común es mover una cita dentro del mismo día
+  // (ej. tras cambiar una excepción de horario), pero el admin puede elegir
+  // otra fecha desde el propio selector.
+  function abrirReagendar(cita) {
+    setCitaAReagendar(cita);
+    setReagendarFecha(fecha);
+    setReagendarHoraSeleccionada('');
+    setErrorReagendar(null);
+  }
+
+  function cerrarReagendar() {
+    setCitaAReagendar(null);
+    setReagendarHoras([]);
+  }
+
+  useEffect(() => {
+    if (!citaAReagendar || !reagendarFecha || !token) return;
+    setCargandoHorasReagendar(true);
+    setReagendarHoraSeleccionada('');
+    fetchDisponibilidadRecurso(token, citaAReagendar.recursoAgendableId, reagendarFecha)
+      .then((data) => setReagendarHoras(data.horas || []))
+      .catch((err) => setErrorReagendar(err.message))
+      .finally(() => setCargandoHorasReagendar(false));
+  }, [citaAReagendar, reagendarFecha, token]);
+
+  async function confirmarReagendar() {
+    if (!citaAReagendar || !reagendarHoraSeleccionada) return;
+    setGuardandoReagendar(true);
+    setErrorReagendar(null);
+    try {
+      await reagendarCita(token, citaAReagendar.id, { nuevaFecha: reagendarFecha, nuevaHora: reagendarHoraSeleccionada });
+      cerrarReagendar();
+      cargarCitas();
+    } catch (err) {
+      setErrorReagendar(err.message);
+    } finally {
+      setGuardandoReagendar(false);
     }
   }
 
@@ -494,7 +545,10 @@ export default function TablaCitas() {
                     <td className="tabla-citas-acciones-celda">
                       <button className="btn-link" onClick={() => setClienteSeleccionadoId(cita.clienteId)}>Ver ficha</button>
                       {cita.estado !== 'CANCELADA' && (
-                        <button className="btn-link btn-danger" disabled={bloqueado} onClick={() => liberarHora(cita)}>Liberar</button>
+                        <>
+                          <button className="btn-link" disabled={bloqueado} onClick={() => abrirReagendar(cita)}>Reagendar</button>
+                          <button className="btn-link btn-danger" disabled={bloqueado} onClick={() => liberarHora(cita)}>Liberar</button>
+                        </>
                       )}
                     </td>
                   </tr>
@@ -564,7 +618,10 @@ export default function TablaCitas() {
                 <div className="tabla-citas-card-links">
                   <button className="btn-link" onClick={() => setClienteSeleccionadoId(cita.clienteId)}>Ver ficha</button>
                   {cita.estado !== 'CANCELADA' && (
-                    <button className="btn-link btn-danger" disabled={bloqueado} onClick={() => liberarHora(cita)}>Liberar hora</button>
+                    <>
+                      <button className="btn-link" disabled={bloqueado} onClick={() => abrirReagendar(cita)}>Reagendar</button>
+                      <button className="btn-link btn-danger" disabled={bloqueado} onClick={() => liberarHora(cita)}>Liberar hora</button>
+                    </>
                   )}
                 </div>
               </div>
@@ -572,6 +629,48 @@ export default function TablaCitas() {
           })
         )}
       </div>
+
+      {citaAReagendar && (
+        <div className="reagendar-overlay" onClick={cerrarReagendar}>
+          <div className="reagendar-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Reagendar a {citaAReagendar.nombre}</h3>
+            <p className="reagendar-actual">Hora actual: {citaAReagendar.hora}</p>
+
+            <SimpleDatePicker value={reagendarFecha} onChange={setReagendarFecha} />
+
+            {cargandoHorasReagendar ? (
+              <p className="reagendar-estado">Cargando horas disponibles…</p>
+            ) : reagendarHoras.length === 0 ? (
+              <p className="reagendar-estado">Sin horas disponibles ese día.</p>
+            ) : (
+              <div className="reagendar-horas">
+                {reagendarHoras.map((h) => (
+                  <button
+                    key={h}
+                    className={`pill-btn ${reagendarHoraSeleccionada === h ? 'activo' : ''}`}
+                    onClick={() => setReagendarHoraSeleccionada(h)}
+                  >
+                    {h}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {errorReagendar && <p className="mensaje-error">{errorReagendar}</p>}
+
+            <div className="reagendar-acciones">
+              <button className="btn-link" onClick={cerrarReagendar}>Cancelar</button>
+              <button
+                className="btn-primario"
+                disabled={!reagendarHoraSeleccionada || guardandoReagendar}
+                onClick={confirmarReagendar}
+              >
+                {guardandoReagendar ? 'Reagendando…' : 'Confirmar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {clienteSeleccionadoId && (
         <DetalleCliente
