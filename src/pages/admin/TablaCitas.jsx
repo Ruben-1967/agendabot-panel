@@ -81,13 +81,22 @@ export default function TablaCitas() {
     fetchClientes(token).then((data) => setClientes(data.clientes || [])).catch(() => {});
   }, [token]);
 
-  // Con UN profesional puntual (elegido a mano, o porque la empresa solo
-  // tiene uno) el backend además arma la grilla completa del día — todas
-  // las horas configuradas, tengan o no paciente (ver GET /agenda/citas).
-  // Con "todos los profesionales" eso no aplica (cada uno tiene su propio
-  // horario en paralelo, mezclar huecos de varios sería engañoso), así que
-  // solo se listan las citas reales.
-  const recursoParaGrilla = recursoFiltro || (profesionales.length === 1 ? profesionales[0].id : '');
+  // Por defecto se elige el primer profesional apenas carga la lista, así
+  // la grilla de horario (ver más abajo) se ve de entrada sin que el admin
+  // tenga que elegir nada a mano — puede cambiar a otro profesional o a
+  // "Todos" desde el filtro, que ahora siempre está visible.
+  useEffect(() => {
+    if (profesionales.length > 0 && !recursoFiltro) {
+      setRecursoFiltro(profesionales[0].id);
+    }
+  }, [profesionales]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Con UN profesional puntual (el elegido en el filtro) el backend además
+  // arma la grilla completa del día — todas las horas configuradas, tengan
+  // o no paciente (ver GET /agenda/citas). Con "todos los profesionales"
+  // eso no aplica (cada uno tiene su propio horario en paralelo, mezclar
+  // huecos de varios sería engañoso), así que solo se listan las citas reales.
+  const recursoParaGrilla = recursoFiltro;
 
   function cargarCitas() {
     if (!token) return;
@@ -105,6 +114,15 @@ export default function TablaCitas() {
   // horario libre sirve para cualquier servicio, no tiene sentido que
   // desaparezca solo porque hay un filtro de servicio activo.
   const citasFiltradas = citas.filter((c) => c.vacio || !servicioFiltro || c.servicioId === servicioFiltro);
+
+  // Con un profesional puntual elegido (grilla activa) una tabla vacía casi
+  // siempre significa que ese día no tiene bloque de horario configurado —
+  // no que "no hay citas" (eso solo pasa si además hubiera horas libres sin
+  // agendar, que ya se listarían). Mensaje distinto para no confundir un día
+  // sin horario con un día laboral tranquilo.
+  const mensajeVacio = recursoParaGrilla
+    ? 'Este profesional no tiene horario configurado para este día (revisa Configuración de agenda).'
+    : 'Sin citas agendadas este día.';
 
   async function marcarConfirmado(cita, valor) {
     if (cita.estado === 'CANCELADA' || cita.estado === 'COMPLETADA' || cita.estado === 'NO_ASISTIO') return;
@@ -213,22 +231,18 @@ export default function TablaCitas() {
             onChange={(e) => setFecha(e.target.value)}
             className="tabla-citas-fecha"
           />
-          {servicios.length > 1 && (
-            <select value={servicioFiltro} onChange={(e) => setServicioFiltro(e.target.value)}>
-              <option value="">Todos los servicios</option>
-              {servicios.map((s) => (
-                <option key={s.id} value={s.id}>{s.nombre}</option>
-              ))}
-            </select>
-          )}
-          {profesionales.length > 1 && (
-            <select value={recursoFiltro} onChange={(e) => setRecursoFiltro(e.target.value)}>
-              <option value="">Todos los profesionales</option>
-              {profesionales.map((p) => (
-                <option key={p.id} value={p.id}>{p.nombre}</option>
-              ))}
-            </select>
-          )}
+          <select value={servicioFiltro} onChange={(e) => setServicioFiltro(e.target.value)}>
+            <option value="">Todos los servicios</option>
+            {servicios.map((s) => (
+              <option key={s.id} value={s.id}>{s.nombre}</option>
+            ))}
+          </select>
+          <select value={recursoFiltro} onChange={(e) => setRecursoFiltro(e.target.value)}>
+            <option value="">Todos los profesionales</option>
+            {profesionales.map((p) => (
+              <option key={p.id} value={p.id}>{p.nombre}</option>
+            ))}
+          </select>
           <button className="btn-primario" onClick={() => abrirFormulario()}>+ Agregar cita</button>
         </div>
       </div>
@@ -335,7 +349,7 @@ export default function TablaCitas() {
             {cargando ? (
               <tr><td colSpan={9} className="tabla-citas-vacio">Cargando…</td></tr>
             ) : citasFiltradas.length === 0 ? (
-              <tr><td colSpan={9} className="tabla-citas-vacio">Sin citas agendadas este día.</td></tr>
+              <tr><td colSpan={9} className="tabla-citas-vacio">{mensajeVacio}</td></tr>
             ) : (
               citasFiltradas.map((cita, i) => {
                 if (cita.vacio) {
@@ -403,7 +417,7 @@ export default function TablaCitas() {
         {cargando ? (
           <p className="tabla-citas-vacio">Cargando…</p>
         ) : citasFiltradas.length === 0 ? (
-          <p className="tabla-citas-vacio">Sin citas agendadas este día.</p>
+          <p className="tabla-citas-vacio">{mensajeVacio}</p>
         ) : (
           citasFiltradas.map((cita, i) => {
             if (cita.vacio) {
