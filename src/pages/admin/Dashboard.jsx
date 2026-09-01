@@ -190,7 +190,7 @@ export default function Dashboard() {
         <div className="agenda-section">
           <div className="agenda-header">
             <h2>Agenda de hoy</h2>
-            <a href="/admin/agenda">ver agenda completa →</a>
+            <a href="/admin/tabla-citas">ver agenda completa →</a>
           </div>
 
           <div className="agenda-list">

@@ -56,6 +56,7 @@ export default function TablaCitas() {
   const [errorProfesionales, setErrorProfesionales] = useState(null);
   const [recursoFiltro, setRecursoFiltro] = useState('');
   const [servicioFiltro, setServicioFiltro] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('todas');
 
   const [servicios, setServicios] = useState([]);
   const [clientes, setClientes] = useState([]);
@@ -148,10 +149,35 @@ export default function TablaCitas() {
 
   useEffect(cargarCitas, [token, fecha, recursoParaGrilla]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Confirmado/Asistió no son campos aparte en la BD (ver funciones de más
+  // arriba) — el resumen por estado se cuenta sobre las citas reales, sin
+  // las filas vacías de la grilla (no tienen estado).
+  const citasReales = citas.filter((c) => !c.vacio);
+  const contadores = {
+    todas: citasReales.length,
+    confirmadas: citasReales.filter((c) => c.estado === 'CONFIRMADA').length,
+    pendientes: citasReales.filter((c) => c.estado === 'PENDIENTE').length,
+    completadas: citasReales.filter((c) => c.estado === 'COMPLETADA').length,
+    canceladas: citasReales.filter((c) => c.estado === 'CANCELADA').length,
+  };
+  const ESTADO_POR_FILTRO = {
+    confirmadas: 'CONFIRMADA',
+    pendientes: 'PENDIENTE',
+    completadas: 'COMPLETADA',
+    canceladas: 'CANCELADA',
+  };
+
   // El filtro de servicio no aplica a las filas vacías de la grilla — un
   // horario libre sirve para cualquier servicio, no tiene sentido que
-  // desaparezca solo porque hay un filtro de servicio activo.
-  const citasFiltradas = citas.filter((c) => c.vacio || !servicioFiltro || c.servicioId === servicioFiltro);
+  // desaparezca solo porque hay un filtro de servicio activo. El filtro de
+  // estado sí las oculta: un hueco libre no tiene estado que coincida con
+  // "confirmadas/pendientes/...", mostrarlo ahí sería confuso.
+  const citasFiltradas = citas.filter((c) => {
+    if (!(c.vacio || !servicioFiltro || c.servicioId === servicioFiltro)) return false;
+    if (filtroEstado === 'todas') return true;
+    if (c.vacio) return false;
+    return c.estado === ESTADO_POR_FILTRO[filtroEstado];
+  });
 
   // Con un profesional puntual elegido (grilla activa) una tabla vacía casi
   // siempre significa que ese día no tiene bloque de horario configurado —
@@ -278,6 +304,39 @@ export default function TablaCitas() {
           </select>
           <button className="btn-primario" onClick={() => abrirFormulario()}>+ Agregar cita</button>
         </div>
+      </div>
+
+      <div className="tabla-citas-pills">
+        <button
+          className={`pill-btn ${filtroEstado === 'todas' ? 'activo' : ''}`}
+          onClick={() => setFiltroEstado('todas')}
+        >
+          todas ({contadores.todas})
+        </button>
+        <button
+          className={`pill-btn ${filtroEstado === 'confirmadas' ? 'activo' : ''}`}
+          onClick={() => setFiltroEstado('confirmadas')}
+        >
+          confirmadas ({contadores.confirmadas})
+        </button>
+        <button
+          className={`pill-btn ${filtroEstado === 'pendientes' ? 'activo' : ''}`}
+          onClick={() => setFiltroEstado('pendientes')}
+        >
+          pendientes ({contadores.pendientes})
+        </button>
+        <button
+          className={`pill-btn ${filtroEstado === 'completadas' ? 'activo' : ''}`}
+          onClick={() => setFiltroEstado('completadas')}
+        >
+          completadas ({contadores.completadas})
+        </button>
+        <button
+          className={`pill-btn ${filtroEstado === 'canceladas' ? 'activo' : ''}`}
+          onClick={() => setFiltroEstado('canceladas')}
+        >
+          canceladas ({contadores.canceladas})
+        </button>
       </div>
 
       {error && <p className="mensaje-error">{error}</p>}
