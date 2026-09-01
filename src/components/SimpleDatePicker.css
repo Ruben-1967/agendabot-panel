@@ -1,0 +1,86 @@
+.simple-date-picker {
+  position: relative;
+  display: inline-block;
+}
+
+.simple-date-picker-boton {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.88rem;
+  min-width: 110px;
+  text-align: left;
+}
+.simple-date-picker-boton:hover {
+  border-color: var(--teal);
+}
+
+.simple-date-picker-popover {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 12px;
+  width: 240px;
+}
+
+.simple-date-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink);
+  text-transform: capitalize;
+}
+
+.simple-date-picker-header button {
+  border: none;
+  background: none;
+  color: var(--teal-deep);
+  font-size: 1.1rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.simple-date-picker-header button:hover {
+  background: var(--teal-soft);
+}
+
+.simple-date-picker-dias-semana {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.simple-date-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.simple-date-picker-dia {
+  border: none;
+  background: none;
+  padding: 6px 0;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--ink);
+}
+.simple-date-picker-dia:hover {
+  background: var(--teal-soft);
+}
+.simple-date-picker-dia.activo {
+  background: var(--teal-deep);
+  color: var(--paper);
+  font-weight: 600;
+}

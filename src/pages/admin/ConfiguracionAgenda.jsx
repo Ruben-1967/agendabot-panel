@@ -3,6 +3,7 @@ import './ConfiguracionAgenda.css';
 import { useAuth } from '../../context/AuthContext';
 import EditorHorario from '../../components/EditorHorario';
 import Servicios from '../../components/Servicios';
+import SimpleDatePicker from '../../components/SimpleDatePicker';
 import {
   fetchAgenda,
   guardarRecurso,
@@ -110,8 +111,8 @@ function Bloqueos({ bloqueos, token, onCambio, setError }) {
   return (
     <div>
       <form className="form-inline" onSubmit={manejarCrear}>
-        <label className="campo-segmento">Desde <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} required style={{ marginLeft: 6 }} /></label>
-        <label className="campo-segmento">Hasta <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} required style={{ marginLeft: 6 }} /></label>
+        <label className="campo-segmento">Desde <SimpleDatePicker value={fechaInicio} onChange={setFechaInicio} /></label>
+        <label className="campo-segmento">Hasta <SimpleDatePicker value={fechaFin} onChange={setFechaFin} /></label>
         <input placeholder="Motivo (opcional, ej. Vacaciones)" value={motivo} onChange={(e) => setMotivo(e.target.value)} />
         <button type="submit" disabled={guardando}>{guardando ? 'Agregando…' : 'Agregar bloqueo'}</button>
       </form>

@@ -14,15 +14,6 @@
   align-items: center;
 }
 
-.tabla-citas-fecha {
-  padding: 8px 10px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  font-size: 0.9rem;
-  background: #fff;
-  color: var(--ink);
-}
-
 .btn-primario {
   padding: 8px 16px;
   border: none;

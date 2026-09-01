@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
   fetchCitasDia,
@@ -8,6 +8,7 @@ import {
   fetchServicios,
   fetchClientes,
 } from '../../api/client';
+import SimpleDatePicker from '../../components/SimpleDatePicker';
 import './TablaCitas.css';
 
 function fechaHoyLocal() {
@@ -98,14 +99,34 @@ export default function TablaCitas() {
   // huecos de varios sería engañoso), así que solo se listan las citas reales.
   const recursoParaGrilla = recursoFiltro;
 
+  // Al montar se dispara un pedido inicial sin profesional (recursoFiltro
+  // todavía vacío) y, apenas carga la lista de profesionales, un segundo
+  // pedido ya con el profesional autoseleccionado (ver el efecto de arriba)
+  // — casi al mismo tiempo. Si la respuesta del primero (incompleta, sin
+  // grilla) llega DESPUÉS que la del segundo (correcta), pisaba el
+  // resultado bueno con uno viejo — visto en real con "TMO Diego Quinteros"
+  // mostrando la tabla vacía pese a tener horario configurado. Un id de
+  // pedido creciente descarta cualquier respuesta que no sea la más reciente.
+  const pedidoIdRef = useRef(0);
+
   function cargarCitas() {
     if (!token) return;
+    const idDeEstePedido = ++pedidoIdRef.current;
     setCargando(true);
     setError(null);
     fetchCitasDia(token, fecha, recursoParaGrilla || undefined)
-      .then((data) => setCitas(data.citas || []))
-      .catch((err) => setError(err.message))
-      .finally(() => setCargando(false));
+      .then((data) => {
+        if (pedidoIdRef.current !== idDeEstePedido) return; // llegó una respuesta más nueva antes
+        setCitas(data.citas || []);
+      })
+      .catch((err) => {
+        if (pedidoIdRef.current !== idDeEstePedido) return;
+        setError(err.message);
+      })
+      .finally(() => {
+        if (pedidoIdRef.current !== idDeEstePedido) return;
+        setCargando(false);
+      });
   }
 
   useEffect(cargarCitas, [token, fecha, recursoParaGrilla]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -225,12 +246,7 @@ export default function TablaCitas() {
       <div className="tabla-citas-header">
         <h1>Tabla de citas</h1>
         <div className="tabla-citas-filtros">
-          <input
-            type="date"
-            value={fecha}
-            onChange={(e) => setFecha(e.target.value)}
-            className="tabla-citas-fecha"
-          />
+          <SimpleDatePicker value={fecha} onChange={setFecha} />
           <select value={servicioFiltro} onChange={(e) => setServicioFiltro(e.target.value)}>
             <option value="">Todos los servicios</option>
             {servicios.map((s) => (
