@@ -224,6 +224,24 @@
   overflow: hidden;
 }
 
+.btn-volver-tabla-citas {
+  display: block;
+  width: 100%;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 0;
+  background: var(--color-verde-oscuro);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: left;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.btn-volver-tabla-citas:hover {
+  background: var(--color-dorado);
+}
+
 @keyframes slideUp {
   from {
     transform: translateY(100%);

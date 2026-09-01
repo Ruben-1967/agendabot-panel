@@ -152,7 +152,7 @@ function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, camposFicha
   );
 }
 
-export function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposFicha, profesionales, onCerrar, onCambio, volverATablaCitas }) {
+export function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposFicha, profesionales, onCerrar, onCambio, volverATablaCitas, enTablaCitas }) {
   const nombreRegistro = camposFicha?.nombreRegistro || 'Registro';
   const nombreHistorial = camposFicha?.nombreHistorial || 'Historial';
 
@@ -423,11 +423,16 @@ async function guardarFechaVenta(ventaId) {
 
   return (
     <div className="cliente-detalle-panel">
+      {enTablaCitas ? (
+        // Ya estamos en Tabla de citas (panel embebido, no hubo navegación
+        // real) — "volver" es solo cerrar, nunca un <a href> que recargaría
+        // la página entera y perdería la fecha/filtros ya elegidos.
+        <button type="button" className="btn-volver-tabla-citas" onClick={onCerrar}>← Volver a la tabla de citas</button>
+      ) : volverATablaCitas && (
+        <a href="/admin/tabla-citas" className="btn-volver-tabla-citas">← Volver a la tabla de citas</a>
+      )}
       <div className="cliente-detalle-header">
         <h3>{cliente.nombre}</h3>
-        {volverATablaCitas && (
-          <a href="/admin/tabla-citas" className="btn-link">← Volver a Tabla de citas</a>
-        )}
         <button type="button" className="btn-cerrar" onClick={onCerrar}>✕</button>
       </div>
 

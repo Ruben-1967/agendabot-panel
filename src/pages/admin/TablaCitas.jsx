@@ -523,6 +523,7 @@ export default function TablaCitas() {
           profesionales={profesionales}
           onCerrar={() => setClienteSeleccionadoId(null)}
           onCambio={recargarTrasCambioDeCliente}
+          enTablaCitas
         />
       )}
     </div>
