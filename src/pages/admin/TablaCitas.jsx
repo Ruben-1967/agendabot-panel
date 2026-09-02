@@ -320,13 +320,21 @@ export default function TablaCitas() {
       return;
     }
 
+    // Forzar un sobrecupo exige un recurso puntual (ver agenda.js) — pero
+    // con un solo profesional el selector queda oculto (nada que elegir),
+    // así que formRecursoId nunca se llena aunque el profesional sea
+    // igual de puntual. Reportado 2026-09-04: "Forzar sobrecupo" nunca
+    // aparecía en Ahorróptica/Alejandro Barber (ambos con 1 profesional)
+    // por esta misma razón.
+    const recursoIdEfectivo = formRecursoId || (profesionales.length === 1 ? profesionales[0].id : '');
+
     setGuardando(true);
     try {
       await crearCitaManual(token, {
         fecha,
         hora: formHora,
         servicioId: formServicioId || undefined,
-        recursoAgendableId: formRecursoId || undefined,
+        recursoAgendableId: recursoIdEfectivo || undefined,
         forzarSobrecupo: forzarSobrecupo || undefined,
         ...(formClienteId
           ? { clienteId: formClienteId }
@@ -344,9 +352,10 @@ export default function TablaCitas() {
       fetchClientes(token).then((data) => setClientes(data.clientes || [])).catch(() => {});
     } catch (err) {
       setErrorForm(err.message);
-      // Solo se puede forzar cuando se eligió un profesional puntual (ver
-      // agenda.js) — con "no especificar" el backend ya recorrió a todos.
-      setOfrecerForzarSobrecupo(err.codigo === 'CONFLICTO_HORARIO' && Boolean(formRecursoId));
+      // Solo se puede forzar cuando se resolvió un recurso puntual (ver
+      // agenda.js) — con "no especificar" (2+ profesionales, ninguno
+      // elegido) el backend ya recorrió a todos.
+      setOfrecerForzarSobrecupo(err.codigo === 'CONFLICTO_HORARIO' && Boolean(recursoIdEfectivo));
     } finally {
       setGuardando(false);
     }
