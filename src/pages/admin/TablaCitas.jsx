@@ -64,6 +64,7 @@ export default function TablaCitas() {
   const [clientes, setClientes] = useState([]);
   const [categoriasProductoSugeridas, setCategoriasProductoSugeridas] = useState([]);
   const [camposFicha, setCamposFicha] = useState({ grupos: [] });
+  const [mediosPago, setMediosPago] = useState([]);
   const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState(null);
 
   const [citaAReagendar, setCitaAReagendar] = useState(null);
@@ -101,6 +102,7 @@ export default function TablaCitas() {
       .then((data) => {
         setCategoriasProductoSugeridas(data.categoriasProductoSugeridas || []);
         setCamposFicha(data.camposFicha || { grupos: [] });
+        setMediosPago(data.mediosPago || []);
       })
       .catch(() => {});
   }, [token]);
@@ -686,6 +688,8 @@ export default function TablaCitas() {
           categoriasProductoSugeridas={categoriasProductoSugeridas}
           camposFicha={camposFicha}
           profesionales={profesionales}
+          servicios={servicios}
+          mediosPago={mediosPago}
           onCerrar={() => setClienteSeleccionadoId(null)}
           onCambio={recargarTrasCambioDeCliente}
           enTablaCitas

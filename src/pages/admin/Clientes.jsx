@@ -7,7 +7,7 @@ import {
   fetchCliente,
   crearCliente,
   actualizarCliente,
-  registrarVenta,
+  registrarLoteVentas,
   editarVenta,
   fetchAtenciones,
   crearAtencion,
@@ -42,6 +42,14 @@ function aFechaInput(iso) {
 function hoyFechaInput() {
   return aFechaInput(new Date().toISOString());
 }
+
+const MEDIO_PAGO_LABEL = {
+  EFECTIVO: 'Efectivo',
+  TARJETA_CREDITO: 'Tarjeta de crédito',
+  TARJETA_DEBITO: 'Tarjeta de débito',
+  TRANSFERENCIA: 'Transferencia',
+  OTRO: 'Otro',
+};
 
 function obtenerValorAnidado(obj, path) {
   return path.reduce((acc, key) => (acc && typeof acc === 'object' ? acc[key] : undefined), obj);
@@ -144,7 +152,7 @@ function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, camposFicha
   );
 }
 
-export function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposFicha, profesionales, onCerrar, onCambio, volverATablaCitas, enTablaCitas }) {
+export function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposFicha, profesionales, servicios = [], mediosPago = [], onCerrar, onCambio, volverATablaCitas, enTablaCitas }) {
   const nombreRegistro = camposFicha?.nombreRegistro || 'Registro';
   const nombreHistorial = camposFicha?.nombreHistorial || 'Historial';
 
@@ -162,9 +170,15 @@ export function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, 
   const [guardandoDatos, setGuardandoDatos] = useState(false);
 
   // ---- Tab Atenciones (ventas) ----
-  const [descripcionVenta, setDescripcionVenta] = useState('');
-  const [montoVenta, setMontoVenta] = useState('');
-  const [categoriaVenta, setCategoriaVenta] = useState('');
+  // { [servicioId]: montoString } — cada servicio marcado lleva su propio
+  // monto, porque una misma sesión puede cobrar varios servicios distintos
+  // (ej. atención oftalmológica + lentes ópticos). Reportado por
+  // Ahorróptica 2026-09-02.
+  const [serviciosSeleccionados, setServiciosSeleccionados] = useState({});
+  const [otroDescripcion, setOtroDescripcion] = useState('');
+  const [otroMonto, setOtroMonto] = useState('');
+  const [medioPagoVenta, setMedioPagoVenta] = useState('');
+  const [atendidoPorVenta, setAtendidoPorVenta] = useState('');
   const [recursoAgendableIdVenta, setRecursoAgendableIdVenta] = useState('');
   const [fechaVenta, setFechaVenta] = useState(() => new Date().toISOString().slice(0, 10));
   const [editandoVentaId, setEditandoVentaId] = useState(null);
@@ -263,22 +277,51 @@ export function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, 
   }
 
   // ---- Atenciones (ventas) ----
+  function alternarServicioVenta(servicioId, marcado) {
+    setServiciosSeleccionados((prev) => {
+      const siguiente = { ...prev };
+      if (marcado) siguiente[servicioId] = siguiente[servicioId] ?? '';
+      else delete siguiente[servicioId];
+      return siguiente;
+    });
+  }
+
   async function manejarRegistrarVenta(e) {
     e.preventDefault();
-    if (!descripcionVenta.trim() || !montoVenta) return;
-    setRegistrandoVenta(true);
     setError('');
+
+    const itemsServicios = servicios
+      .filter((s) => serviciosSeleccionados[s.id] !== undefined)
+      .map((s) => ({ servicioId: s.id, descripcion: s.nombre, monto: serviciosSeleccionados[s.id] }));
+    const itemOtro = otroDescripcion.trim()
+      ? [{ servicioId: null, descripcion: otroDescripcion.trim(), monto: otroMonto }]
+      : [];
+    const items = [...itemsServicios, ...itemOtro];
+
+    if (items.length === 0) {
+      setError('Marca al menos un servicio o completa "Otro".');
+      return;
+    }
+    const itemSinMonto = items.find((i) => i.monto === '' || i.monto === undefined || Number(i.monto) < 0 || Number.isNaN(Number(i.monto)));
+    if (itemSinMonto) {
+      setError(`Falta el monto de "${itemSinMonto.descripcion}".`);
+      return;
+    }
+
+    setRegistrandoVenta(true);
     try {
-        await registrarVenta(token, clienteId, {
-        descripcion: descripcionVenta.trim(),
-        monto: Number(montoVenta),
-        categoriaProducto: categoriaVenta || null,
-        recursoAgendableId: recursoAgendableIdVenta || null,
+      await registrarLoteVentas(token, clienteId, {
         fecha: fechaVenta,
+        recursoAgendableId: recursoAgendableIdVenta || null,
+        medioPago: medioPagoVenta || null,
+        atendidoPor: atendidoPorVenta.trim() || null,
+        items: items.map((i) => ({ servicioId: i.servicioId, descripcion: i.descripcion, monto: Number(i.monto) })),
       });
-      setDescripcionVenta('');
-      setMontoVenta('');
-      setCategoriaVenta('');
+      setServiciosSeleccionados({});
+      setOtroDescripcion('');
+      setOtroMonto('');
+      setMedioPagoVenta('');
+      setAtendidoPorVenta('');
       setRecursoAgendableIdVenta('');
       setFechaVenta(new Date().toISOString().slice(0, 10));
       cargar();
@@ -495,44 +538,83 @@ async function guardarFechaVenta(ventaId) {
         <div className="cliente-tab-content">
           <div className="historial-seccion">
             <h4 className="historial-titulo">Nueva venta/atención</h4>
-            <form className="historial-form-inline" onSubmit={manejarRegistrarVenta}>
-              <input
-                placeholder="Descripción (ej. Lentes Ray-Ban)"
-                value={descripcionVenta}
-                onChange={(e) => setDescripcionVenta(e.target.value)}
-                required
-              />
-              <SimpleDatePicker value={fechaVenta} onChange={setFechaVenta} />
-              <input
-                type="number"
-                min="0"
-                placeholder="Monto CLP"
-                value={montoVenta}
-                onChange={(e) => setMontoVenta(e.target.value)}
-                required
-              />
-              {categoriasProductoSugeridas.length > 0 && (
-                <select
-                  value={categoriaVenta}
-                  onChange={(e) => setCategoriaVenta(e.target.value)}
-                >
-                  <option value="">Categoría (opt.)</option>
-                  {categoriasProductoSugeridas.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
+            <form className="historial-form-atencion" onSubmit={manejarRegistrarVenta}>
+              {servicios.length > 0 && (
+                <div className="historial-checklist-servicios">
+                  {servicios.map((s) => {
+                    const marcado = serviciosSeleccionados[s.id] !== undefined;
+                    return (
+                      <div key={s.id} className="historial-checklist-item">
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={marcado}
+                            onChange={(e) => alternarServicioVenta(s.id, e.target.checked)}
+                          />
+                          {s.nombre}
+                        </label>
+                        {marcado && (
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="Monto CLP"
+                            value={serviciosSeleccionados[s.id]}
+                            onChange={(e) =>
+                              setServiciosSeleccionados((prev) => ({ ...prev, [s.id]: e.target.value }))
+                            }
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               )}
-              {profesionales.length > 0 && (
-                <select
-                  value={recursoAgendableIdVenta}
-                  onChange={(e) => setRecursoAgendableIdVenta(e.target.value)}
-                >
-                  <option value="">Profesional (opt.)</option>
-                  {profesionales.map((p) => (
-                    <option key={p.id} value={p.id}>{p.nombre}</option>
-                  ))}
-                </select>
-              )}
+
+              <div className="historial-checklist-item">
+                <input
+                  placeholder="Otro (lo que no esté en la lista)"
+                  value={otroDescripcion}
+                  onChange={(e) => setOtroDescripcion(e.target.value)}
+                />
+                {otroDescripcion.trim() && (
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Monto CLP"
+                    value={otroMonto}
+                    onChange={(e) => setOtroMonto(e.target.value)}
+                  />
+                )}
+              </div>
+
+              <div className="historial-form-inline">
+                <SimpleDatePicker value={fechaVenta} onChange={setFechaVenta} />
+                {mediosPago.length > 0 && (
+                  <select value={medioPagoVenta} onChange={(e) => setMedioPagoVenta(e.target.value)}>
+                    <option value="">Medio de pago (opt.)</option>
+                    {mediosPago.map((m) => (
+                      <option key={m} value={m}>{MEDIO_PAGO_LABEL[m] || m}</option>
+                    ))}
+                  </select>
+                )}
+                <input
+                  placeholder="Atendido por (opt.)"
+                  value={atendidoPorVenta}
+                  onChange={(e) => setAtendidoPorVenta(e.target.value)}
+                />
+                {profesionales.length > 0 && (
+                  <select
+                    value={recursoAgendableIdVenta}
+                    onChange={(e) => setRecursoAgendableIdVenta(e.target.value)}
+                  >
+                    <option value="">Profesional (opt.)</option>
+                    {profesionales.map((p) => (
+                      <option key={p.id} value={p.id}>{p.nombre}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
               <button type="submit" disabled={registrandoVenta} className="btn-guardar">
                 {registrandoVenta ? 'Registrando…' : 'Registrar atención'}
               </button>
@@ -577,6 +659,12 @@ async function guardarFechaVenta(ventaId) {
                     <div className="historial-item-desc">{v.descripcion}</div>
                     {v.categoriaProducto && (
                       <div className="historial-item-badge">{v.categoriaProducto}</div>
+                    )}
+                    {v.medioPago && (
+                      <div className="historial-item-badge">{MEDIO_PAGO_LABEL[v.medioPago] || v.medioPago}</div>
+                    )}
+                    {v.atendidoPor && (
+                      <div className="historial-item-badge">{v.atendidoPor}</div>
                     )}
                     <div className="historial-item-monto">${v.monto.toLocaleString('es-CL')}</div>
                   </div>
@@ -703,6 +791,8 @@ export default function Clientes() {
   const [categoriasProductoSugeridas, setCategoriasProductoSugeridas] = useState([]);
   const [camposFicha, setCamposFicha] = useState({ grupos: [] });
   const [profesionales, setProfesionales] = useState([]);
+  const [servicios, setServicios] = useState([]);
+  const [mediosPago, setMediosPago] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState(clienteIdDesdeUrl);
@@ -721,6 +811,8 @@ export default function Clientes() {
         setCategoriasProductoSugeridas(dataConfig.categoriasProductoSugeridas || []);
         setCamposFicha(dataConfig.camposFicha || { grupos: [] });
         setProfesionales(dataProfesionales.profesionales || []);
+        setServicios(dataConfig.servicios || []);
+        setMediosPago(dataConfig.mediosPago || []);
       })
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
@@ -859,6 +951,8 @@ export default function Clientes() {
           categoriasProductoSugeridas={categoriasProductoSugeridas}
           camposFicha={camposFicha}
           profesionales={profesionales}
+          servicios={servicios}
+          mediosPago={mediosPago}
           onCerrar={() => setClienteSeleccionadoId(null)}
           onCambio={cargar}
           volverATablaCitas={clienteSeleccionadoId === clienteIdDesdeUrl}

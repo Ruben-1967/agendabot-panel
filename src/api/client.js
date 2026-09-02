@@ -290,6 +290,9 @@ export function actualizarCliente(token, id, data) {
 export function registrarVenta(token, clienteId, data) {
   return apiFetch(`/clientes/${clienteId}/ventas`, { method: 'POST', body: data, token });
 }
+export function registrarLoteVentas(token, clienteId, data) {
+  return apiFetch(`/clientes/${clienteId}/ventas/lote`, { method: 'POST', body: data, token });
+}
 export function editarVenta(token, clienteId, ventaId, data) {
   return apiFetch(`/clientes/${clienteId}/ventas/${ventaId}`, { method: 'PATCH', body: data, token });
 }
