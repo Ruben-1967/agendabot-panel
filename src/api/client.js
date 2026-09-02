@@ -170,6 +170,9 @@ export function fetchInfoNegocio(token) {
 export function actualizarInfoNegocio(token, data) {
   return apiFetch('/empresa/info', { method: 'PUT', body: data, token });
 }
+export function fetchEjemplosFormulario(token) {
+  return apiFetch('/empresa/ejemplos-formulario', { token });
+}
 
 // ---------- Conectar WhatsApp (Embedded Signup) ----------
 export function conectarWhatsApp(token, { code, wabaId, phoneNumberId }) {

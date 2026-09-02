@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import EditorHorario from '../../components/EditorHorario';
 import Bloqueos from '../../components/Bloqueos';
 import Servicios from '../../components/Servicios';
-import { fetchProfesionales, crearProfesional, actualizarProfesional, fetchServicios } from '../../api/client';
+import { fetchProfesionales, crearProfesional, actualizarProfesional, fetchServicios, fetchEjemplosFormulario } from '../../api/client';
 
 const NOMBRES_DIAS_CORTO = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
@@ -233,6 +233,7 @@ export default function GestionProfesionales() {
   const [mostrarForm, setMostrarForm] = useState(false);
   const [mostrarUpsell, setMostrarUpsell] = useState(false);
   const [expandidoId, setExpandidoId] = useState(null);
+  const [ejemplos, setEjemplos] = useState({});
 
   async function cargar() {
     try {
@@ -257,7 +258,10 @@ export default function GestionProfesionales() {
     }
   }
 
-  useEffect(() => { cargar(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    cargar();
+    fetchEjemplosFormulario(token).then(setEjemplos).catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function manejarClickAgregar() {
     setMostrarUpsell(false);
@@ -329,7 +333,7 @@ export default function GestionProfesionales() {
       )}
 
       <h2 className="subtitulo">Servicios</h2>
-      <Servicios servicios={servicios} profesionales={profesionales} token={token} onCambio={cargarServicios} setError={setError} bloqueado={bloqueadoPorPlan} />
+      <Servicios servicios={servicios} profesionales={profesionales} token={token} onCambio={cargarServicios} setError={setError} bloqueado={bloqueadoPorPlan} ejemploNombre={ejemplos.ejemploServicio} />
     </div>
   );
 }

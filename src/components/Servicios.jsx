@@ -10,7 +10,7 @@ import { crearServicio, actualizarServicio, eliminarServicio } from '../api/clie
  * GestionProfesionales.jsx (negocios multi-profesional, como sección
  * general arriba de la lista de profesionales).
  */
-export default function Servicios({ servicios, profesionales, token, onCambio, setError, bloqueado = false }) {
+export default function Servicios({ servicios, profesionales, token, onCambio, setError, bloqueado = false, ejemploNombre }) {
   const [nombre, setNombre] = useState('');
   const [guardando, setGuardando] = useState(false);
   // Solo se usa cuando bloqueado=true: el form de creación arranca
@@ -132,7 +132,7 @@ export default function Servicios({ servicios, profesionales, token, onCambio, s
       )}
       {(!bloqueado || mostrarFormNuevo) && (
         <form className="form-inline" onSubmit={manejarCrear} style={{ flexWrap: 'wrap' }}>
-          <input placeholder="Nombre (ej. Examen visual)" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+          <input placeholder={`Nombre (ej. ${ejemploNombre || 'Corte de pelo'})`} value={nombre} onChange={(e) => setNombre(e.target.value)} required />
           <button type="submit" disabled={guardando}>{guardando ? 'Agregando…' : 'Agregar servicio'}</button>
           {bloqueado && (
             <button type="button" className="btn-link" onClick={() => setMostrarFormNuevo(false)} disabled={guardando}>Cancelar</button>

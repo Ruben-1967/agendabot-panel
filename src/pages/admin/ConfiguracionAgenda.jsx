@@ -10,6 +10,7 @@ import {
   eliminarBloqueo,
   guardarExcepcion,
   eliminarExcepcion,
+  fetchEjemplosFormulario,
 } from '../../api/client';
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -27,7 +28,7 @@ function generarClave() {
 // ------------------------------------------------------------
 // Datos base del recurso (nombre, duración de cita, anticipación, horizonte)
 // ------------------------------------------------------------
-function FormRecurso({ recurso, token, onGuardado, setError }) {
+function FormRecurso({ recurso, token, onGuardado, setError, ejemploNombre }) {
   const [nombre, setNombre] = useState(recurso?.nombre || '');
   const [duracion, setDuracion] = useState(recurso?.duracionCitaMinutos ?? 30);
   const [anticipacion, setAnticipacion] = useState(recurso?.anticipacionMinimaMin ?? 120);
@@ -57,7 +58,7 @@ function FormRecurso({ recurso, token, onGuardado, setError }) {
     <form className="form-campana" onSubmit={manejarGuardar}>
       <label>
         Nombre del recurso (negocio o profesional que atiende)
-        <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Atención Ahorróptica" required />
+        <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder={ejemploNombre || 'Ej. Atención al público'} required />
       </label>
       <label>
         {/* Restaurado 2026-08-31: esta es la ÚNICA duración real que usa el
@@ -252,6 +253,7 @@ export default function ConfiguracionAgenda() {
   const [recurso, setRecurso] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
+  const [ejemplos, setEjemplos] = useState({});
 
   async function cargar() {
     try {
@@ -264,7 +266,10 @@ export default function ConfiguracionAgenda() {
     }
   }
 
-  useEffect(() => { cargar(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    cargar();
+    fetchEjemplosFormulario(token).then(setEjemplos).catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (cargando) return <p className="texto-muted">Cargando…</p>;
 
@@ -276,7 +281,7 @@ export default function ConfiguracionAgenda() {
       {error && <p className="mensaje-error">{error}</p>}
 
       <h2 className="subtitulo">Datos de la agenda (profesional / calendario único)</h2>
-      <FormRecurso recurso={recurso} token={token} onGuardado={cargar} setError={setError} />
+      <FormRecurso recurso={recurso} token={token} onGuardado={cargar} setError={setError} ejemploNombre={ejemplos.nombreRecurso} />
 
       {!recurso ? (
         <p className="texto-muted">Guarda los datos de arriba primero para poder cargar el horario semanal y los bloqueos.</p>

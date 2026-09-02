@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { fetchInfoNegocio, actualizarInfoNegocio, fetchServicios } from '../../api/client';
+import { fetchInfoNegocio, actualizarInfoNegocio, fetchServicios, fetchEjemplosFormulario } from '../../api/client';
 import Servicios from '../../components/Servicios';
 
 export default function InformacionNegocio() {
@@ -17,6 +17,10 @@ export default function InformacionNegocio() {
   const [tonoComunicacion, setTonoComunicacion] = useState('Neutral');
 
   const [servicios, setServicios] = useState([]);
+  // Ejemplos (placeholder) según el rubro del negocio — antes estos campos
+  // mostraban siempre los mismos ejemplos con datos reales de Ahorróptica
+  // (dirección real, precios reales de óptica) sin importar el rubro.
+  const [ejemplos, setEjemplos] = useState({});
 
   function cargarServicios() {
     return fetchServicios(token).then((data) => setServicios(data.servicios || [])).catch((err) => setError(err.message));
@@ -34,6 +38,7 @@ export default function InformacionNegocio() {
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
     cargarServicios();
+    fetchEjemplosFormulario(token).then(setEjemplos).catch(() => {});
   }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function manejarGuardar(e) {
@@ -67,7 +72,7 @@ export default function InformacionNegocio() {
           <input
             value={direccion}
             onChange={(e) => setDireccion(e.target.value)}
-            placeholder="Ej. Av. O'Higgins #546, comuna de Lautaro"
+            placeholder={ejemplos.direccion || 'Ej. Av. Providencia #1234, comuna'}
           />
         </label>
 
@@ -87,7 +92,7 @@ export default function InformacionNegocio() {
             rows={6}
             value={informacionAdicional}
             onChange={(e) => setInformacionAdicional(e.target.value)}
-            placeholder="Ej. Examen + receta $15.000 normal. $5.000 si se compra lente completo el mismo día…"
+            placeholder={ejemplos.informacionAdicional || 'Ej. Precios, promociones o detalles que quieras que el bot mencione.'}
           />
           <span className="texto-ayuda">El bot cita esto TAL CUAL cuando un cliente pregunta — no inventa nada fuera de lo que escribas acá.</span>
         </label>
@@ -111,7 +116,7 @@ export default function InformacionNegocio() {
       </form>
 
       <h2 className="subtitulo">Servicios</h2>
-      <Servicios servicios={servicios} token={token} onCambio={cargarServicios} setError={setError} />
+      <Servicios servicios={servicios} token={token} onCambio={cargarServicios} setError={setError} ejemploNombre={ejemplos.ejemploServicio} />
     </div>
   );
 }
