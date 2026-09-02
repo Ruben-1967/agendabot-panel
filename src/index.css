@@ -202,6 +202,25 @@ button {
   font-weight: 600;
 }
 
+.nav-item-con-badge {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.badge-alerta {
+  background: var(--red);
+  color: var(--paper);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 3px 7px;
+  border-radius: 999px;
+  min-width: 18px;
+  text-align: center;
+}
+
 .sidebar-footer {
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   padding-top: 14px;

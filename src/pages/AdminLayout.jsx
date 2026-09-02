@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { fetchEstadoSuscripcion } from '../api/client';
+import { fetchEstadoSuscripcion, fetchConversacionesPendientesCount } from '../api/client';
+
+const MS_ENTRE_CONSULTAS_PENDIENTES = 30_000;
 
 export default function AdminLayout() {
   const { usuario, token, cerrarSesion } = useAuth();
@@ -24,6 +26,24 @@ export default function AdminLayout() {
       })
       .catch(() => {}); // si falla la consulta, simplemente no se muestra el banner/botón
   }, [token]);
+
+  // Conversaciones pausadas esperando intervención humana (bot en pausa
+  // porque el cliente pidió hablar con alguien, o un humano ya intervino) —
+  // se sondea cada 30s mientras el panel está abierto, no solo al montar,
+  // para que el aviso desaparezca solo cuando se resuelva.
+  const [conversacionesPendientes, setConversacionesPendientes] = useState(0);
+  useEffect(() => {
+    if (!token || !usuario?.empresaId) return;
+    let cancelado = false;
+    const consultar = () => {
+      fetchConversacionesPendientesCount(token, usuario.empresaId)
+        .then((data) => { if (!cancelado) setConversacionesPendientes(data.pendientes || 0); })
+        .catch(() => {}); // si falla, simplemente no se actualiza el badge esta vuelta
+    };
+    consultar();
+    const intervalo = setInterval(consultar, MS_ENTRE_CONSULTAS_PENDIENTES);
+    return () => { cancelado = true; clearInterval(intervalo); };
+  }, [token, usuario?.empresaId]);
 
   const TEXTO_AVISO = {
     verde: 'Tu suscripción está pendiente de pago — el acceso sigue habilitado, pero para no perder el servicio activa tu plan cuanto antes.',
@@ -61,7 +81,12 @@ export default function AdminLayout() {
               <NavLink to="/admin/clientes">Pacientes / Clientes</NavLink>
               <NavLink to="/admin/profesionales">Profesionales</NavLink>
               {/* <NavLink to="/admin/campanas">Campañas</NavLink> */}
-              <NavLink to="/admin/chats">Chats en vivo</NavLink>
+              <NavLink to="/admin/chats" className="nav-item-con-badge">
+                Chats en vivo
+                {conversacionesPendientes > 0 && (
+                  <span className="badge-alerta" title="Esperando intervención humana">{conversacionesPendientes}</span>
+                )}
+              </NavLink>
               <NavLink to="/admin/lista-espera">Lista de espera</NavLink>
               <NavLink to="/admin/catalogo-visual">Catálogo visual</NavLink>
             </>

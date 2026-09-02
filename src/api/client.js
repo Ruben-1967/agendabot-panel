@@ -235,6 +235,11 @@ export function fetchEstadoSuscripcion(token) {
   return apiFetch('/suscripcion/estado', { token });
 }
 
+// ---------- Conversaciones ----------
+export function fetchConversacionesPendientesCount(token, empresaId) {
+  return apiFetch(`/conversaciones/${empresaId}/pendientes/count`, { token });
+}
+
 // ---------- Agenda: multi-profesional ----------
 export function fetchProfesionales(token) {
   return apiFetch('/agenda/profesionales', { token });
