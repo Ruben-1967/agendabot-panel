@@ -33,6 +33,7 @@ async function apiFetch(path, { method = 'GET', body, token, tipoSesion = 'negoc
     const mensaje = data?.error || `Error ${res.status} al llamar a ${path}`;
     const error = new Error(mensaje);
     error.status = res.status;
+    error.codigo = data?.codigo;
     throw error;
   }
 

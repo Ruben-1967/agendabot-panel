@@ -154,6 +154,15 @@
   background: rgba(0, 0, 0, 0.015);
 }
 
+/* La línea divisoria normal (--line, muy clara) casi desaparece sobre el
+   fondo apenas oscurecido de las filas "Disponible" — sobre todo se nota en
+   la zona derecha (Confirmado/Fono/Asistió/Acciones), donde esas celdas
+   quedan casi vacías y no hay nada más que ayude a distinguir una fila de
+   la siguiente. Reportado 2026-09-04. */
+.fila-vacia td {
+  border-bottom-color: rgba(22, 36, 31, 0.12);
+}
+
 .tabla-citas-acciones-celda {
   display: flex;
   gap: 12px;
@@ -202,6 +211,41 @@
   font-weight: 400;
   color: var(--ink);
   background: #fff;
+}
+
+.tabla-citas-forzar-sobrecupo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--brass-soft);
+  border: 1px solid var(--brass);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.tabla-citas-forzar-sobrecupo p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink);
+  flex: 1;
+}
+
+.tabla-citas-forzar-sobrecupo button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  background: var(--brass);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tabla-citas-forzar-sobrecupo button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .tabla-citas-form-fila {

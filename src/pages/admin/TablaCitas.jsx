@@ -78,6 +78,7 @@ export default function TablaCitas() {
   const [mostrarForm, setMostrarForm] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [errorForm, setErrorForm] = useState(null);
+  const [ofrecerForzarSobrecupo, setOfrecerForzarSobrecupo] = useState(false);
   const [formHora, setFormHora] = useState('');
   const [formServicioId, setFormServicioId] = useState('');
   const [formRecursoId, setFormRecursoId] = useState('');
@@ -294,6 +295,7 @@ export default function TablaCitas() {
 
   function abrirFormulario(horaPrellenada = '') {
     setErrorForm(null);
+    setOfrecerForzarSobrecupo(false);
     setFormHora(horaPrellenada);
     setFormServicioId('');
     setFormRecursoId('');
@@ -304,9 +306,10 @@ export default function TablaCitas() {
     setMostrarForm(true);
   }
 
-  async function guardarCitaNueva(e) {
+  async function guardarCitaNueva(e, forzarSobrecupo = false) {
     e.preventDefault();
     setErrorForm(null);
+    if (!forzarSobrecupo) setOfrecerForzarSobrecupo(false);
 
     if (!formHora) {
       setErrorForm('Falta la hora');
@@ -324,6 +327,7 @@ export default function TablaCitas() {
         hora: formHora,
         servicioId: formServicioId || undefined,
         recursoAgendableId: formRecursoId || undefined,
+        forzarSobrecupo: forzarSobrecupo || undefined,
         ...(formClienteId
           ? { clienteId: formClienteId }
           : {
@@ -335,10 +339,14 @@ export default function TablaCitas() {
             }),
       });
       setMostrarForm(false);
+      setOfrecerForzarSobrecupo(false);
       cargarCitas();
       fetchClientes(token).then((data) => setClientes(data.clientes || [])).catch(() => {});
     } catch (err) {
       setErrorForm(err.message);
+      // Solo se puede forzar cuando se eligió un profesional puntual (ver
+      // agenda.js) — con "no especificar" el backend ya recorrió a todos.
+      setOfrecerForzarSobrecupo(err.codigo === 'CONFLICTO_HORARIO' && Boolean(formRecursoId));
     } finally {
       setGuardando(false);
     }
@@ -408,6 +416,14 @@ export default function TablaCitas() {
         <form className="tabla-citas-form" onSubmit={guardarCitaNueva}>
           <h2>Nueva cita — {fecha}</h2>
           {errorForm && <p className="mensaje-error">{errorForm}</p>}
+          {ofrecerForzarSobrecupo && (
+            <div className="tabla-citas-forzar-sobrecupo">
+              <p>Ya hay otra cita a esa hora con este profesional. ¿Agendar igual como sobrecupo?</p>
+              <button type="button" disabled={guardando} onClick={(e) => guardarCitaNueva(e, true)}>
+                {guardando ? 'Agendando…' : 'Forzar sobrecupo (agendar igual)'}
+              </button>
+            </div>
+          )}
 
           <div className="tabla-citas-form-fila">
             <label>
