@@ -475,6 +475,98 @@
   }
 }
 
+.agendar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(45, 90, 82, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.agendar-modal {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.agendar-modal h3 {
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.agendar-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.agendar-campo select {
+  padding: 8px;
+  border: 1px solid #e8ddd2;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.agendar-estado {
+  margin: 0;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.agendar-horas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.agendar-pill {
+  padding: 8px 16px;
+  border: 2px solid #2d5a52;
+  background: transparent;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2d5a52;
+  cursor: pointer;
+}
+
+.agendar-pill:hover {
+  background: #d4e8e3;
+}
+
+.agendar-pill.activo {
+  background: #2d5a52;
+  color: white;
+}
+
+.agendar-error {
+  margin: 0;
+  padding: 10px 12px;
+  background: #fde8e8;
+  border: 1px solid #f5c4c4;
+  border-radius: 6px;
+  color: #c94e4e;
+  font-size: 0.85rem;
+}
+
+.agendar-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  align-items: center;
+  margin-top: 4px;
+}
+
 @media (max-width: 480px) {
   .lista-espera-container {
     padding: 12px;

@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import CalendarPickerModal from '../../components/CalendarPickerModal';
-import { API_URL } from '../../api/client';
+import { API_URL, fetchProfesionales, fetchDisponibilidadRecurso } from '../../api/client';
+import SimpleDatePicker from '../../components/SimpleDatePicker';
 import './ListaEspera.css';
+
+function fechaHoyLocal() {
+  const hoy = new Date();
+  const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+  const dia = String(hoy.getDate()).padStart(2, '0');
+  return `${hoy.getFullYear()}-${mes}-${dia}`;
+}
 
 export default function ListaEspera() {
   const { usuario, token } = useAuth();
@@ -13,13 +20,25 @@ export default function ListaEspera() {
   const [error, setError] = useState(null);
   const [accionando, setAccionando] = useState(false);
 
-  // NUEVO: States para CalendarPickerModal
-  const [modalAbierto, setModalAbierto] = useState(false);
+  const [profesionales, setProfesionales] = useState([]);
+
+  // Modal de "Agendar" — mismo patrón que "Reagendar" en Tabla de citas:
+  // SimpleDatePicker + horas reales del motor de disponibilidad (ver
+  // GET /agenda/disponibilidad/:recursoId). El modal anterior
+  // (CalendarPickerModal + /disponibilidad/:recursoId) dependía de un
+  // servicio roto contra el schema actual — ver git log de este archivo.
   const [pacienteAgendar, setPacienteAgendar] = useState(null);
+  const [agendarRecursoId, setAgendarRecursoId] = useState('');
+  const [agendarFecha, setAgendarFecha] = useState('');
+  const [agendarHoras, setAgendarHoras] = useState([]);
+  const [agendarHoraSeleccionada, setAgendarHoraSeleccionada] = useState('');
+  const [cargandoHorasAgendar, setCargandoHorasAgendar] = useState(false);
+  const [errorAgendar, setErrorAgendar] = useState(null);
 
   useEffect(() => {
     if (token) {
       cargarListaEspera();
+      fetchProfesionales(token).then((data) => setProfesionales(data.profesionales || [])).catch(() => {});
     }
   }, [token]);
 
@@ -51,17 +70,34 @@ export default function ListaEspera() {
     return item.preferenciaRecursoId === filtroServicio;
   });
 
-  // MODIFICADO: Abre el modal en lugar de agendar directo
-  const handleAgendar = async (listaEsperaItem) => {
+  const handleAgendar = (listaEsperaItem) => {
     setPacienteAgendar(listaEsperaItem);
-    setModalAbierto(true);
+    setAgendarRecursoId(listaEsperaItem.preferenciaRecursoId || profesionales[0]?.id || '');
+    setAgendarFecha(fechaHoyLocal());
+    setAgendarHoraSeleccionada('');
+    setErrorAgendar(null);
   };
 
-  // NUEVO: Confirma el agendamiento desde el modal
-  const handleConfirmarAgendamiento = async (selection) => {
-    if (!pacienteAgendar) return;
+  const cerrarModalAgendar = () => {
+    setPacienteAgendar(null);
+    setAgendarHoras([]);
+  };
+
+  useEffect(() => {
+    if (!pacienteAgendar || !agendarRecursoId || !agendarFecha || !token) return;
+    setCargandoHorasAgendar(true);
+    setAgendarHoraSeleccionada('');
+    fetchDisponibilidadRecurso(token, agendarRecursoId, agendarFecha)
+      .then((data) => setAgendarHoras(data.horas || []))
+      .catch((err) => setErrorAgendar(err.message))
+      .finally(() => setCargandoHorasAgendar(false));
+  }, [pacienteAgendar, agendarRecursoId, agendarFecha, token]);
+
+  const confirmarAgendamiento = async () => {
+    if (!pacienteAgendar || !agendarHoraSeleccionada) return;
 
     setAccionando(true);
+    setErrorAgendar(null);
     try {
       const res = await fetch(
         `${API_URL}/lista-espera/${pacienteAgendar.id}/agendar`,
@@ -72,20 +108,22 @@ export default function ListaEspera() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            fecha: selection.fecha,
-            hora: selection.hora,
-            profesionalId: selection.profesionalId,
+            fecha: agendarFecha,
+            hora: agendarHoraSeleccionada,
+            recursoAgendableId: agendarRecursoId,
           }),
         }
       );
 
-      if (!res.ok) throw new Error('Error agendando paciente');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Error agendando paciente');
+      }
       await cargarListaEspera();
-      setPacienteAgendar(null);
-      setModalAbierto(false);
+      cerrarModalAgendar();
       alert('Paciente agendado correctamente');
     } catch (err) {
-      alert(err.message);
+      setErrorAgendar(err.message);
     } finally {
       setAccionando(false);
     }
@@ -235,17 +273,57 @@ export default function ListaEspera() {
         </table>
       </div>
 
-      {/* NUEVO: CalendarPickerModal */}
-      <CalendarPickerModal
-        isOpen={modalAbierto}
-        onClose={() => {
-          setModalAbierto(false);
-          setPacienteAgendar(null);
-        }}
-        onConfirm={handleConfirmarAgendamiento}
-        recursoId={pacienteAgendar?.preferenciaRecursoId}
-        token={token}
-      />
+      {pacienteAgendar && (
+        <div className="agendar-overlay" onClick={cerrarModalAgendar}>
+          <div className="agendar-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Agendar a {pacienteAgendar.clienteNombre}</h3>
+
+            {profesionales.length > 1 && (
+              <label className="agendar-campo">
+                Profesional
+                <select value={agendarRecursoId} onChange={(e) => setAgendarRecursoId(e.target.value)}>
+                  {profesionales.map((p) => (
+                    <option key={p.id} value={p.id}>{p.nombre}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            <SimpleDatePicker value={agendarFecha} onChange={setAgendarFecha} />
+
+            {cargandoHorasAgendar ? (
+              <p className="agendar-estado">Cargando horas disponibles…</p>
+            ) : agendarHoras.length === 0 ? (
+              <p className="agendar-estado">Sin horas disponibles ese día.</p>
+            ) : (
+              <div className="agendar-horas">
+                {agendarHoras.map((h) => (
+                  <button
+                    key={h}
+                    className={`agendar-pill ${agendarHoraSeleccionada === h ? 'activo' : ''}`}
+                    onClick={() => setAgendarHoraSeleccionada(h)}
+                  >
+                    {h}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {errorAgendar && <p className="agendar-error">{errorAgendar}</p>}
+
+            <div className="agendar-acciones">
+              <button className="btn-cancelar" onClick={cerrarModalAgendar}>Cancelar</button>
+              <button
+                className="btn-agendar"
+                disabled={!agendarHoraSeleccionada || accionando}
+                onClick={confirmarAgendamiento}
+              >
+                {accionando ? 'Agendando…' : 'Confirmar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
