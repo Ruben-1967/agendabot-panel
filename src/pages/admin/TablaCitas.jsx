@@ -379,6 +379,7 @@ export default function TablaCitas() {
               <option key={p.id} value={p.id}>{p.nombre}</option>
             ))}
           </select>
+          <a href="/admin/lista-espera" className="btn-secundario">Lista de espera</a>
           <button className="btn-primario" onClick={() => abrirFormulario()}>+ Agregar cita</button>
         </div>
       </div>

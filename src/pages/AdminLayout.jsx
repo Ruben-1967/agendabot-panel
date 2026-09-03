@@ -87,11 +87,12 @@ export default function AdminLayout() {
                   <span className="badge-alerta" title="Esperando intervención humana">{conversacionesPendientes}</span>
                 )}
               </NavLink>
-              <NavLink to="/admin/lista-espera">Lista de espera</NavLink>
               <NavLink to="/admin/catalogo-visual">Catálogo visual</NavLink>
             </>
           )}
-          <NavLink to="/admin/conectar-whatsapp">Conectar WhatsApp</NavLink>
+          {!usuario?.whatsappConectado && (
+            <NavLink to="/admin/conectar-whatsapp">Conectar WhatsApp</NavLink>
+          )}
           {pendientePago && (
             <NavLink to="/suscripcion/elegir-plan" className="nav-suscribir-plan">Suscribir plan</NavLink>
           )}

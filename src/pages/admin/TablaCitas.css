@@ -99,6 +99,18 @@
 .btn-primario:hover:not(:disabled) { background: var(--teal); }
 .btn-primario:disabled { opacity: 0.6; cursor: default; }
 
+.btn-secundario {
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.btn-secundario:hover { border-color: var(--teal-deep); color: var(--teal-deep); }
+
 .tabla-citas-wrap {
   overflow-x: auto;
 }

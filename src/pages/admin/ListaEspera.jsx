@@ -183,6 +183,7 @@ export default function ListaEspera() {
   if (loading) {
     return (
       <div className="lista-espera-container">
+        <a href="/admin/tabla-citas" className="lista-espera-volver">← Volver a la tabla de citas</a>
         <div className="lista-header">
           <h1>Lista de espera</h1>
           <p className="fecha">{obtenerFecha()}</p>
@@ -195,6 +196,7 @@ export default function ListaEspera() {
   if (error) {
     return (
       <div className="lista-espera-container">
+        <a href="/admin/tabla-citas" className="lista-espera-volver">← Volver a la tabla de citas</a>
         <div className="lista-header">
           <h1>Lista de espera</h1>
           <p className="fecha">{obtenerFecha()}</p>
@@ -209,6 +211,7 @@ export default function ListaEspera() {
 
   return (
     <div className="lista-espera-container">
+      <a href="/admin/tabla-citas" className="lista-espera-volver">← Volver a la tabla de citas</a>
       <div className="lista-header">
         <h1>Lista de espera</h1>
         <p className="fecha">{obtenerFecha()}</p>

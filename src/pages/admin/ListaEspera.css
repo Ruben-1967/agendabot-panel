@@ -5,6 +5,19 @@
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
+.lista-espera-volver {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: #2d5a52;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.lista-espera-volver:hover {
+  color: #d4793e;
+  text-decoration: underline;
+}
+
 .lista-espera-header {
   margin-bottom: 24px;
   background: #2d5a52;
