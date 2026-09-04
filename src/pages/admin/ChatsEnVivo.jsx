@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { API_URL } from '../../api/client';
+import { API_URL, fetchPlantillasRapidas, crearPlantillaRapida, eliminarPlantillaRapida } from '../../api/client';
 import './ChatsEnVivo.css';
 
 export default function ChatsEnVivo() {
   const { usuario, token } = useAuth();
+  const navigate = useNavigate();
   const [conversaciones, setConversaciones] = useState([]);
   const [conversacionSeleccionada, setConversacionSeleccionada] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -12,11 +14,52 @@ export default function ChatsEnVivo() {
   const [nuevoMensaje, setNuevoMensaje] = useState('');
   const [enviando, setEnviando] = useState(false);
 
+  const [plantillas, setPlantillas] = useState([]);
+  const [mostrarPlantillas, setMostrarPlantillas] = useState(false);
+  const [nuevaPlantillaTexto, setNuevaPlantillaTexto] = useState('');
+  const [guardandoPlantilla, setGuardandoPlantilla] = useState(false);
+
   useEffect(() => {
     if (token) {
       cargarConversaciones();
+      fetchPlantillasRapidas(token).then(setPlantillas).catch(() => {});
     }
   }, [token]);
+
+  async function agregarPlantilla(e) {
+    e.preventDefault();
+    if (!nuevaPlantillaTexto.trim()) return;
+    setGuardandoPlantilla(true);
+    try {
+      const creada = await crearPlantillaRapida(token, nuevaPlantillaTexto.trim());
+      setPlantillas((prev) => [...prev, creada]);
+      setNuevaPlantillaTexto('');
+    } catch (err) {
+      console.error('Error creando plantilla rápida:', err);
+    } finally {
+      setGuardandoPlantilla(false);
+    }
+  }
+
+  async function borrarPlantilla(id) {
+    setPlantillas((prev) => prev.filter((p) => p.id !== id));
+    try {
+      await eliminarPlantillaRapida(token, id);
+    } catch (err) {
+      console.error('Error eliminando plantilla rápida:', err);
+    }
+  }
+
+  function irAAgendarCita() {
+    if (!conversacionSeleccionada) return;
+    navigate('/admin/tabla-citas', {
+      state: {
+        clienteId: conversacionSeleccionada.cliente?.id || null,
+        clienteNombre: conversacionSeleccionada.clienteNombre,
+        telefono: conversacionSeleccionada.telefono,
+      },
+    });
+  }
 
   const cargarConversaciones = async () => {
     try {
@@ -247,8 +290,59 @@ export default function ChatsEnVivo() {
                   </form>
 
                   <div className="mensaje-botones">
-                    <button className="btn-plantilla">plantilla rapida</button>
-                    <button className="btn-agendar">agendar cita</button>
+                    <div style={{ position: 'relative' }}>
+                      <button
+                        type="button"
+                        className="btn-plantilla"
+                        onClick={() => setMostrarPlantillas((v) => !v)}
+                      >
+                        plantilla rápida
+                      </button>
+                      {mostrarPlantillas && (
+                        <div className="plantillas-dropdown">
+                          {plantillas.length === 0 && (
+                            <p className="plantillas-vacio">Todavía no tienes plantillas guardadas.</p>
+                          )}
+                          {plantillas.map((p) => (
+                            <div key={p.id} className="plantilla-item">
+                              <button
+                                type="button"
+                                className="plantilla-texto"
+                                onClick={() => {
+                                  setNuevoMensaje(p.texto);
+                                  setMostrarPlantillas(false);
+                                }}
+                              >
+                                {p.texto}
+                              </button>
+                              <button
+                                type="button"
+                                className="plantilla-borrar"
+                                title="Eliminar"
+                                onClick={() => borrarPlantilla(p.id)}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                          <form className="plantilla-nueva-form" onSubmit={agregarPlantilla}>
+                            <input
+                              type="text"
+                              placeholder="Nueva plantilla…"
+                              value={nuevaPlantillaTexto}
+                              onChange={(e) => setNuevaPlantillaTexto(e.target.value)}
+                              disabled={guardandoPlantilla}
+                            />
+                            <button type="submit" disabled={guardandoPlantilla || !nuevaPlantillaTexto.trim()}>
+                              +
+                            </button>
+                          </form>
+                        </div>
+                      )}
+                    </div>
+                    <button type="button" className="btn-agendar" onClick={irAAgendarCita}>
+                      agendar cita
+                    </button>
                   </div>
                 </>
               )}

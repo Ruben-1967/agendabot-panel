@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   fetchCitasDia,
@@ -48,6 +49,7 @@ function ToggleSiNo({ valor, deshabilitado, onSi, onNo }) {
 
 export default function TablaCitas() {
   const { token } = useAuth();
+  const location = useLocation();
   const [fecha, setFecha] = useState(fechaHoyLocal());
   const [citas, setCitas] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -161,6 +163,16 @@ export default function TablaCitas() {
   }
 
   useEffect(cargarCitas, [token, fecha, recursoParaGrilla]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Llegada desde "Chats en vivo" (botón "agendar cita") con el cliente ya
+  // identificado — abre el formulario de nueva cita directo con ese
+  // paciente elegido, en vez de que el admin tenga que buscarlo a mano.
+  useEffect(() => {
+    if (location.state?.clienteId) {
+      setFormClienteId(location.state.clienteId);
+      setMostrarForm(true);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Confirmado/Asistió no son campos aparte en la BD (ver funciones de más
   // arriba) — el resumen por estado se cuenta sobre las citas reales, sin

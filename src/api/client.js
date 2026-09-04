@@ -171,6 +171,17 @@ export function fetchInfoNegocio(token) {
 export function actualizarInfoNegocio(token, data) {
   return apiFetch('/empresa/info', { method: 'PUT', body: data, token });
 }
+
+// ---------- Plantillas rápidas (Chats en vivo) ----------
+export function fetchPlantillasRapidas(token) {
+  return apiFetch('/empresa/plantillas-rapidas', { token });
+}
+export function crearPlantillaRapida(token, texto) {
+  return apiFetch('/empresa/plantillas-rapidas', { method: 'POST', body: { texto }, token });
+}
+export function eliminarPlantillaRapida(token, id) {
+  return apiFetch(`/empresa/plantillas-rapidas/${id}`, { method: 'DELETE', token });
+}
 export function fetchEjemplosFormulario(token) {
   return apiFetch('/empresa/ejemplos-formulario', { token });
 }
