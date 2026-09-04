@@ -16,6 +16,7 @@ export default function InformacionNegocio() {
   const [requiereRut, setRequiereRut] = useState(false);
   const [tonoComunicacion, setTonoComunicacion] = useState('Neutral');
   const [telefonoContacto, setTelefonoContacto] = useState('');
+  const [minutosAlertaUrgente, setMinutosAlertaUrgente] = useState(10);
 
   const [servicios, setServicios] = useState([]);
   // Ejemplos (placeholder) según el rubro del negocio — antes estos campos
@@ -36,6 +37,7 @@ export default function InformacionNegocio() {
         setRequiereRut(!!data.requiereRut);
         setTonoComunicacion(data.tonoComunicacion || 'Neutral');
         setTelefonoContacto(data.telefonoContacto || '');
+        setMinutosAlertaUrgente(data.minutosAlertaUrgente ?? 10);
       })
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
@@ -49,7 +51,7 @@ export default function InformacionNegocio() {
     setError('');
     setGuardadoOk(false);
     try {
-      await actualizarInfoNegocio(token, { direccion, notaAgendamiento, informacionAdicional, requiereRut, tonoComunicacion, telefonoContacto });
+      await actualizarInfoNegocio(token, { direccion, notaAgendamiento, informacionAdicional, requiereRut, tonoComunicacion, telefonoContacto, minutosAlertaUrgente });
       setGuardadoOk(true);
     } catch (err) {
       setError(err.message);
@@ -85,7 +87,19 @@ export default function InformacionNegocio() {
             onChange={(e) => setTelefonoContacto(e.target.value)}
             placeholder="Ej. +56912345678"
           />
-          <span className="texto-ayuda">A este número te llegan los avisos automáticos por WhatsApp — activación de cuenta, y la alerta urgente cuando un cliente lleva 10+ min esperando hablar con una persona.</span>
+          <span className="texto-ayuda">A este número te llegan los avisos automáticos por WhatsApp — activación de cuenta, y la alerta urgente cuando un cliente lleva esperando hablar con una persona (ver campo de abajo).</span>
+        </label>
+
+        <label>
+          Minutos de espera antes de la alerta urgente
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={minutosAlertaUrgente}
+            onChange={(e) => setMinutosAlertaUrgente(e.target.value === '' ? '' : Number(e.target.value))}
+          />
+          <span className="texto-ayuda">Cuando un cliente pide hablar con una persona y nadie responde, a los 5 min el bot le manda un mensaje de contención al cliente. Este número define cuántos minutos más esperar antes de mandarte a ti la alerta urgente por WhatsApp — pon 0 si quieres que te llegue de inmediato.</span>
         </label>
 
         <label>
