@@ -15,6 +15,7 @@ export default function InformacionNegocio() {
   const [informacionAdicional, setInformacionAdicional] = useState('');
   const [requiereRut, setRequiereRut] = useState(false);
   const [tonoComunicacion, setTonoComunicacion] = useState('Neutral');
+  const [telefonoContacto, setTelefonoContacto] = useState('');
 
   const [servicios, setServicios] = useState([]);
   // Ejemplos (placeholder) según el rubro del negocio — antes estos campos
@@ -34,6 +35,7 @@ export default function InformacionNegocio() {
         setInformacionAdicional(data.informacionAdicional || '');
         setRequiereRut(!!data.requiereRut);
         setTonoComunicacion(data.tonoComunicacion || 'Neutral');
+        setTelefonoContacto(data.telefonoContacto || '');
       })
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
@@ -47,7 +49,7 @@ export default function InformacionNegocio() {
     setError('');
     setGuardadoOk(false);
     try {
-      await actualizarInfoNegocio(token, { direccion, notaAgendamiento, informacionAdicional, requiereRut, tonoComunicacion });
+      await actualizarInfoNegocio(token, { direccion, notaAgendamiento, informacionAdicional, requiereRut, tonoComunicacion, telefonoContacto });
       setGuardadoOk(true);
     } catch (err) {
       setError(err.message);
@@ -74,6 +76,16 @@ export default function InformacionNegocio() {
             onChange={(e) => setDireccion(e.target.value)}
             placeholder={ejemplos.direccion || 'Ej. Av. Providencia #1234, comuna'}
           />
+        </label>
+
+        <label>
+          Teléfono de contacto (WhatsApp)
+          <input
+            value={telefonoContacto}
+            onChange={(e) => setTelefonoContacto(e.target.value)}
+            placeholder="Ej. +56912345678"
+          />
+          <span className="texto-ayuda">A este número te llegan los avisos automáticos por WhatsApp — activación de cuenta, y la alerta urgente cuando un cliente lleva 10+ min esperando hablar con una persona.</span>
         </label>
 
         <label>
