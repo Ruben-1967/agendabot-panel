@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { fetchInfoNegocio, actualizarInfoNegocio, fetchServicios, fetchEjemplosFormulario } from '../../api/client';
+import { fetchInfoNegocio, actualizarInfoNegocio, actualizarOptInMarketing, fetchServicios, fetchEjemplosFormulario } from '../../api/client';
 import Servicios from '../../components/Servicios';
+
+const TEXTO_COMPROMISO = 'Nos comprometemos a usar TotemSystem exclusivamente para responder solicitudes de horas, agendamiento y asesoría directamente relacionada con la atención de nuestros clientes — nunca para enviar publicidad, promociones ni comunicaciones de marketing sin el consentimiento explícito (opt-in) de cada cliente. Entendemos que el incumplimiento de este compromiso puede resultar en la suspensión del servicio.';
 
 export default function InformacionNegocio() {
   const { token } = useAuth();
@@ -17,6 +19,15 @@ export default function InformacionNegocio() {
   const [tonoComunicacion, setTonoComunicacion] = useState('Neutral');
   const [telefonoContacto, setTelefonoContacto] = useState('');
   const [minutosAlertaUrgente, setMinutosAlertaUrgente] = useState(10);
+  const [minutosEsperaOptIn, setMinutosEsperaOptIn] = useState(10);
+
+  const [usaOptInMarketing, setUsaOptInMarketing] = useState(false);
+  const [compromisoAceptadoEn, setCompromisoAceptadoEn] = useState(null);
+  const [eleccionMarketing, setEleccionMarketing] = useState('no'); // 'si' | 'no' — elección en pantalla, no necesariamente guardada
+  const [aceptaCompromiso, setAceptaCompromiso] = useState(false);
+  const [guardandoMarketing, setGuardandoMarketing] = useState(false);
+  const [errorMarketing, setErrorMarketing] = useState('');
+  const [guardadoMarketingOk, setGuardadoMarketingOk] = useState(false);
 
   const [servicios, setServicios] = useState([]);
   // Ejemplos (placeholder) según el rubro del negocio — antes estos campos
@@ -38,6 +49,10 @@ export default function InformacionNegocio() {
         setTonoComunicacion(data.tonoComunicacion || 'Neutral');
         setTelefonoContacto(data.telefonoContacto || '');
         setMinutosAlertaUrgente(data.minutosAlertaUrgente ?? 10);
+        setMinutosEsperaOptIn(data.minutosEsperaOptIn ?? 10);
+        setUsaOptInMarketing(!!data.usaOptInMarketing);
+        setEleccionMarketing(data.usaOptInMarketing ? 'si' : 'no');
+        setCompromisoAceptadoEn(data.compromisoSoloAgendamientoAceptadoEn || null);
       })
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
@@ -51,12 +66,34 @@ export default function InformacionNegocio() {
     setError('');
     setGuardadoOk(false);
     try {
-      await actualizarInfoNegocio(token, { direccion, notaAgendamiento, informacionAdicional, requiereRut, tonoComunicacion, telefonoContacto, minutosAlertaUrgente });
+      await actualizarInfoNegocio(token, { direccion, notaAgendamiento, informacionAdicional, requiereRut, tonoComunicacion, telefonoContacto, minutosAlertaUrgente, minutosEsperaOptIn });
       setGuardadoOk(true);
     } catch (err) {
       setError(err.message);
     } finally {
       setGuardando(false);
+    }
+  }
+
+  async function manejarGuardarMarketing(e) {
+    e.preventDefault();
+    setGuardandoMarketing(true);
+    setErrorMarketing('');
+    setGuardadoMarketingOk(false);
+    try {
+      const quiereMarketing = eleccionMarketing === 'si';
+      const resultado = await actualizarOptInMarketing(token, {
+        usaOptInMarketing: quiereMarketing,
+        ...(quiereMarketing ? {} : { aceptaCompromiso }),
+      });
+      setUsaOptInMarketing(resultado.usaOptInMarketing);
+      setCompromisoAceptadoEn(resultado.compromisoSoloAgendamientoAceptadoEn || null);
+      setAceptaCompromiso(false);
+      setGuardadoMarketingOk(true);
+    } catch (err) {
+      setErrorMarketing(err.message);
+    } finally {
+      setGuardandoMarketing(false);
     }
   }
 
@@ -102,6 +139,20 @@ export default function InformacionNegocio() {
           <span className="texto-ayuda">Cuando un cliente pide hablar con una persona y nadie responde, a los 5 min el bot le manda un mensaje de contención al cliente. Este número define cuántos minutos más esperar antes de mandarte a ti la alerta urgente por WhatsApp — pon 0 si quieres que te llegue de inmediato.</span>
         </label>
 
+        {usaOptInMarketing && (
+          <label>
+            Minutos de silencio antes de preguntar el opt-in
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={minutosEsperaOptIn}
+              onChange={(e) => setMinutosEsperaOptIn(e.target.value === '' ? '' : Number(e.target.value))}
+            />
+            <span className="texto-ayuda">Cuánto tiempo sin que el cliente escriba antes de preguntarle si quiere recibir promociones — para no interrumpir una conversación en curso.</span>
+          </label>
+        )}
+
         <label>
           Nota de agendamiento
           <input
@@ -127,7 +178,7 @@ export default function InformacionNegocio() {
           <input type="checkbox" checked={requiereRut} onChange={(e) => setRequiereRut(e.target.checked)} />
           Exigir RUT del cliente antes de agendar una cita
         </label>
-        
+
         <label>
           Tono de comunicación
           <select value={tonoComunicacion} onChange={(e) => setTonoComunicacion(e.target.value)}>
@@ -139,6 +190,58 @@ export default function InformacionNegocio() {
         </label>
 
         <button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar cambios'}</button>
+      </form>
+
+      <h2 className="subtitulo">Marketing y publicidad</h2>
+      <p className="pagina-sub">Define si vas a usar TotemSystem para enviar promociones a tus clientes, o solo para agendamiento y consultas. Esto es importante para cumplir con la Ley 21.719 de protección de datos personales.</p>
+
+      <form className="form-campana" style={{ maxWidth: 560 }} onSubmit={manejarGuardarMarketing}>
+        {errorMarketing && <p className="mensaje-error">{errorMarketing}</p>}
+        {guardadoMarketingOk && <p className="mensaje-ok">Guardado correctamente.</p>}
+
+        <p className="texto-ayuda">
+          {usaOptInMarketing
+            ? 'Estado actual: marketing activado — tus clientes reciben la pregunta de opt-in automáticamente.'
+            : compromisoAceptadoEn
+              ? `Estado actual: solo agendamiento — aceptaste este compromiso el ${new Date(compromisoAceptadoEn).toLocaleDateString('es-CL')}.`
+              : 'Estado actual: sin definir todavía.'}
+        </p>
+
+        <label className="checkbox-segmentacion" style={{ padding: '4px 0' }}>
+          <input
+            type="radio"
+            name="eleccionMarketing"
+            checked={eleccionMarketing === 'si'}
+            onChange={() => setEleccionMarketing('si')}
+          />
+          Sí, quiero poder enviar promociones (activa la pregunta de opt-in a mis clientes)
+        </label>
+        <label className="checkbox-segmentacion" style={{ padding: '4px 0' }}>
+          <input
+            type="radio"
+            name="eleccionMarketing"
+            checked={eleccionMarketing === 'no'}
+            onChange={() => setEleccionMarketing('no')}
+          />
+          No, solo usaré el bot para agendamiento y consultas
+        </label>
+
+        {eleccionMarketing === 'no' && (
+          <div style={{ background: '#faf6ec', border: '1px solid #e8ddd2', borderRadius: 8, padding: 12 }}>
+            <p style={{ fontSize: '0.85rem', margin: '0 0 8px' }}>{TEXTO_COMPROMISO}</p>
+            <label className="checkbox-segmentacion" style={{ padding: '4px 0' }}>
+              <input type="checkbox" checked={aceptaCompromiso} onChange={(e) => setAceptaCompromiso(e.target.checked)} />
+              Acepto este compromiso
+            </label>
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={guardandoMarketing || (eleccionMarketing === 'no' && !aceptaCompromiso)}
+        >
+          {guardandoMarketing ? 'Guardando…' : 'Guardar elección'}
+        </button>
       </form>
 
       <h2 className="subtitulo">Servicios</h2>

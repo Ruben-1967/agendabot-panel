@@ -171,6 +171,9 @@ export function fetchInfoNegocio(token) {
 export function actualizarInfoNegocio(token, data) {
   return apiFetch('/empresa/info', { method: 'PUT', body: data, token });
 }
+export function actualizarOptInMarketing(token, data) {
+  return apiFetch('/empresa/opt-in-marketing', { method: 'PUT', body: data, token });
+}
 
 // ---------- Plantillas rápidas (Chats en vivo) ----------
 export function fetchPlantillasRapidas(token) {

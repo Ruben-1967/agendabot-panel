@@ -22,6 +22,7 @@ import TablaCitas from './pages/admin/TablaCitas';
 import ListaEspera from './pages/admin/ListaEspera';
 import CatalogoVisual from './pages/admin/CatalogoVisual';
 import ChatsEnVivo from './pages/admin/ChatsEnVivo';
+import OptInMarketing from './pages/admin/OptInMarketing';
 import MiPerfil from './pages/admin/MiPerfil';
 import LoginVendedor from './pages/vendedor/LoginVendedor';
 import NuevaDemo from './pages/vendedor/NuevaDemo';
@@ -77,6 +78,7 @@ function AppRoutes() {
         <Route path="informacion-negocio" element={<InformacionNegocio />} />
         <Route path="conectar-whatsapp" element={<ConectarWhatsApp />} />
         <Route path="clientes" element={<Clientes />} />
+        <Route path="opt-in" element={<OptInMarketing />} />
         <Route path="lista-espera" element={<ListaEspera />} />
         <Route path="catalogo-visual" element={<CatalogoVisual />} />
         <Route path="chats" element={<ChatsEnVivo />} />

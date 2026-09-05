@@ -79,6 +79,7 @@ export default function AdminLayout() {
                 <NavLink to="/admin/configuracion-agenda">Configuración de agenda</NavLink>
               )}
               <NavLink to="/admin/clientes">Pacientes / Clientes</NavLink>
+              <NavLink to="/admin/opt-in">Opt-in marketing</NavLink>
               <NavLink to="/admin/profesionales">Profesionales</NavLink>
               {/* <NavLink to="/admin/campanas">Campañas</NavLink> */}
               <NavLink to="/admin/chats" className="nav-item-con-badge">
