@@ -86,6 +86,13 @@ export default function InformacionNegocio() {
         usaOptInMarketing: quiereMarketing,
         ...(quiereMarketing ? {} : { aceptaCompromiso }),
       });
+      // Un solo clic guarda ambos registros: la elección (arriba) y, si
+      // eligió "sí", los minutos de espera (mismo endpoint que el resto de
+      // "Información del negocio" — no vale la pena un tercer endpoint solo
+      // para este campo).
+      if (quiereMarketing) {
+        await actualizarInfoNegocio(token, { direccion, notaAgendamiento, informacionAdicional, requiereRut, tonoComunicacion, telefonoContacto, minutosAlertaUrgente, minutosEsperaOptIn });
+      }
       setUsaOptInMarketing(resultado.usaOptInMarketing);
       setCompromisoAceptadoEn(resultado.compromisoSoloAgendamientoAceptadoEn || null);
       setAceptaCompromiso(false);
@@ -138,20 +145,6 @@ export default function InformacionNegocio() {
           />
           <span className="texto-ayuda">Cuando un cliente pide hablar con una persona y nadie responde, a los 5 min el bot le manda un mensaje de contención al cliente. Este número define cuántos minutos más esperar antes de mandarte a ti la alerta urgente por WhatsApp — pon 0 si quieres que te llegue de inmediato.</span>
         </label>
-
-        {usaOptInMarketing && (
-          <label>
-            Minutos de silencio antes de preguntar el opt-in
-            <input
-              type="number"
-              min="0"
-              step="1"
-              value={minutosEsperaOptIn}
-              onChange={(e) => setMinutosEsperaOptIn(e.target.value === '' ? '' : Number(e.target.value))}
-            />
-            <span className="texto-ayuda">Cuánto tiempo sin que el cliente escriba antes de preguntarle si quiere recibir promociones — para no interrumpir una conversación en curso.</span>
-          </label>
-        )}
 
         <label>
           Nota de agendamiento
@@ -234,6 +227,20 @@ export default function InformacionNegocio() {
               Acepto este compromiso
             </label>
           </div>
+        )}
+
+        {eleccionMarketing === 'si' && (
+          <label>
+            Minutos de silencio antes de preguntar el opt-in
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={minutosEsperaOptIn}
+              onChange={(e) => setMinutosEsperaOptIn(e.target.value === '' ? '' : Number(e.target.value))}
+            />
+            <span className="texto-ayuda">Cuánto tiempo sin que el cliente escriba antes de preguntarle si quiere recibir promociones — para no interrumpir una conversación en curso.</span>
+          </label>
         )}
 
         <button
