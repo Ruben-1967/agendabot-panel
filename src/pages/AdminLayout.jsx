@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { fetchEstadoSuscripcion, fetchConversacionesPendientesCount } from '../api/client';
+import { fetchEstadoSuscripcion, fetchConversacionesPendientesCount, fetchInfoNegocio } from '../api/client';
 
 const MS_ENTRE_CONSULTAS_PENDIENTES = 30_000;
 
@@ -25,6 +25,16 @@ export default function AdminLayout() {
         setPendientePago(data.estado === 'PENDIENTE_PAGO');
       })
       .catch(() => {}); // si falla la consulta, simplemente no se muestra el banner/botón
+  }, [token]);
+
+  // Solo para mostrar/ocultar el ítem del menú — si el negocio no activó
+  // marketing, "Opt-in marketing" no tiene nada útil que mostrarle.
+  const [usaOptInMarketing, setUsaOptInMarketing] = useState(false);
+  useEffect(() => {
+    if (!token) return;
+    fetchInfoNegocio(token)
+      .then((data) => setUsaOptInMarketing(!!data.usaOptInMarketing))
+      .catch(() => {}); // ej. rol sin permiso para /empresa/info — se oculta por defecto
   }, [token]);
 
   // Conversaciones pausadas esperando intervención humana (bot en pausa
@@ -79,7 +89,9 @@ export default function AdminLayout() {
                 <NavLink to="/admin/configuracion-agenda">Configuración de agenda</NavLink>
               )}
               <NavLink to="/admin/clientes">Pacientes / Clientes</NavLink>
-              <NavLink to="/admin/opt-in">Opt-in marketing</NavLink>
+              {usaOptInMarketing && (
+                <NavLink to="/admin/opt-in">Opt-in marketing</NavLink>
+              )}
               <NavLink to="/admin/profesionales">Profesionales</NavLink>
               {/* <NavLink to="/admin/campanas">Campañas</NavLink> */}
               <NavLink to="/admin/chats" className="nav-item-con-badge">
