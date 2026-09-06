@@ -107,6 +107,17 @@ export function actualizarCatalogoVisualActivo(token, catalogoVisualActivo) {
   return apiFetch('/empresa/catalogo-visual-activo', { method: 'PATCH', body: { catalogoVisualActivo }, token });
 }
 
+// ---------- Recordatorio de control anual (rubro óptica) ----------
+export function fetchResumenRecordatorio(token) {
+  return apiFetch('/empresa/recordatorio-control-anual/resumen', { token });
+}
+export function actualizarPausadoRecordatorio(token, pausado) {
+  return apiFetch('/empresa/recordatorio-control-anual/pausado', { method: 'PATCH', body: { pausado }, token });
+}
+export function importarBaseRecordatorio(token, archivoBase64) {
+  return apiFetch('/empresa/recordatorio-control-anual/importar', { method: 'POST', body: { archivoBase64 }, token });
+}
+
 // ---------- Campañas (catálogo rotativo Y negocios reactivos) ----------
 export function fetchConfigCampanas(token) {
   return apiFetch('/campanas/config', { token });

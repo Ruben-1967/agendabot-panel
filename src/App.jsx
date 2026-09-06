@@ -21,6 +21,7 @@ import Clientes from './pages/admin/Clientes';
 import TablaCitas from './pages/admin/TablaCitas';
 import ListaEspera from './pages/admin/ListaEspera';
 import CatalogoVisual from './pages/admin/CatalogoVisual';
+import RecordatorioControlAnual from './pages/admin/RecordatorioControlAnual';
 import ChatsEnVivo from './pages/admin/ChatsEnVivo';
 import OptInMarketing from './pages/admin/OptInMarketing';
 import MiPerfil from './pages/admin/MiPerfil';
@@ -81,6 +82,7 @@ function AppRoutes() {
         <Route path="opt-in" element={<OptInMarketing />} />
         <Route path="lista-espera" element={<ListaEspera />} />
         <Route path="catalogo-visual" element={<CatalogoVisual />} />
+        <Route path="recordatorio-control-anual" element={<RecordatorioControlAnual />} />
         <Route path="chats" element={<ChatsEnVivo />} />
         <Route path="productos" element={<Productos />} />
         <Route path="campanas" element={<Campanas />} />

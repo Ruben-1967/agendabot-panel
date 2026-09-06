@@ -89,6 +89,9 @@ export default function AdminLayout() {
                 <NavLink to="/admin/configuracion-agenda">Configuración de agenda</NavLink>
               )}
               <NavLink to="/admin/clientes">Pacientes / Clientes</NavLink>
+              {usuario?.rubroClave === 'optica' && (
+                <NavLink to="/admin/recordatorio-control-anual">Recordatorio control anual</NavLink>
+              )}
               {usaOptInMarketing && (
                 <NavLink to="/admin/opt-in">Opt-in marketing</NavLink>
               )}
