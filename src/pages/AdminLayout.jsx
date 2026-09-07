@@ -89,7 +89,12 @@ export default function AdminLayout() {
                 <NavLink to="/admin/configuracion-agenda">Configuración de agenda</NavLink>
               )}
               <NavLink to="/admin/clientes">Pacientes / Clientes</NavLink>
-              {usuario?.rubroClave === 'optica' && (
+              {/* Restringido a LuxVision a propósito (decisión 2026-09-06): recién
+                  se está probando el comportamiento real del envío y su costo
+                  (ver plantilla recordatorio_control_anual, categoría Marketing
+                  de Meta) -- se abre a cualquier óptica una vez que eso se
+                  entienda mejor. Cambiar/quitar este chequeo cuando corresponda. */}
+              {usuario?.empresaId === 'e277ea9e-5793-468c-aa96-e4a2f7457201' && (
                 <NavLink to="/admin/recordatorio-control-anual">Recordatorio control anual</NavLink>
               )}
               {usaOptInMarketing && (
