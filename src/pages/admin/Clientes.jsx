@@ -26,7 +26,8 @@ function formatearFecha(iso) {
 function formatearFechaCorta(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
-  return `${d.getDate()} ${['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][d.getMonth()]}`;
+  const mes = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][d.getMonth()];
+  return `${d.getDate()} ${mes} ${d.getFullYear()}`;
 }
 
 // Convierte un ISO/Date a "YYYY-MM-DD" para inputs type="date"
