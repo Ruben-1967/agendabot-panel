@@ -43,7 +43,6 @@ export default function Dashboard() {
     citasHoy: 0,
     confirmadas: 0,
     listaEspera: 0,
-    asistencia30dias: 0,
     agendaHoy: [],
     listaEsperaItems: [],
     atencionesHoy: 0,
@@ -62,11 +61,6 @@ export default function Dashboard() {
   const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
   const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   const fechaFormato = `${diasSemana[hoy.getDay()]} ${hoy.getDate()} ${meses[hoy.getMonth()]}`;
-
-  // ✅ FIX: Cálculo seguro de citas asistidas (sin división por cero)
-  const citasAsistidas = datos_seguros.asistencia30dias > 0 && datos_seguros.citasHoy > 0
-    ? Math.round((datos_seguros.citasHoy * datos_seguros.asistencia30dias) / 100)
-    : 0;
 
   return (
     <div className="dashboard-container">
@@ -112,14 +106,6 @@ export default function Dashboard() {
           <span className="metric-value">{datos_seguros.atencionesHoy}</span>
           <span className="metric-description">
             ventas/atenciones registradas hoy
-          </span>
-        </div>
-
-        <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
-          <span className="metric-label">Asistencia (30 días)</span>
-          <span className="metric-value">{Math.round(datos_seguros.asistencia30dias)}%</span>
-          <span className="metric-description">
-            {citasAsistidas} de {datos_seguros.citasHoy} citas asistidas
           </span>
         </div>
 
