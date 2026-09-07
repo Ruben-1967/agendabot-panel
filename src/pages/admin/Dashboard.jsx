@@ -50,6 +50,7 @@ export default function Dashboard() {
     montoHoy: 0,
     montoSemana: 0,
     citasProximosDias: [],
+    citasProximos7Dias: 0,
     citasPorDia: [],
     atencionesPorTipo: [],
     citasPorMes: [],
@@ -120,6 +121,12 @@ export default function Dashboard() {
           <span className="metric-description">
             {citasAsistidas} de {datos_seguros.citasHoy} citas asistidas
           </span>
+        </div>
+
+        <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
+          <span className="metric-label">Pacientes próximos 7 días</span>
+          <span className="metric-value">{datos_seguros.citasProximos7Dias}</span>
+          <span className="metric-description">citas agendadas de hoy a 7 días</span>
         </div>
 
         <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
