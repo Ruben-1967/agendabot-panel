@@ -8,7 +8,7 @@ export default function NavVendedor() {
   return (
     <nav className="nav-vendedor">
       <NavLink to="/vendedor/mis-demos" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
-        Mis casos
+        Casos
       </NavLink>
       <NavLink to="/vendedor/nueva-demo" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
         + Nueva demo

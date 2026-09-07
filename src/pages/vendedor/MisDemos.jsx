@@ -416,7 +416,7 @@ export default function MisDemos() {
     <div className="pantalla-vendedor">
       <NavVendedor />
       <div className="vendedor-inner">
-        <h1>Mis casos</h1>
+        <h1>Casos</h1>
 
         {contadorVencidos > 0 && (
           <span className="badge-vencidos">🔴 {contadorVencidos} lead{contadorVencidos === 1 ? '' : 's'} vencido{contadorVencidos === 1 ? '' : 's'}</span>
@@ -512,7 +512,7 @@ export default function MisDemos() {
             className={pestanaActiva === 'demos' ? 'cta-primaria' : 'cta-secundaria'}
             onClick={() => setPestanaActiva('demos')}
           >
-            Mis casos
+            Casos
           </button>
           <button
             type="button"

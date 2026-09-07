@@ -109,7 +109,7 @@ export default function GestionVenta() {
       <NavVendedor />
       <div className="vendedor-inner">
         <button className="btn-link" onClick={() => navigate('/vendedor/mis-demos')} style={{ marginBottom: 12 }}>
-          ← Volver a Mis casos
+          ← Volver a Casos
         </button>
 
         <h1>Gestión de venta</h1>
