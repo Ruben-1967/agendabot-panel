@@ -31,6 +31,9 @@ export default function NavVendedor() {
           <NavLink to="/vendedor/admin/excedente-citas" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
             Excedente citas
           </NavLink>
+          <NavLink to="/vendedor/admin/calidad-whatsapp" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
+            Calidad WhatsApp
+          </NavLink>
           <NavLink to="/vendedor/admin/vendedores" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
             Vendedores
           </NavLink>

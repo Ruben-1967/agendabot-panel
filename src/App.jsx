@@ -32,6 +32,7 @@ import Ranking from './pages/vendedor/Ranking';
 import GestionVenta from './pages/vendedor/GestionVenta';
 import ClientesVendedor from './pages/vendedor/admin/Clientes';
 import ExcedenteCitas from './pages/vendedor/admin/ExcedenteCitas';
+import CalidadWhatsApp from './pages/vendedor/admin/CalidadWhatsApp';
 import AdminVendedores from './pages/vendedor/admin/AdminVendedores';
 import Leads from './pages/vendedor/admin/Leads';
 import ReporteOrigenCaso from './pages/vendedor/ReporteOrigenCaso';
@@ -144,6 +145,14 @@ function AppRoutes() {
         element={
           <ProtectedRouteVendedorAdmin>
             <ExcedenteCitas />
+          </ProtectedRouteVendedorAdmin>
+        }
+      />
+      <Route
+        path="/vendedor/admin/calidad-whatsapp"
+        element={
+          <ProtectedRouteVendedorAdmin>
+            <CalidadWhatsApp />
           </ProtectedRouteVendedorAdmin>
         }
       />

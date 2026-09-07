@@ -466,6 +466,9 @@ export function marcarSuscripcionActiva(token, empresaId) {
 export function fetchExcedenteCitas(token) {
   return apiFetch('/admin-vendedores/excedente-citas', { token, tipoSesion: 'vendedor' });
 }
+export function fetchCalidadWhatsApp(token) {
+  return apiFetch('/admin-vendedores/calidad-whatsapp', { token, tipoSesion: 'vendedor' });
+}
 
 // ---------- Árbol de gestión de ventas ----------
 export function fetchCatalogoGestion(token) {
