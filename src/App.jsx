@@ -30,14 +30,10 @@ import NuevaDemo from './pages/vendedor/NuevaDemo';
 import MisDemos from './pages/vendedor/MisDemos';
 import Ranking from './pages/vendedor/Ranking';
 import GestionVenta from './pages/vendedor/GestionVenta';
-import ConfigRanking from './pages/vendedor/admin/ConfigRanking';
-import ConfigSLA from './pages/vendedor/admin/ConfigSLA';
-import ConfigDistribucion from './pages/vendedor/admin/ConfigDistribucion';
-import MarcarPagos from './pages/vendedor/admin/MarcarPagos';
+import ClientesVendedor from './pages/vendedor/admin/Clientes';
 import ExcedenteCitas from './pages/vendedor/admin/ExcedenteCitas';
 import AdminVendedores from './pages/vendedor/admin/AdminVendedores';
-import PoolLeads from './pages/vendedor/admin/PoolLeads';
-import LeadsEmails from './pages/vendedor/admin/LeadsEmails';
+import Leads from './pages/vendedor/admin/Leads';
 import ReporteOrigenCaso from './pages/vendedor/ReporteOrigenCaso';
 import CatalogoVisualDemoAdmin from './pages/vendedor/admin/CatalogoVisualDemoAdmin';
 import ActivarCuenta from './pages/ActivarCuenta';
@@ -136,34 +132,10 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/vendedor/admin/ranking"
+        path="/vendedor/admin/clientes"
         element={
           <ProtectedRouteVendedorAdmin>
-            <ConfigRanking />
-          </ProtectedRouteVendedorAdmin>
-        }
-      />
-      <Route
-        path="/vendedor/admin/sla"
-        element={
-          <ProtectedRouteVendedorAdmin>
-            <ConfigSLA />
-          </ProtectedRouteVendedorAdmin>
-        }
-      />
-      <Route
-        path="/vendedor/admin/distribucion-leads"
-        element={
-          <ProtectedRouteVendedorAdmin>
-            <ConfigDistribucion />
-          </ProtectedRouteVendedorAdmin>
-        }
-      />
-      <Route
-        path="/vendedor/admin/pagos"
-        element={
-          <ProtectedRouteVendedorAdmin>
-            <MarcarPagos />
+            <ClientesVendedor />
           </ProtectedRouteVendedorAdmin>
         }
       />
@@ -184,18 +156,10 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/vendedor/admin/pool-leads"
+        path="/vendedor/admin/leads"
         element={
           <ProtectedRouteVendedorAdmin>
-            <PoolLeads />
-          </ProtectedRouteVendedorAdmin>
-        }
-      />
-      <Route
-        path="/vendedor/admin/leads-emails"
-        element={
-          <ProtectedRouteVendedorAdmin>
-            <LeadsEmails />
+            <Leads />
           </ProtectedRouteVendedorAdmin>
         }
       />

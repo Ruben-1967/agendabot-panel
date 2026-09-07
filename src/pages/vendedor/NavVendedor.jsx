@@ -22,26 +22,14 @@ export default function NavVendedor() {
       {esAdmin && (
         <>
           <div className="nav-vendedor-separador" />
-          <NavLink to="/vendedor/admin/pool-leads" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
-            Leads fonos
+          <NavLink to="/vendedor/admin/leads" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
+            Leads
           </NavLink>
-          <NavLink to="/vendedor/admin/leads-emails" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
-            Leads emails
-          </NavLink>
-          <NavLink to="/vendedor/admin/pagos" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
-            Pagos pendientes
+          <NavLink to="/vendedor/admin/clientes" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
+            Clientes
           </NavLink>
           <NavLink to="/vendedor/admin/excedente-citas" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
             Excedente citas
-          </NavLink>
-          <NavLink to="/vendedor/admin/ranking" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
-            Config. ranking
-          </NavLink>
-          <NavLink to="/vendedor/admin/sla" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
-            Config. SLA
-          </NavLink>
-          <NavLink to="/vendedor/admin/distribucion-leads" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
-            Config. distribución
           </NavLink>
           <NavLink to="/vendedor/admin/vendedores" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
             Vendedores

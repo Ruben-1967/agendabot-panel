@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useVendedorAuth } from '../../../context/VendedorAuthContext';
 import { fetchLeadsPool, asignarLeadAVendedor, fetchVendedores } from '../../../api/client';
-import NavVendedor from '../NavVendedor';
 import '../vendedor.css';
 
 function formatFechaHora(iso) {
@@ -123,39 +122,35 @@ export default function LeadsEmails() {
   }
 
   return (
-    <div className="pantalla-vendedor">
-      <NavVendedor />
-      <div className="vendedor-inner">
-        <h1>Leads emails</h1>
-        <p className="texto-ayuda">
-          Leads de campañas de email sin asignar todavía. Distribúyelos manualmente a un
-          vendedor — los vendedores no ven ni toman leads de este pool por su cuenta.
-        </p>
+    <div>
+      <p className="texto-ayuda">
+        Leads de campañas de email sin asignar todavía. Distribúyelos manualmente a un
+        vendedor — los vendedores no ven ni toman leads de este pool por su cuenta.
+      </p>
 
-        {error && <p className="login-error">{error}</p>}
-        {avisoCasoManual && <p className="texto-ayuda" style={{ color: 'var(--naranja)' }}>{avisoCasoManual}</p>}
+      {error && <p className="login-error">{error}</p>}
+      {avisoCasoManual && <p className="texto-ayuda" style={{ color: 'var(--naranja)' }}>{avisoCasoManual}</p>}
 
-        {cargando && <p>Cargando…</p>}
-        {!cargando && leads.length === 0 && <p className="texto-ayuda">No hay leads de email sin asignar por el momento.</p>}
+      {cargando && <p>Cargando…</p>}
+      {!cargando && leads.length === 0 && <p className="texto-ayuda">No hay leads de email sin asignar por el momento.</p>}
 
-        {!cargando && leads.length > 0 && (
-          <div className="lista-vendedores-admin">
-            {leads.map((lead) => (
-              <TarjetaLeadEmail
-                key={lead.id}
-                lead={lead}
-                vendedoresActivos={vendedoresActivos}
-                vendedorElegidoId={vendedorElegidoPorLead[lead.id]}
-                onCambiarVendedorElegido={(vendedorId) => setVendedorElegidoPorLead((prev) => ({ ...prev, [lead.id]: vendedorId }))}
-                onAsignar={manejarAsignar}
-                procesando={procesandoId === lead.id}
-                expandido={expandidoId === lead.id}
-                onToggle={() => setExpandidoId(expandidoId === lead.id ? null : lead.id)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      {!cargando && leads.length > 0 && (
+        <div className="lista-vendedores-admin">
+          {leads.map((lead) => (
+            <TarjetaLeadEmail
+              key={lead.id}
+              lead={lead}
+              vendedoresActivos={vendedoresActivos}
+              vendedorElegidoId={vendedorElegidoPorLead[lead.id]}
+              onCambiarVendedorElegido={(vendedorId) => setVendedorElegidoPorLead((prev) => ({ ...prev, [lead.id]: vendedorId }))}
+              onAsignar={manejarAsignar}
+              procesando={procesandoId === lead.id}
+              expandido={expandidoId === lead.id}
+              onToggle={() => setExpandidoId(expandidoId === lead.id ? null : lead.id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

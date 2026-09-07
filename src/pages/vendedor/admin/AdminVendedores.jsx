@@ -1,9 +1,22 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useVendedorAuth } from '../../../context/VendedorAuthContext';
 import { fetchVendedores, crearVendedor, alternarActivoVendedor, resetearPasswordVendedor } from '../../../api/client';
 import NavVendedor from '../NavVendedor';
 import EditorHorarioModalidad from '../../../components/EditorHorarioModalidad';
+import ConfigSLA from './ConfigSLA';
+import ConfigDistribucion from './ConfigDistribucion';
+import ConfigRanking from './ConfigRanking';
 import '../vendedor.css';
+
+// Cada sub-pestaña de "Vendedores" -- agregar una nueva acá si hace falta,
+// sin tocar el nav ni las rutas.
+const SUBPESTANAS = [
+  { clave: 'cuentas', etiqueta: 'Cuentas' },
+  { clave: 'sla', etiqueta: 'Config. SLA' },
+  { clave: 'distribucion', etiqueta: 'Config. distribución' },
+  { clave: 'ranking', etiqueta: 'Config. ranking' },
+];
 
 function formatFecha(iso) {
   if (!iso) return '—';
@@ -127,6 +140,8 @@ function TarjetaVendedorAdmin({ vendedor: v, token, expandido, onToggle, onToggl
 
 export default function AdminVendedores() {
   const { token } = useVendedorAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const subpestanaActiva = SUBPESTANAS.some((s) => s.clave === searchParams.get('seccion')) ? searchParams.get('seccion') : 'cuentas';
   const [vendedores, setVendedores] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
@@ -214,6 +229,26 @@ export default function AdminVendedores() {
       <NavVendedor />
       <div className="vendedor-inner">
         <h1>Vendedores</h1>
+
+        <div className="pestanas-filtro" style={{ marginBottom: 16 }}>
+          {SUBPESTANAS.map((s) => (
+            <button
+              key={s.clave}
+              type="button"
+              className={s.clave === subpestanaActiva ? 'pestana-filtro activa' : 'pestana-filtro'}
+              onClick={() => setSearchParams({ seccion: s.clave })}
+            >
+              {s.etiqueta}
+            </button>
+          ))}
+        </div>
+
+        {subpestanaActiva === 'sla' && <ConfigSLA />}
+        {subpestanaActiva === 'distribucion' && <ConfigDistribucion />}
+        {subpestanaActiva === 'ranking' && <ConfigRanking />}
+
+        {subpestanaActiva === 'cuentas' && (
+        <>
         <p className="texto-ayuda">
           Crea cuentas de vendedor, bloquéalas si alguien deja el equipo, resetea contraseñas y define
           su horario semanal de modalidad (presencial/teletrabajo). Bloquear no reasigna los casos
@@ -300,6 +335,8 @@ export default function AdminVendedores() {
 
         {resetTarget && (
           <ModalResetPassword vendedor={resetTarget} token={token} onCerrar={() => setResetTarget(null)} />
+        )}
+        </>
         )}
       </div>
     </div>

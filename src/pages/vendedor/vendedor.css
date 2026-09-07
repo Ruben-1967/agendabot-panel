@@ -301,6 +301,26 @@
 .badge-exito { background: var(--teal); color: #fff; }
 .badge-pendiente { background: var(--naranja); color: #fff; }
 
+/* ---------- Sub-pestañas dentro de una página (Clientes, Leads, Vendedores) ---------- */
+.pestanas-filtro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pestana-filtro {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #3A4842;
+  background: #EEF2F0;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+.pestana-filtro:hover { background: #E1E8E4; }
+.pestana-filtro.activa { background: var(--md-navy, #14263B); color: #fff; }
+
 /* ---------- Nav compartido del panel de vendedor (pestañas, colores Multidigital) ---------- */
 .nav-vendedor {
   --md-navy: #14263B;

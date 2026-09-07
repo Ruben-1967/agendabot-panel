@@ -457,8 +457,8 @@ export function fetchConfigDistribucion(token) {
 export function guardarConfigDistribucion(token, cupoMaximoCasosActivos) {
   return apiFetch('/admin-vendedores/distribucion/config', { method: 'POST', body: { cupoMaximoCasosActivos }, token, tipoSesion: 'vendedor' });
 }
-export function fetchSuscripcionesPendientes(token) {
-  return apiFetch('/admin-vendedores/suscripciones/pendientes', { token, tipoSesion: 'vendedor' });
+export function fetchSuscripciones(token) {
+  return apiFetch('/admin-vendedores/suscripciones', { token, tipoSesion: 'vendedor' });
 }
 export function marcarSuscripcionActiva(token, empresaId) {
   return apiFetch(`/admin-vendedores/suscripciones/${empresaId}/marcar-activa`, { method: 'POST', token, tipoSesion: 'vendedor' });
