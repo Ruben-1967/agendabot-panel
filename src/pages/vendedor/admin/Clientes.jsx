@@ -14,12 +14,57 @@ const ETIQUETA_ESTADO = {
   PENDIENTE_PAGO: { texto: 'Pendiente de pago', clase: 'badge-pendiente' },
 };
 
+function TarjetaCliente({ cliente: c, expandido, onToggle, onMarcarPagado, procesando }) {
+  const estado = ETIQUETA_ESTADO[c.estado] || { texto: c.estado, clase: 'badge-pendiente' };
+
+  return (
+    <div className="tarjeta-vendedor-admin-wrap">
+      <div className="tarjeta-vendedor-admin" onClick={onToggle} role="button" tabIndex={0}>
+        <div className="tarjeta-vendedor-admin-info">
+          <strong>{c.empresaNombre}</strong>
+          <span className="texto-muted">{c.telefonoContacto || 'Sin teléfono'} · {c.plan}</span>
+        </div>
+        <div className="tarjeta-vendedor-admin-derecha">
+          <span className={estado.clase}>{estado.texto}</span>
+          <span className="btn-link">{expandido ? 'Ocultar' : 'Ver más'}</span>
+        </div>
+      </div>
+      {expandido && (
+        <div className="detalle-vendedor-admin">
+          <h3 className="subtitulo-tarjeta">Datos</h3>
+          <p className="texto-ayuda" style={{ margin: '0 0 4px' }}>Vendedor: {c.vendedorNombre || '—'}</p>
+          <p className="texto-ayuda" style={{ margin: '0 0 4px' }}>Monto mensual: ${c.montoMensualActual?.toLocaleString('es-CL')}</p>
+          <p className="texto-ayuda" style={{ margin: '0 0 4px' }}>Desde: {formatFecha(c.fechaInicio)}</p>
+          {c.estado === 'ACTIVA' && (
+            <p className="texto-ayuda" style={{ marginBottom: 16 }}>Activo desde: {formatFecha(c.fechaActivacion)}</p>
+          )}
+          {c.estado === 'PENDIENTE_PAGO' && (
+            <p className="texto-ayuda" style={{ marginBottom: 16 }}>Días sin pago: {c.diasSinPago}</p>
+          )}
+
+          {c.estado === 'PENDIENTE_PAGO' && (
+            <button
+              type="button"
+              className="cta-secundaria"
+              onClick={(e) => { e.stopPropagation(); onMarcarPagado(c); }}
+              disabled={procesando}
+            >
+              {procesando ? 'Marcando…' : 'Marcar como pagado'}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Clientes() {
   const { token } = useVendedorAuth();
   const [clientes, setClientes] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [procesandoId, setProcesandoId] = useState(null);
+  const [expandidoId, setExpandidoId] = useState(null);
   const [filtro, setFiltro] = useState('todos'); // 'todos' | 'ACTIVA' | 'PENDIENTE_PAGO'
 
   function cargar() {
@@ -32,15 +77,15 @@ export default function Clientes() {
 
   useEffect(() => { cargar(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function manejarMarcar(empresaId, nombre) {
-    const confirmado = window.confirm(`¿Confirmar que "${nombre}" ya pagó y activar su plan? Esto queda contado en el ranking de conversión del mes.`);
+  async function manejarMarcar(cliente) {
+    const confirmado = window.confirm(`¿Confirmar que "${cliente.empresaNombre}" ya pagó y activar su plan? Esto queda contado en el ranking de conversión del mes.`);
     if (!confirmado) return;
 
-    setProcesandoId(empresaId);
+    setProcesandoId(cliente.empresaId);
     setError('');
     try {
-      await marcarSuscripcionActiva(token, empresaId);
-      setClientes((prev) => prev.map((c) => (c.empresaId === empresaId ? { ...c, estado: 'ACTIVA' } : c)));
+      await marcarSuscripcionActiva(token, cliente.empresaId);
+      setClientes((prev) => prev.map((c) => (c.empresaId === cliente.empresaId ? { ...c, estado: 'ACTIVA' } : c)));
     } catch (err) {
       setError(err.message || 'No se pudo activar la suscripción');
     } finally {
@@ -80,38 +125,18 @@ export default function Clientes() {
         {!cargando && clientesFiltrados.length === 0 && <p className="texto-ayuda">No hay clientes en esta vista.</p>}
 
         {!cargando && clientesFiltrados.length > 0 && (
-          <table className="tabla-admin-vendedor">
-            <thead>
-              <tr><th>Empresa</th><th>Estado</th><th>Vendedor</th><th>Plan</th><th>Monto</th><th>Desde</th><th>Días sin pago</th><th></th></tr>
-            </thead>
-            <tbody>
-              {clientesFiltrados.map((c) => {
-                const estado = ETIQUETA_ESTADO[c.estado] || { texto: c.estado, clase: 'badge-pendiente' };
-                return (
-                  <tr key={c.empresaId}>
-                    <td>{c.empresaNombre}<br /><span className="texto-ayuda">{c.telefonoContacto}</span></td>
-                    <td><span className={estado.clase}>{estado.texto}</span></td>
-                    <td>{c.vendedorNombre || '—'}</td>
-                    <td>{c.plan}</td>
-                    <td>${c.montoMensualActual?.toLocaleString('es-CL')}</td>
-                    <td>{formatFecha(c.fechaInicio)}</td>
-                    <td>{c.diasSinPago ?? '—'}</td>
-                    <td>
-                      {c.estado === 'PENDIENTE_PAGO' && (
-                        <button
-                          className="cta-secundaria"
-                          onClick={() => manejarMarcar(c.empresaId, c.empresaNombre)}
-                          disabled={procesandoId === c.empresaId}
-                        >
-                          {procesandoId === c.empresaId ? 'Marcando…' : 'Marcar como pagado'}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="lista-vendedores-admin">
+            {clientesFiltrados.map((c) => (
+              <TarjetaCliente
+                key={c.empresaId}
+                cliente={c}
+                expandido={expandidoId === c.empresaId}
+                onToggle={() => setExpandidoId(expandidoId === c.empresaId ? null : c.empresaId)}
+                onMarcarPagado={manejarMarcar}
+                procesando={procesandoId === c.empresaId}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>
