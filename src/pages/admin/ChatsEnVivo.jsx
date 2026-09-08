@@ -234,6 +234,7 @@ export default function ChatsEnVivo() {
                   <div className="chat-nombre">
                     {conv.clienteNombre}
                     {conv.esEjemplo && <span className="badge-ejemplo">Ejemplo</span>}
+                    {conv.canal === 'instagram' && <span className="badge-canal-instagram">Instagram</span>}
                   </div>
                   <div className="chat-hora">
                     {formatearHora(conv.ultimoMensajeTimestamp)}
@@ -250,6 +251,9 @@ export default function ChatsEnVivo() {
             <>
               <div className="chat-expandido-header">
                 <h2>{conversacionSeleccionada.clienteNombre}</h2>
+                {conversacionSeleccionada.canal === 'instagram' && (
+                  <span className="badge-canal-instagram">Instagram</span>
+                )}
                 {conversacionSeleccionada.esEjemplo ? (
                   <span className="badge-ejemplo">Ejemplo</span>
                 ) : (

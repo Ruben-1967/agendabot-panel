@@ -114,6 +114,12 @@ export default function AdminLayout() {
           {!usuario?.whatsappConectado && (
             <NavLink to="/admin/conectar-whatsapp">Conectar WhatsApp</NavLink>
           )}
+          {/* Instagram Direct como canal nuevo (2026-09-08): arquitectura general,
+              pero habilitada y visible solo para LuxVision por ahora — mismo
+              patrón cauteloso que el recordatorio de control anual de arriba. */}
+          {usuario?.empresaId === 'e277ea9e-5793-468c-aa96-e4a2f7457201' && (
+            <NavLink to="/admin/conectar-instagram">Conectar Instagram</NavLink>
+          )}
           {pendientePago && (
             <NavLink to="/suscripcion/elegir-plan" className="nav-suscribir-plan">Suscribir plan</NavLink>
           )}

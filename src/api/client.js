@@ -205,6 +205,11 @@ export function conectarWhatsApp(token, { code, wabaId, phoneNumberId }) {
   return apiFetch('/empresa/whatsapp/conectar', { method: 'POST', body: { code, wabaId, phoneNumberId }, token });
 }
 
+// ---------- Conectar Instagram (canal nuevo, solo LuxVision) ----------
+export function conectarInstagram(token, { code }) {
+  return apiFetch('/empresa/instagram/conectar', { method: 'POST', body: { code }, token });
+}
+
 // ---------- Agenda: recurso, horario semanal, bloqueos ----------
 export function fetchAgenda(token) {
   return apiFetch('/agenda', { token });
