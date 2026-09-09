@@ -1,8 +1,61 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL, fetchPlantillasRapidas, crearPlantillaRapida, eliminarPlantillaRapida } from '../../api/client';
 import './ChatsEnVivo.css';
+
+const MS_ENTRE_POLLS_CHATS = 15_000;
+const CLAVE_VISTOS = 'agendabot_chats_vistos';
+const CLAVE_SILENCIADO = 'agendabot_chats_silenciado';
+
+// "No leído" = el último mensaje es del cliente y no lo hemos "visto" (abierto
+// esa conversación) todavía en este navegador — no hay un campo de leído/no
+// leído en la base de datos, así que se rastrea localmente por admin.
+function leerVistos() {
+  try {
+    return JSON.parse(localStorage.getItem(CLAVE_VISTOS) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function marcarVisto(conversacionId, timestamp) {
+  try {
+    const vistos = leerVistos();
+    vistos[conversacionId] = timestamp;
+    localStorage.setItem(CLAVE_VISTOS, JSON.stringify(vistos));
+  } catch {
+    // localStorage puede fallar (modo privado, etc.) — no es crítico
+  }
+}
+
+function esNoLeido(conv, vistos) {
+  if (conv.esEjemplo || conv.ultimoMensajeRol !== 'usuario' || !conv.ultimoMensajeTimestamp) return false;
+  const visto = vistos[conv.id];
+  return !visto || new Date(visto) < new Date(conv.ultimoMensajeTimestamp);
+}
+
+// Beep corto generado con Web Audio API — sin depender de ningún archivo de
+// audio externo.
+function reproducirBeep() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.35);
+    osc.onended = () => ctx.close();
+  } catch {
+    // Web Audio no disponible — silencioso, no es crítico
+  }
+}
 
 export default function ChatsEnVivo() {
   const { usuario, token } = useAuth();
@@ -13,18 +66,40 @@ export default function ChatsEnVivo() {
   const [error, setError] = useState(null);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [filtroCanal, setFiltroCanal] = useState('todos');
+  const [silenciado, setSilenciado] = useState(() => localStorage.getItem(CLAVE_SILENCIADO) === '1');
+  const [vistos, setVistos] = useState(leerVistos);
 
   const [plantillas, setPlantillas] = useState([]);
   const [mostrarPlantillas, setMostrarPlantillas] = useState(false);
   const [nuevaPlantillaTexto, setNuevaPlantillaTexto] = useState('');
   const [guardandoPlantilla, setGuardandoPlantilla] = useState(false);
 
+  // Guarda el timestamp del último mensaje visto de cada conversación en el
+  // poll anterior, para detectar SOLO mensajes nuevos (no repetir el sonido
+  // en cada poll ni al cargar la página la primera vez).
+  const ultimosTimestampsRef = useRef(null);
+
   useEffect(() => {
     if (token) {
-      cargarConversaciones();
+      cargarConversaciones({ esPrimeraCarga: true });
       fetchPlantillasRapidas(token).then(setPlantillas).catch(() => {});
+      const intervalo = setInterval(() => cargarConversaciones({ esPrimeraCarga: false }), MS_ENTRE_POLLS_CHATS);
+      return () => clearInterval(intervalo);
     }
   }, [token]);
+
+  function alternarSilencio() {
+    setSilenciado((prev) => {
+      const nuevo = !prev;
+      try {
+        localStorage.setItem(CLAVE_SILENCIADO, nuevo ? '1' : '0');
+      } catch {
+        // no crítico
+      }
+      return nuevo;
+    });
+  }
 
   async function agregarPlantilla(e) {
     e.preventDefault();
@@ -61,9 +136,9 @@ export default function ChatsEnVivo() {
     });
   }
 
-  const cargarConversaciones = async () => {
+  const cargarConversaciones = async ({ esPrimeraCarga } = {}) => {
     try {
-      setLoading(true);
+      if (esPrimeraCarga) setLoading(true);
       const empresaId = usuario?.empresaId;
       if (!empresaId) {
         throw new Error('No hay empresaId');
@@ -81,11 +156,31 @@ export default function ChatsEnVivo() {
       }
 
       const data = await res.json();
-      setConversaciones(data.conversaciones || []);
+      const listaNueva = data.conversaciones || [];
+
+      // Alerta sonora: solo para mensajes nuevos del cliente detectados
+      // DESPUÉS de la primera carga (evita sonar al abrir la pantalla con
+      // chats ya pendientes) y solo si no está silenciado.
+      if (!esPrimeraCarga && ultimosTimestampsRef.current) {
+        const huboMensajeNuevo = listaNueva.some((conv) => {
+          if (conv.esEjemplo || conv.ultimoMensajeRol !== 'usuario') return false;
+          const anterior = ultimosTimestampsRef.current[conv.id];
+          return anterior === undefined || new Date(conv.ultimoMensajeTimestamp) > new Date(anterior);
+        });
+        if (huboMensajeNuevo && !silenciado) {
+          reproducirBeep();
+        }
+      }
+
+      ultimosTimestampsRef.current = Object.fromEntries(
+        listaNueva.map((conv) => [conv.id, conv.ultimoMensajeTimestamp])
+      );
+
+      setConversaciones(listaNueva);
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      if (esPrimeraCarga) setLoading(false);
     }
   };
 
@@ -105,6 +200,13 @@ export default function ChatsEnVivo() {
 
       const data = await res.json();
       setConversacionSeleccionada(data.conversacion);
+
+      const mensajesLista = Array.isArray(data.conversacion?.mensajes) ? data.conversacion.mensajes : [];
+      const ultimoTimestamp = mensajesLista[mensajesLista.length - 1]?.timestamp;
+      if (ultimoTimestamp) {
+        marcarVisto(conversacionId, ultimoTimestamp);
+        setVistos(leerVistos());
+      }
     } catch (err) {
       console.error('Error:', err);
     }
@@ -210,39 +312,83 @@ export default function ChatsEnVivo() {
     );
   }
 
+  const conversacionesFiltradas = conversaciones.filter(
+    (conv) => filtroCanal === 'todos' || conv.canal === filtroCanal
+  );
+  const totalWhatsapp = conversaciones.filter((c) => c.canal === 'whatsapp').length;
+  const totalInstagram = conversaciones.filter((c) => c.canal === 'instagram').length;
+
   return (
     <div className="chats-container">
       <div className="chats-header">
-        <h1>Chats en vivo</h1>
-        <p className="fecha">{obtenerFecha()}</p>
+        <div className="chats-header-fila">
+          <div>
+            <h1>Chats en vivo</h1>
+            <p className="fecha">{obtenerFecha()}</p>
+          </div>
+          <button
+            type="button"
+            className="btn-silenciar"
+            onClick={alternarSilencio}
+            title={silenciado ? 'Activar alerta sonora' : 'Silenciar alerta sonora'}
+          >
+            {silenciado ? '🔇' : '🔊'}
+          </button>
+        </div>
+      </div>
+
+      <div className="chats-tabs">
+        <button
+          type="button"
+          className={`chat-tab ${filtroCanal === 'todos' ? 'activo' : ''}`}
+          onClick={() => setFiltroCanal('todos')}
+        >
+          Todos <span className="tab-count">{conversaciones.length}</span>
+        </button>
+        <button
+          type="button"
+          className={`chat-tab ${filtroCanal === 'whatsapp' ? 'activo' : ''}`}
+          onClick={() => setFiltroCanal('whatsapp')}
+        >
+          WhatsApp <span className="tab-count">{totalWhatsapp}</span>
+        </button>
+        <button
+          type="button"
+          className={`chat-tab ${filtroCanal === 'instagram' ? 'activo' : ''}`}
+          onClick={() => setFiltroCanal('instagram')}
+        >
+          Instagram <span className="tab-count">{totalInstagram}</span>
+        </button>
       </div>
 
       <div className="chats-split">
         <div className="chats-lista">
-          {conversaciones.length === 0 ? (
+          {conversacionesFiltradas.length === 0 ? (
             <div className="empty-state">No hay chats</div>
           ) : (
-            conversaciones.map((conv) => (
-              <div
-                key={conv.id}
-                className={`chat-item ${
-                  conversacionSeleccionada?.id === conv.id ? 'activo' : ''
-                }`}
-                onClick={() => cargarConversacion(conv.id)}
-              >
-                <div className="chat-item-header">
-                  <div className="chat-nombre">
-                    {conv.clienteNombre}
-                    {conv.esEjemplo && <span className="badge-ejemplo">Ejemplo</span>}
-                    {conv.canal === 'instagram' && <span className="badge-canal-instagram">Instagram</span>}
+            conversacionesFiltradas.map((conv) => {
+              const noLeido = esNoLeido(conv, vistos);
+              return (
+                <div
+                  key={conv.id}
+                  className={`chat-item ${conversacionSeleccionada?.id === conv.id ? 'activo' : ''} ${noLeido ? 'no-leido' : ''}`}
+                  onClick={() => cargarConversacion(conv.id)}
+                >
+                  <div className="chat-item-header">
+                    <div className="chat-nombre">
+                      {noLeido && <span className="punto-no-leido" title="No leído" />}
+                      {conv.clienteNombre}
+                      {conv.esEjemplo && <span className="badge-ejemplo">Ejemplo</span>}
+                      {conv.canal === 'instagram' && <span className="badge-canal-instagram">Instagram</span>}
+                    </div>
+                    <div className="chat-hora">
+                      {formatearHora(conv.ultimoMensajeTimestamp)}
+                    </div>
                   </div>
-                  <div className="chat-hora">
-                    {formatearHora(conv.ultimoMensajeTimestamp)}
-                  </div>
+                  <div className="chat-preview">{conv.ultimoMensaje}</div>
                 </div>
-                <div className="chat-preview">{conv.ultimoMensaje}</div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 

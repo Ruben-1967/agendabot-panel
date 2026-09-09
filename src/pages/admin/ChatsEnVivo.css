@@ -32,6 +32,62 @@
   letter-spacing: 0.3px;
 }
 
+.chats-header-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.btn-silenciar {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.btn-silenciar:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Pestañas de canal */
+.chats-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.chat-tab {
+  padding: 8px 14px;
+  border: 1px solid #e8ddd2;
+  background: white;
+  color: #666;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chat-tab:hover {
+  border-color: #2d5a52;
+  color: #2d5a52;
+}
+
+.chat-tab.activo {
+  background: #2d5a52;
+  border-color: #2d5a52;
+  color: white;
+}
+
+.chat-tab .tab-count {
+  opacity: 0.75;
+  margin-left: 4px;
+}
+
 /* Split view */
 .chats-split {
   display: flex;
@@ -83,6 +139,27 @@
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.chat-item.no-leido {
+  background: #f6fbf9;
+}
+
+.chat-item.no-leido .chat-nombre {
+  font-weight: 800;
+}
+
+.chat-item.no-leido .chat-preview {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.punto-no-leido {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2d5a52;
+  flex-shrink: 0;
 }
 
 .badge-ejemplo {
