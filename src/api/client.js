@@ -210,6 +210,11 @@ export function conectarInstagram(token, { code }) {
   return apiFetch('/empresa/instagram/conectar', { method: 'POST', body: { code }, token });
 }
 
+// ---------- Conectar Messenger/Facebook (canal nuevo, solo LuxVision) ----------
+export function conectarFacebook(token, { code }) {
+  return apiFetch('/empresa/facebook/conectar', { method: 'POST', body: { code }, token });
+}
+
 // ---------- Agenda: recurso, horario semanal, bloqueos ----------
 export function fetchAgenda(token) {
   return apiFetch('/agenda', { token });

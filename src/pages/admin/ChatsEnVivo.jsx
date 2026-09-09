@@ -317,6 +317,7 @@ export default function ChatsEnVivo() {
   );
   const totalWhatsapp = conversaciones.filter((c) => c.canal === 'whatsapp').length;
   const totalInstagram = conversaciones.filter((c) => c.canal === 'instagram').length;
+  const totalFacebook = conversaciones.filter((c) => c.canal === 'facebook').length;
 
   return (
     <div className="chats-container">
@@ -359,6 +360,13 @@ export default function ChatsEnVivo() {
         >
           Instagram <span className="tab-count">{totalInstagram}</span>
         </button>
+        <button
+          type="button"
+          className={`chat-tab ${filtroCanal === 'facebook' ? 'activo' : ''}`}
+          onClick={() => setFiltroCanal('facebook')}
+        >
+          Messenger <span className="tab-count">{totalFacebook}</span>
+        </button>
       </div>
 
       <div className="chats-split">
@@ -380,6 +388,7 @@ export default function ChatsEnVivo() {
                       {conv.clienteNombre}
                       {conv.esEjemplo && <span className="badge-ejemplo">Ejemplo</span>}
                       {conv.canal === 'instagram' && <span className="badge-canal-instagram">Instagram</span>}
+                      {conv.canal === 'facebook' && <span className="badge-canal-facebook">Messenger</span>}
                     </div>
                     <div className="chat-hora">
                       {formatearHora(conv.ultimoMensajeTimestamp)}
@@ -399,6 +408,9 @@ export default function ChatsEnVivo() {
                 <h2>{conversacionSeleccionada.clienteNombre}</h2>
                 {conversacionSeleccionada.canal === 'instagram' && (
                   <span className="badge-canal-instagram">Instagram</span>
+                )}
+                {conversacionSeleccionada.canal === 'facebook' && (
+                  <span className="badge-canal-facebook">Messenger</span>
                 )}
                 {conversacionSeleccionada.esEjemplo ? (
                   <span className="badge-ejemplo">Ejemplo</span>

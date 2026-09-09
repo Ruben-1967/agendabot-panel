@@ -17,6 +17,7 @@ import GestionProfesionales from './pages/admin/GestionProfesionales';
 import InformacionNegocio from './pages/admin/InformacionNegocio';
 import ConectarWhatsApp from './pages/admin/ConectarWhatsApp';
 import ConectarInstagram from './pages/admin/ConectarInstagram';
+import ConectarFacebook from './pages/admin/ConectarFacebook';
 import Dashboard from './pages/admin/Dashboard';
 import Clientes from './pages/admin/Clientes';
 import TablaCitas from './pages/admin/TablaCitas';
@@ -77,6 +78,7 @@ function AppRoutes() {
         <Route path="informacion-negocio" element={<InformacionNegocio />} />
         <Route path="conectar-whatsapp" element={<ConectarWhatsApp />} />
         <Route path="conectar-instagram" element={<ConectarInstagram />} />
+        <Route path="conectar-facebook" element={<ConectarFacebook />} />
         <Route path="clientes" element={<Clientes />} />
         <Route path="opt-in" element={<OptInMarketing />} />
         <Route path="lista-espera" element={<ListaEspera />} />

@@ -120,6 +120,11 @@ export default function AdminLayout() {
           {usuario?.empresaId === 'e277ea9e-5793-468c-aa96-e4a2f7457201' && (
             <NavLink to="/admin/conectar-instagram">Conectar Instagram</NavLink>
           )}
+          {/* Messenger (Facebook) como canal nuevo (2026-09-09), mismo patrón
+              cauteloso que Instagram — ver ConectarFacebook.jsx. */}
+          {usuario?.empresaId === 'e277ea9e-5793-468c-aa96-e4a2f7457201' && (
+            <NavLink to="/admin/conectar-facebook">Conectar Messenger</NavLink>
+          )}
           {pendientePago && (
             <NavLink to="/suscripcion/elegir-plan" className="nav-suscribir-plan">Suscribir plan</NavLink>
           )}
