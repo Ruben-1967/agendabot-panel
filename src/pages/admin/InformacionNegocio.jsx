@@ -27,6 +27,7 @@ export default function InformacionNegocio() {
   const [telefonoContacto, setTelefonoContacto] = useState('');
   const [minutosAlertaUrgente, setMinutosAlertaUrgente] = useState(10);
   const [minutosEsperaOptIn, setMinutosEsperaOptIn] = useState(10);
+  const [horasMinimasConfirmacionCita, setHorasMinimasConfirmacionCita] = useState(24);
 
   const [usaOptInMarketing, setUsaOptInMarketing] = useState(false);
   const [compromisoAceptadoEn, setCompromisoAceptadoEn] = useState(null);
@@ -57,6 +58,7 @@ export default function InformacionNegocio() {
         setTelefonoContacto(data.telefonoContacto || '');
         setMinutosAlertaUrgente(data.minutosAlertaUrgente ?? 10);
         setMinutosEsperaOptIn(data.minutosEsperaOptIn ?? 10);
+        setHorasMinimasConfirmacionCita(data.horasMinimasConfirmacionCita ?? 24);
         setUsaOptInMarketing(!!data.usaOptInMarketing);
         setEleccionMarketing(data.usaOptInMarketing ? 'si' : 'no');
         setCompromisoAceptadoEn(data.compromisoSoloAgendamientoAceptadoEn || null);
@@ -73,7 +75,7 @@ export default function InformacionNegocio() {
     setError('');
     setGuardadoOk(false);
     try {
-      await actualizarInfoNegocio(token, { direccion, notaAgendamiento, informacionAdicional, requiereRut, tonoComunicacion, telefonoContacto, minutosAlertaUrgente, minutosEsperaOptIn });
+      await actualizarInfoNegocio(token, { direccion, notaAgendamiento, informacionAdicional, requiereRut, tonoComunicacion, telefonoContacto, minutosAlertaUrgente, minutosEsperaOptIn, horasMinimasConfirmacionCita });
       setGuardadoOk(true);
     } catch (err) {
       setError(err.message);
@@ -98,7 +100,7 @@ export default function InformacionNegocio() {
       // "Información del negocio" — no vale la pena un tercer endpoint solo
       // para este campo).
       if (quiereMarketing) {
-        await actualizarInfoNegocio(token, { direccion, notaAgendamiento, informacionAdicional, requiereRut, tonoComunicacion, telefonoContacto, minutosAlertaUrgente, minutosEsperaOptIn });
+        await actualizarInfoNegocio(token, { direccion, notaAgendamiento, informacionAdicional, requiereRut, tonoComunicacion, telefonoContacto, minutosAlertaUrgente, minutosEsperaOptIn, horasMinimasConfirmacionCita });
       }
       setUsaOptInMarketing(resultado.usaOptInMarketing);
       setCompromisoAceptadoEn(resultado.compromisoSoloAgendamientoAceptadoEn || null);
@@ -151,6 +153,18 @@ export default function InformacionNegocio() {
             onChange={(e) => setMinutosAlertaUrgente(e.target.value === '' ? '' : Number(e.target.value))}
           />
           <span className="texto-ayuda">Cuando un cliente pide hablar con una persona y nadie responde, a los 5 min el bot le manda un mensaje de contención al cliente. Este número define cuántos minutos más esperar antes de mandarte a ti la alerta urgente por WhatsApp — pon 0 si quieres que te llegue de inmediato.</span>
+        </label>
+
+        <label>
+          Horas mínimas desde que se agenda antes del primer recordatorio
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={horasMinimasConfirmacionCita}
+            onChange={(e) => setHorasMinimasConfirmacionCita(e.target.value === '' ? '' : Number(e.target.value))}
+          />
+          <span className="texto-ayuda">El recordatorio de confirmación (24h antes de la cita) solo se manda si además pasó este tiempo desde que el cliente agendó — evita que se sienta repetido si agenda justo antes de su hora. Pon 0 si prefieres que salga siempre, sin esperar nada.</span>
         </label>
 
         <label>
