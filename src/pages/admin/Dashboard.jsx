@@ -54,6 +54,7 @@ export default function Dashboard() {
     atencionesPorTipo: [],
     citasPorMes: [],
     dineroPorMes: [],
+    alertaWhatsApp: null,
   };
 
   // Obtener fecha de hoy formateada
@@ -82,6 +83,18 @@ export default function Dashboard() {
           </select>
         )}
       </div>
+
+      {datos_seguros.alertaWhatsApp && (
+        <div className="dashboard-alerta-whatsapp" role="alert">
+          <span className="dashboard-alerta-icono">⚠️</span>
+          <div className="dashboard-alerta-texto">
+            <strong>
+              {datos_seguros.alertaWhatsApp.cantidadFallas} mensaje{datos_seguros.alertaWhatsApp.cantidadFallas === 1 ? '' : 's'} de WhatsApp no se {datos_seguros.alertaWhatsApp.cantidadFallas === 1 ? 'pudo entregar' : 'pudieron entregar'} en los últimos 7 días
+            </strong>
+            <p>{datos_seguros.alertaWhatsApp.motivo}</p>
+          </div>
+        </div>
+      )}
 
       {/* 4 tarjetas KPI */}
       <div className="dashboard-grid">

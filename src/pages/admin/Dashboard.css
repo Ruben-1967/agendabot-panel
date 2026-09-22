@@ -46,6 +46,38 @@
   font-weight: 400;
 }
 
+/* Banner de alerta de WhatsApp -- solo aparece si Meta reportó fallas
+   reales de entrega en los últimos 7 días (ver Dashboard.jsx) */
+.dashboard-alerta-whatsapp {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 1.5rem 1.5rem 0;
+  padding: 14px 16px;
+  background: var(--bg-danger);
+  border: 0.5px solid var(--border-danger);
+  border-radius: 8px;
+}
+
+.dashboard-alerta-icono {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.dashboard-alerta-texto strong {
+  display: block;
+  color: var(--text-danger);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dashboard-alerta-texto p {
+  margin: 4px 0 0;
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 /* Grid de tarjetas KPI */
 .dashboard-grid {
   display: grid;
