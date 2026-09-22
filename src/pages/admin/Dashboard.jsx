@@ -55,6 +55,7 @@ export default function Dashboard() {
     citasPorMes: [],
     dineroPorMes: [],
     alertaWhatsApp: null,
+    usoMensajes: null,
   };
 
   // Obtener fecha de hoy formateada
@@ -139,6 +140,18 @@ export default function Dashboard() {
           <span className="metric-value">{formatoCLP.format(datos_seguros.montoSemana)}</span>
           <span className="metric-description">de lunes a hoy</span>
         </div>
+
+        {datos_seguros.usoMensajes && (
+          <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
+            <span className="metric-label">Mensajes del bot (este mes)</span>
+            <span className="metric-value">{datos_seguros.usoMensajes.mensajesEsteMes}</span>
+            <span className="metric-description">
+              {datos_seguros.usoMensajes.mensajesEsteMes <= datos_seguros.usoMensajes.limiteGratis
+                ? `Dentro del tramo gratis de Meta (${datos_seguros.usoMensajes.limiteGratis}/mes) · estimado`
+                : `≈ ${formatoCLP.format(datos_seguros.usoMensajes.costoEstimadoCLP)} sobre el tramo gratis · estimado, no es la factura real de Meta`}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Gráficos de negocio */}
