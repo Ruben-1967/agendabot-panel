@@ -3,9 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="/icon-vendedor-192.png" />
-    <meta name="theme-color" content="#12203a" />
+    <!-- Manifest por defecto: panel de negocio (mayoría de las instalaciones,
+         ej. LuxVision, Ahorróptica, Alejandro Barber). Para /vendedor/* se
+         cambia en tiempo real a manifest.json (el de Vendedores) -- ver
+         src/main.jsx. Bug real corregido 2026-09-22: antes SIEMPRE se servía
+         el de Vendedores (start_url "/vendedor/login"), así que cualquier
+         negocio que instalaba la app terminaba en el login equivocado, sin
+         el link de "¿Olvidaste tu contraseña?" (que solo existe en el login
+         de negocio). -->
+    <link rel="manifest" href="/manifest-negocio.json" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <meta name="theme-color" content="#2F6F62" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Totemsystem · Panel</title>
   </head>
