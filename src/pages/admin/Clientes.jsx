@@ -306,11 +306,32 @@ export function DetalleCliente({ clienteId, token, usuario, categoriasProductoSu
       } else {
         const otro = chequeo.clienteExistente;
         const totalOtro = Object.values(otro.conteos).reduce((a, b) => a + b, 0);
+
+        // Si AMBOS clientes tienen RUT y son distintos, es evidencia fuerte
+        // de que son 2 personas reales distintas (ej. un familiar
+        // compartiendo el mismo WhatsApp), no un duplicado del mismo
+        // paciente -- fusionar mezclaría el historial clínico de 2
+        // personas. En ese caso NO se ofrece fusionar, se corta acá.
+        // Pedido explícito del usuario 2026-09-25 tras preguntar por este
+        // caso. Si algún RUT falta, no hay forma de comparar -- se sigue
+        // al flujo normal, confiando en que el ADMIN revise el nombre.
+        if (cliente.rut && otro.rut && cliente.rut !== otro.rut) {
+          window.alert(
+            `Ese teléfono ya pertenece a "${otro.nombre}" (RUT ${otro.rut}), pero es un RUT DISTINTO al de ` +
+            `"${cliente.nombre}" (RUT ${cliente.rut}) -- probablemente son 2 personas reales distintas compartiendo el mismo ` +
+            `WhatsApp (ej. un familiar), no la misma persona duplicada. No se puede fusionar automáticamente. ` +
+            `Contáctanos para revisar este caso.`
+          );
+          return;
+        }
+
         const ok = window.confirm(
-          `Ese teléfono ya pertenece a "${otro.nombre}" (${totalOtro} registro(s) asociados: ` +
-          `${otro.conteos.citas} citas, ${otro.conteos.ventas} ventas, ${otro.conteos.conversaciones} conversaciones). ` +
-          `Se moverá TODO el historial de "${cliente.nombre}" a "${otro.nombre}", y este registro (${cliente.nombre}) se eliminará. ` +
-          `Esta acción no se puede deshacer. ¿Continuar con la fusión?`
+          `Ese teléfono ya pertenece a "${otro.nombre}" (RUT: ${otro.rut || 'sin RUT registrado'}; ` +
+          `${totalOtro} registro(s) asociados: ${otro.conteos.citas} citas, ${otro.conteos.ventas} ventas, ${otro.conteos.conversaciones} conversaciones). ` +
+          `Se moverá TODO el historial de "${cliente.nombre}" (RUT: ${cliente.rut || 'sin RUT registrado'}) a "${otro.nombre}", ` +
+          `y este registro se eliminará. Esta acción no se puede deshacer.\n\n` +
+          `Úsalo SOLO si es la misma persona registrada 2 veces -- si en realidad son 2 personas distintas (ej. un familiar ` +
+          `compartiendo el número), cancela y avísanos.\n\n¿Continuar con la fusión?`
         );
         if (!ok) return;
         await fusionarClientes(token, clienteId, otro.id);
