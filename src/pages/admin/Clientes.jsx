@@ -7,6 +7,9 @@ import {
   fetchCliente,
   crearCliente,
   actualizarCliente,
+  verificarTelefonoCliente,
+  corregirTelefonoCliente,
+  fusionarClientes,
   registrarLoteVentas,
   editarVenta,
   fetchAtenciones,
@@ -153,7 +156,8 @@ function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, camposFicha
   );
 }
 
-export function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, camposFicha, profesionales, servicios = [], mediosPago = [], onCerrar, onCambio, volverATablaCitas, enTablaCitas }) {
+export function DetalleCliente({ clienteId, token, usuario, categoriasProductoSugeridas, camposFicha, profesionales, servicios = [], mediosPago = [], onCerrar, onCambio, volverATablaCitas, enTablaCitas }) {
+  const esAdmin = usuario?.rol === 'ADMIN';
   const nombreRegistro = camposFicha?.nombreRegistro || 'Registro';
   const nombreHistorial = camposFicha?.nombreHistorial || 'Historial';
 
@@ -169,6 +173,7 @@ export function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, 
   const [email, setEmail] = useState('');
   const [fechaProximaCita, setFechaProximaCita] = useState('');
   const [guardandoDatos, setGuardandoDatos] = useState(false);
+  const [corrigiendoTelefono, setCorrigiendoTelefono] = useState(false);
 
   // ---- Tab Atenciones (ventas) ----
   // { [servicioId]: montoString } — cada servicio marcado lleva su propio
@@ -274,6 +279,48 @@ export function DetalleCliente({ clienteId, token, categoriasProductoSugeridas, 
       setError(err.message);
     } finally {
       setGuardandoDatos(false);
+    }
+  }
+
+  // Corregir teléfono (ADMIN) -- usa el valor YA escrito en el campo
+  // Teléfono del formulario de arriba, no un campo/modal aparte. Si el
+  // número ya pertenece a otro Cliente de la empresa, ofrece fusionar en
+  // vez de corregir (probablemente la misma persona con 2 registros) --
+  // ver src/routes/clientes.js#fusionar-en. 2026-09-25, caso real
+  // Ahorróptica (Oscar Monsalves): el teléfono quedó mal asignado y el
+  // guardado normal lo rechaza si el cliente ya tiene conversaciones.
+  async function corregirTelefono() {
+    if (!telefono || !telefono.trim()) return;
+    setCorrigiendoTelefono(true);
+    setError('');
+    try {
+      const chequeo = await verificarTelefonoCliente(token, telefono.trim(), clienteId);
+      if (chequeo.disponible) {
+        const ok = window.confirm(
+          `¿Corregir el teléfono de ${cliente.nombre} a "${telefono.trim()}"? Esto afecta el reconocimiento de WhatsApp de este cliente.`
+        );
+        if (!ok) return;
+        await corregirTelefonoCliente(token, clienteId, telefono.trim());
+        cargar();
+        onCambio();
+      } else {
+        const otro = chequeo.clienteExistente;
+        const totalOtro = Object.values(otro.conteos).reduce((a, b) => a + b, 0);
+        const ok = window.confirm(
+          `Ese teléfono ya pertenece a "${otro.nombre}" (${totalOtro} registro(s) asociados: ` +
+          `${otro.conteos.citas} citas, ${otro.conteos.ventas} ventas, ${otro.conteos.conversaciones} conversaciones). ` +
+          `Se moverá TODO el historial de "${cliente.nombre}" a "${otro.nombre}", y este registro (${cliente.nombre}) se eliminará. ` +
+          `Esta acción no se puede deshacer. ¿Continuar con la fusión?`
+        );
+        if (!ok) return;
+        await fusionarClientes(token, clienteId, otro.id);
+        onCambio();
+        onCerrar();
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCorrigiendoTelefono(false);
     }
   }
 
@@ -531,6 +578,17 @@ async function guardarFechaVenta(ventaId) {
                 reconocía este botón como el que guarda sus cambios. */}
             {guardandoDatos ? 'Guardando…' : 'Guardar datos'}
           </button>
+          {esAdmin && (
+            <button
+              type="button"
+              disabled={corrigiendoTelefono}
+              className="btn-secundario"
+              onClick={corregirTelefono}
+              title="Solo si el teléfono se ingresó mal por error -- si el cliente cambió de número de verdad, el bot lo reconocerá solo la próxima vez que escriba"
+            >
+              {corrigiendoTelefono ? 'Verificando…' : 'Corregir teléfono'}
+            </button>
+          )}
         </form>
       )}
 
@@ -783,7 +841,7 @@ async function guardarFechaVenta(ventaId) {
 }
 
 export default function Clientes() {
-  const { token } = useAuth();
+  const { token, usuario } = useAuth();
   const [searchParams] = useSearchParams();
   // Deep link desde "Tabla de citas" (?clienteId=...) — abre la ficha
   // directo al entrar, sin que el admin tenga que buscarlo en la lista.
@@ -949,6 +1007,7 @@ export default function Clientes() {
         <DetalleCliente
           clienteId={clienteSeleccionadoId}
           token={token}
+          usuario={usuario}
           categoriasProductoSugeridas={categoriasProductoSugeridas}
           camposFicha={camposFicha}
           profesionales={profesionales}

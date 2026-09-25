@@ -323,6 +323,20 @@ export function crearCliente(token, data) {
 export function actualizarCliente(token, id, data) {
   return apiFetch(`/clientes/${id}`, { method: 'PATCH', body: data, token });
 }
+// Corrección de teléfono (ADMIN) + fusión de duplicados -- ver
+// backend src/routes/clientes.js. verificarTelefonoCliente se llama
+// primero (GET, 200 exitoso) y decide si corregir o fusionar; nunca se
+// depende de leer el body de un error.
+export function verificarTelefonoCliente(token, telefono, excluirClienteId) {
+  const query = new URLSearchParams({ telefono, ...(excluirClienteId && { excluirClienteId }) }).toString();
+  return apiFetch(`/clientes/verificar-telefono?${query}`, { token });
+}
+export function corregirTelefonoCliente(token, id, telefono) {
+  return apiFetch(`/clientes/${id}/corregir-telefono`, { method: 'PATCH', body: { telefono }, token });
+}
+export function fusionarClientes(token, perdedorId, supervivienteId) {
+  return apiFetch(`/clientes/${perdedorId}/fusionar-en/${supervivienteId}`, { method: 'POST', token });
+}
 export function registrarVenta(token, clienteId, data) {
   return apiFetch(`/clientes/${clienteId}/ventas`, { method: 'POST', body: data, token });
 }

@@ -48,7 +48,7 @@ function ToggleSiNo({ valor, deshabilitado, onSi, onNo }) {
 }
 
 export default function TablaCitas() {
-  const { token } = useAuth();
+  const { token, usuario } = useAuth();
   const location = useLocation();
   const [fecha, setFecha] = useState(fechaHoyLocal());
   const [citas, setCitas] = useState([]);
@@ -723,6 +723,7 @@ export default function TablaCitas() {
         <DetalleCliente
           clienteId={clienteSeleccionadoId}
           token={token}
+          usuario={usuario}
           categoriasProductoSugeridas={categoriasProductoSugeridas}
           camposFicha={camposFicha}
           profesionales={profesionales}

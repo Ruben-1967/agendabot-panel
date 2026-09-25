@@ -390,6 +390,30 @@
   cursor: not-allowed;
 }
 
+/* Acción ADMIN secundaria (ej. "Corregir teléfono") -- distinta del botón
+   sólido de "Guardar datos" a propósito, para no confundirse con el
+   guardado normal. Mismo estilo que .btn-secundario en TablaCitas.css. */
+.btn-secundario {
+  width: 100%;
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.btn-secundario:hover:not(:disabled) {
+  border-color: var(--teal-deep);
+  color: var(--teal-deep);
+}
+.btn-secundario:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ========== HISTORIAL ========== */
 .historial-seccion {
   margin-bottom: 20px;
