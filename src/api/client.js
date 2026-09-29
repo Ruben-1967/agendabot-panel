@@ -44,6 +44,14 @@ export function login(email, password) {
   return apiFetch('/auth/login', { method: 'POST', body: { email, password } });
 }
 
+// Login sin contraseña -- código de 6 dígitos por WhatsApp.
+export function solicitarCodigo(telefono) {
+  return apiFetch('/auth/solicitar-codigo', { method: 'POST', body: { telefono } });
+}
+export function verificarCodigo(telefono, codigo) {
+  return apiFetch('/auth/verificar-codigo', { method: 'POST', body: { telefono, codigo } });
+}
+
 export function fetchMe(token) {
   return apiFetch('/auth/me', { token });
 }
