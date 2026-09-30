@@ -20,14 +20,24 @@ export function AuthProvider({ children }) {
 
     try {
       const { token: tokenGuardado, usuario: usuarioGuardado } = JSON.parse(guardado);
-      // Validamos que el token siga vigente antes de confiar en él
+      // Validamos que el token siga vigente antes de confiar en él -- pero
+      // solo lo botamos si el backend contestó 401 (token realmente
+      // inválido/vencido). Cualquier otro fallo (Render recién despertando
+      // de estar inactivo, red inestable, etc.) no es evidencia de que la
+      // sesión sea inválida, así que la mantenemos con los datos guardados
+      // en vez de forzar un nuevo login en cada visita.
       fetchMe(tokenGuardado)
         .then(() => {
           setToken(tokenGuardado);
           setUsuario(usuarioGuardado);
         })
-        .catch(() => {
-          localStorage.removeItem(STORAGE_KEY);
+        .catch((err) => {
+          if (err.status === 401) {
+            localStorage.removeItem(STORAGE_KEY);
+          } else {
+            setToken(tokenGuardado);
+            setUsuario(usuarioGuardado);
+          }
         })
         .finally(() => setCargandoSesion(false));
     } catch {
