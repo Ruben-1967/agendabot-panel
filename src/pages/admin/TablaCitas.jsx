@@ -218,14 +218,20 @@ export default function TablaCitas() {
     return c.estado === ESTADO_POR_FILTRO[filtroEstado];
   });
 
-  // Con un profesional puntual elegido (grilla activa) una tabla vacía casi
-  // siempre significa que ese día no tiene bloque de horario configurado —
-  // no que "no hay citas" (eso solo pasa si además hubiera horas libres sin
-  // agendar, que ya se listarían). Mensaje distinto para no confundir un día
-  // sin horario con un día laboral tranquilo.
-  const mensajeVacio = recursoParaGrilla
+  // Con un profesional puntual elegido, la tabla puede quedar vacía por 2
+  // motivos bien distintos -- hay que distinguirlos o el mensaje engaña:
+  // (a) el día genuinamente no tiene horario/excepción configurada (ni
+  //     citas reales ni huecos "vacio" en la respuesta cruda del backend), o
+  // (b) sí hay horario, simplemente no hay citas y "Mostrar horarios
+  //     disponibles" está apagado (bug real reportado por Ahorróptica
+  //     2026-09-30: con el toggle nuevo, un día con horario configurado
+  //     pero sin citas todavía se veía igual que un día sin horario).
+  const hayHorarioParaEsteDia = citas.some((c) => c.vacio) || citasReales.length > 0;
+  const mensajeVacio = !recursoParaGrilla
+    ? 'Sin citas agendadas este día.'
+    : !hayHorarioParaEsteDia
     ? 'Este profesional no tiene horario configurado para este día (revisa Configuración de agenda).'
-    : 'Sin citas agendadas este día.';
+    : 'Sin citas agendadas este día. Activa "Mostrar horarios disponibles" arriba para ver los horarios libres.';
 
   async function marcarConfirmado(cita, valor) {
     if (cita.estado === 'CANCELADA' || cita.estado === 'COMPLETADA' || cita.estado === 'NO_ASISTIO') return;
