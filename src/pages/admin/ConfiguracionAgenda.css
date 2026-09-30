@@ -315,3 +315,43 @@
     margin: 20px 0 10px 0;
   }
 }
+/* ---------- Pestañas: Horario semanal / Días variables / Vacaciones ---------- */
+.config-agenda-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--line);
+  margin-bottom: 18px;
+}
+
+.config-agenda-tabs .tab {
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.config-agenda-tabs .tab.active {
+  color: var(--teal-deep);
+  border-bottom-color: var(--teal-deep);
+}
+
+.config-agenda-tabs .tab:hover:not(.active) {
+  color: var(--ink);
+}
+
+@media (max-width: 700px) {
+  .config-agenda-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+  .config-agenda-tabs .tab {
+    white-space: nowrap;
+  }
+}

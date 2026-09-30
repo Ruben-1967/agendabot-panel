@@ -17,8 +17,20 @@
 .tabla-citas-pills {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
   margin-bottom: 20px;
+}
+
+.tabla-citas-toggle-disponibles {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 0.82rem;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 .pill-btn {

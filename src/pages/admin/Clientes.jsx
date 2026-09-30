@@ -1021,12 +1021,31 @@ export default function Clientes() {
               <div className="cliente-card-header">
                 <div className="cliente-card-info">
                   <h3 className="cliente-card-nombre">{c.nombre}</h3>
+                  {(c.telefono || c.rut) && (
+                    <p className="cliente-card-contacto">
+                      {c.telefono && (
+                        <span className="cliente-card-contacto-item">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+                          </svg>
+                          {c.telefono}
+                        </span>
+                      )}
+                      {c.rut && (
+                        <span className="cliente-card-contacto-item">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="3" y="4" width="18" height="16" rx="2" />
+                            <path d="M7 9h10M7 13h6" strokeLinecap="round" />
+                          </svg>
+                          {c.rut}
+                        </span>
+                      )}
+                    </p>
+                  )}
                   <p className="cliente-card-meta">
                     Última visita:{' '}
                     {c.ultimaCompraFecha ? formatearFechaCorta(c.ultimaCompraFecha) : '—'}
-                  </p>
-                  <p className="cliente-card-meta">
-                    Fecha de la próxima visita:{' '}
+                    {' · Próxima: '}
                     {c.fechaProximaCita ? formatearFechaCorta(c.fechaProximaCita) : '—'}
                   </p>
                   {c.numVentas > 0 && (

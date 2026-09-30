@@ -3,6 +3,7 @@ import './ConfiguracionAgenda.css';
 import { useAuth } from '../../context/AuthContext';
 import EditorHorario from '../../components/EditorHorario';
 import SimpleDatePicker from '../../components/SimpleDatePicker';
+import InfoTooltip from '../../components/InfoTooltip';
 import {
   fetchAgenda,
   guardarRecurso,
@@ -55,29 +56,38 @@ function FormRecurso({ recurso, token, onGuardado, setError, ejemploNombre }) {
   }
 
   return (
-    <form className="form-campana" onSubmit={manejarGuardar}>
-      <label>
-        Nombre del recurso (negocio o profesional que atiende)
-        <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder={ejemploNombre || 'Ej. Atención al público'} required />
-      </label>
-      <label>
-        {/* Restaurado 2026-08-31: esta es la ÚNICA duración real que usa el
-            motor de agendamiento (disponibilidad.js/crearCita nunca miró la
-            duración del Servicio) — un intento anterior de mover esto a
-            "por servicio" solo sacó el campo de acá sin cambiar el motor,
-            dejando la duración real congelada en lo que fuera que tuviera
-            guardado el recurso, sin forma de editarla desde el panel. */}
-        Duración de cada cita (minutos)
-        <input type="number" min="1" value={duracion} onChange={(e) => setDuracion(e.target.value)} required />
-      </label>
-      <label>
-        Anticipación mínima para agendar (minutos antes)
-        <input type="number" min="0" value={anticipacion} onChange={(e) => setAnticipacion(e.target.value)} />
-      </label>
-      <label>
-        Horizonte de agenda (días hacia adelante que se pueden reservar)
-        <input type="number" min="1" value={horizonte} onChange={(e) => setHorizonte(e.target.value)} />
-      </label>
+    <form className="form-campana form-info-negocio" onSubmit={manejarGuardar}>
+      <div className="form-info-negocio-columnas">
+        <div className="form-info-negocio-columna">
+          <label>
+            Nombre del recurso (negocio o profesional que atiende)
+            <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder={ejemploNombre || 'Ej. Atención al público'} required />
+          </label>
+          <label>
+            <span className="form-label-linea">
+              Duración de cada cita (minutos)
+              <InfoTooltip texto="Es la única duración real que usa el motor de agendamiento -- no depende del servicio elegido." />
+            </span>
+            <input type="number" min="1" value={duracion} onChange={(e) => setDuracion(e.target.value)} required />
+          </label>
+        </div>
+        <div className="form-info-negocio-columna">
+          <label>
+            <span className="form-label-linea">
+              Anticipación mínima para agendar (minutos antes)
+              <InfoTooltip texto="El cliente no puede agendar una hora que empiece antes de que pase este tiempo desde ahora." />
+            </span>
+            <input type="number" min="0" value={anticipacion} onChange={(e) => setAnticipacion(e.target.value)} />
+          </label>
+          <label>
+            <span className="form-label-linea">
+              Horizonte de agenda (días hacia adelante)
+              <InfoTooltip texto="Cuántos días hacia el futuro puede reservar un cliente -- pasado ese horizonte, el bot no ofrece horas." />
+            </span>
+            <input type="number" min="1" value={horizonte} onChange={(e) => setHorizonte(e.target.value)} />
+          </label>
+        </div>
+      </div>
       <button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : recurso ? 'Guardar cambios' : 'Crear recurso'}</button>
     </form>
   );
@@ -248,12 +258,19 @@ function Excepciones({ excepciones, recursoId, token, onCambio, setError }) {
 // ------------------------------------------------------------
 // Página principal
 // ------------------------------------------------------------
+const TABS = [
+  { id: 'horario', label: 'Horario semanal' },
+  { id: 'excepciones', label: 'Días variables' },
+  { id: 'vacaciones', label: 'Vacaciones y feriados' },
+];
+
 export default function ConfiguracionAgenda() {
   const { token } = useAuth();
   const [recurso, setRecurso] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [ejemplos, setEjemplos] = useState({});
+  const [tabActiva, setTabActiva] = useState('horario');
 
   async function cargar() {
     try {
@@ -287,14 +304,28 @@ export default function ConfiguracionAgenda() {
         <p className="texto-muted">Guarda los datos de arriba primero para poder cargar el horario semanal y los bloqueos.</p>
       ) : (
         <>
-          <h2 className="subtitulo">Horario semanal</h2>
-          <EditorHorario horarios={recurso.horarios} token={token} onGuardado={cargar} setError={setError} />
+          <div className="config-agenda-tabs">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className={`tab ${tabActiva === t.id ? 'active' : ''}`}
+                onClick={() => setTabActiva(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
 
-          <h2 className="subtitulo">Excepciones de horario (días variables)</h2>
-          <Excepciones excepciones={recurso.excepciones || []} recursoId={recurso.id} token={token} onCambio={cargar} setError={setError} />
-
-          <h2 className="subtitulo">Vacaciones y feriados</h2>
-          <Bloqueos bloqueos={recurso.bloqueos} token={token} onCambio={cargar} setError={setError} />
+          {tabActiva === 'horario' && (
+            <EditorHorario horarios={recurso.horarios} token={token} onGuardado={cargar} setError={setError} />
+          )}
+          {tabActiva === 'excepciones' && (
+            <Excepciones excepciones={recurso.excepciones || []} recursoId={recurso.id} token={token} onCambio={cargar} setError={setError} />
+          )}
+          {tabActiva === 'vacaciones' && (
+            <Bloqueos bloqueos={recurso.bloqueos} token={token} onCambio={cargar} setError={setError} />
+          )}
         </>
       )}
     </div>

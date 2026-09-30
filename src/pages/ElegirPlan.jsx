@@ -141,15 +141,19 @@ export default function ElegirPlan() {
         {/* Header */}
         <div style={styles.header}>
           <h1>Elige tu plan</h1>
-          {diasRestantes !== null && (
-            <p style={styles.subtitle}>
-              Tu período de prueba {diasRestantes && diasRestantes <= 0 ? 'ha vencido' : `vence en ${diasRestantes} días`}
-            </p>
+          {diasRestantes !== null && diasRestantes > 0 && (
+            <p style={styles.subtitle}>Tu período de prueba vence en {diasRestantes} días</p>
           )}
           <p style={styles.description}>
             Selecciona el plan que mejor se ajuste a tu negocio. Puedes cambiar en cualquier momento.
           </p>
         </div>
+
+        {diasRestantes !== null && diasRestantes <= 0 && (
+          <div style={styles.avisoUrgente}>
+            ⚠️ Tu período de prueba ha expirado. Activa un plan ahora para no perder acceso al sistema.
+          </div>
+        )}
 
         {/* Aviso de error */}
         {error && <div style={styles.error}>{error}</div>}
@@ -197,8 +201,9 @@ export default function ElegirPlan() {
                 disabled={loading}
                 style={{
                   ...styles.button,
-                  background: planKey === 'B' ? '#2f6f62' : '#e4ede9',
-                  color: planKey === 'B' ? '#fff' : '#1f4e44',
+                  background: planKey === 'B' ? '#2f6f62' : '#fff',
+                  color: planKey === 'B' ? '#fff' : '#2f6f62',
+                  border: planKey === 'B' ? '2px solid #2f6f62' : '2px solid #2f6f62',
                   opacity: loading ? 0.6 : 1,
                   cursor: loading ? 'not-allowed' : 'pointer',
                 }}
@@ -208,6 +213,48 @@ export default function ElegirPlan() {
             </div>
           ))}
         </div>}
+
+        {!resultadoElegido && (
+          <div style={styles.tablaComparativaWrap}>
+            <h2 style={styles.tablaComparativaTitulo}>Comparación rápida</h2>
+            <table style={styles.tablaComparativa}>
+              <thead>
+                <tr>
+                  <th style={styles.tablaTh}></th>
+                  {Object.entries(PLANES).map(([planKey, planData]) => (
+                    <th key={planKey} style={styles.tablaTh}>{planData.nombre}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={styles.tablaTdLabel}>Precio mensual</td>
+                  {Object.entries(PLANES).map(([planKey, planData]) => (
+                    <td key={planKey} style={styles.tablaTd}>${planData.precio.toLocaleString()}</td>
+                  ))}
+                </tr>
+                <tr style={styles.tablaFilaAlterna}>
+                  <td style={styles.tablaTdLabel}>Citas incluidas/mes</td>
+                  {Object.entries(PLANES).map(([planKey, planData]) => (
+                    <td key={planKey} style={styles.tablaTd}>{planData.citas.toLocaleString()}</td>
+                  ))}
+                </tr>
+                <tr>
+                  <td style={styles.tablaTdLabel}>Excedente por cita</td>
+                  {Object.entries(PLANES).map(([planKey, planData]) => (
+                    <td key={planKey} style={styles.tablaTd}>${planData.excedente.toLocaleString()}</td>
+                  ))}
+                </tr>
+                <tr style={styles.tablaFilaAlterna}>
+                  <td style={styles.tablaTdLabel}>Profesionales</td>
+                  {Object.entries(PLANES).map(([planKey, planData]) => (
+                    <td key={planKey} style={styles.tablaTd}>{planData.featuresExtra[0]}</td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Footer */}
         <div style={styles.footer}>
@@ -338,6 +385,61 @@ const styles = {
     marginBottom: '24px',
     textAlign: 'center',
     fontSize: '14px',
+  },
+  avisoUrgente: {
+    background: '#f3e1dc',
+    color: '#a8493b',
+    border: '1px solid #e3b3a8',
+    padding: '14px 20px',
+    borderRadius: '8px',
+    marginBottom: '32px',
+    textAlign: 'center',
+    fontSize: '15px',
+    fontWeight: 600,
+    maxWidth: '700px',
+    marginLeft: 'auto',
+    marginRight: 'auto',
+  },
+  tablaComparativaWrap: {
+    marginBottom: '40px',
+  },
+  tablaComparativaTitulo: {
+    fontSize: '18px',
+    fontWeight: 700,
+    color: '#16241f',
+    textAlign: 'center',
+    marginBottom: '16px',
+  },
+  tablaComparativa: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    background: '#fff',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+  },
+  tablaTh: {
+    padding: '12px 16px',
+    fontSize: '13px',
+    fontWeight: 700,
+    color: '#1f4e44',
+    textAlign: 'center',
+    borderBottom: '2px solid #ddd',
+  },
+  tablaTdLabel: {
+    padding: '10px 16px',
+    fontSize: '13px',
+    fontWeight: 600,
+    color: '#3a4842',
+  },
+  tablaTd: {
+    padding: '10px 16px',
+    fontSize: '13px',
+    color: '#3a4842',
+    textAlign: 'center',
+  },
+  tablaFilaAlterna: {
+    background: '#faf8ef',
   },
   footer: {
     textAlign: 'center',

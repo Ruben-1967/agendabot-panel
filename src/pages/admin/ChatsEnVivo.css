@@ -300,11 +300,45 @@
 
 .chat-vacio {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
   color: #999;
   font-size: 1rem;
+  text-align: center;
+  padding: 0 24px;
+}
+
+.chat-vacio-titulo {
+  margin: 0 0 8px;
+}
+
+.chat-vacio-resumen {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #8a8577;
+  max-width: 320px;
+}
+
+.chats-tabs-estado {
+  margin-top: -4px;
+}
+
+.chat-tab-atencion.activo {
+  background: #a8493b;
+  border-color: #a8493b;
+}
+
+.badge-atencion {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #a8493b;
+  background: #f3e1dc;
+  border-radius: 4px;
+  padding: 2px 6px;
 }
 
 /* Input y botones */

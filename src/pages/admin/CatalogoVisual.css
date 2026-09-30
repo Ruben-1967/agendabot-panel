@@ -185,23 +185,79 @@
 }
 
 .tarjeta-subir {
-  border: 1px dashed var(--line);
+  border: 2px dashed var(--line);
   border-radius: 8px;
   aspect-ratio: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   color: var(--muted);
   font-size: 0.78rem;
+  text-align: center;
+  padding: 12px;
   background: none;
   cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 .tarjeta-subir:hover { border-color: var(--teal); color: var(--teal-deep); }
+.tarjeta-subir.arrastrando { border-color: var(--teal-deep); background: var(--teal-soft); color: var(--teal-deep); }
 .tarjeta-subir.disabled { opacity: 0.6; cursor: default; }
 .tarjeta-subir input { display: none; }
-.tarjeta-subir-icono { font-size: 1.4rem; }
+.tarjeta-subir-icono-nube { opacity: 0.7; }
+
+/* ---------- Menú "..." (Editar/Pausar/Eliminar) ---------- */
+.tarjeta-imagen-fila-nombre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.tarjeta-imagen-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.tarjeta-imagen-menu-boton {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.tarjeta-imagen-menu-boton:hover { background: var(--paper); color: var(--ink); }
+
+.tarjeta-imagen-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 10;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  min-width: 110px;
+  overflow: hidden;
+}
+
+.tarjeta-imagen-menu-item {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+.tarjeta-imagen-menu-item:hover { background: var(--paper); }
+.tarjeta-imagen-menu-item-danger { color: var(--red); }
 
 @media (max-width: 720px) {
   .catalogo-layout { flex-direction: column; }

@@ -61,6 +61,12 @@ export default function TablaCitas() {
   const [recursoFiltro, setRecursoFiltro] = useState('');
   const [servicioFiltro, setServicioFiltro] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todas');
+  // Antes los horarios libres se mostraban siempre mezclados con las citas
+  // reales, con la fila diciendo "Nombre: Disponible" -- confundía la tabla
+  // con una planilla de horarios en vez de una agenda. Ahora quedan ocultos
+  // por defecto; el admin los activa solo si quiere agendar haciendo clic
+  // directo en una hora libre (mismo resultado que "+ Agregar cita").
+  const [mostrarDisponibles, setMostrarDisponibles] = useState(false);
 
   const [servicios, setServicios] = useState([]);
   const [clientes, setClientes] = useState([]);
@@ -201,6 +207,7 @@ export default function TablaCitas() {
   // estado sí las oculta: un hueco libre no tiene estado que coincida con
   // "confirmadas/pendientes/...", mostrarlo ahí sería confuso.
   const citasFiltradas = citas.filter((c) => {
+    if (c.vacio && !mostrarDisponibles) return false;
     if (!(c.vacio || !servicioFiltro || c.servicioId === servicioFiltro)) return false;
     // "Todas" excluye las canceladas — esa hora ya está libre de nuevo (el
     // backend genera su fila "Disponible" en su lugar), no debe verse como
@@ -427,6 +434,15 @@ export default function TablaCitas() {
         >
           canceladas ({contadores.canceladas})
         </button>
+
+        <label className="tabla-citas-toggle-disponibles">
+          <input
+            type="checkbox"
+            checked={mostrarDisponibles}
+            onChange={(e) => setMostrarDisponibles(e.target.checked)}
+          />
+          Mostrar horarios disponibles
+        </label>
       </div>
 
       {error && <p className="mensaje-error">{error}</p>}

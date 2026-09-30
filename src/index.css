@@ -274,6 +274,10 @@ button {
 
 .layout-con-banner { padding-top: 40px; }
 
+.banner-pago-icono {
+  margin-right: 8px;
+}
+
 .banner-pago-pendiente a {
   font-weight: 600;
   text-decoration: none;
@@ -490,7 +494,107 @@ button {
   background: #fff; font-family: inherit; resize: vertical;
 }
 .texto-ayuda { color: var(--muted); font-size: 0.74rem; font-weight: 400; }
+
+.form-label-linea {
+  display: inline-flex;
+  align-items: center;
+}
+
+.form-info-negocio {
+  max-width: 720px;
+}
+
+.form-info-negocio-columnas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 24px;
+}
+
+.form-info-negocio-columna {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-info-negocio-columna-titulo {
+  margin: 0 0 2px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+@media (max-width: 700px) {
+  .form-info-negocio-columnas {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
 .mensaje-ok {
   background: var(--teal-soft); color: var(--teal-deep); font-size: 0.82rem;
   padding: 8px 12px; border-radius: 6px; margin: 10px 0;
+}
+
+/* ---------- Tooltip de ayuda (ícono "?") ---------- */
+/* Reemplaza los párrafos de ayuda siempre visibles debajo de cada campo --
+   el texto solo aparece al pasar el mouse o hacer foco (tab/tap). */
+.info-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  margin-left: 6px;
+  vertical-align: middle;
+  outline: none;
+}
+
+.info-tooltip-icono {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--line);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+}
+
+.info-tooltip:hover .info-tooltip-icono,
+.info-tooltip:focus .info-tooltip-icono {
+  background: var(--teal-deep);
+  color: #fff;
+}
+
+.info-tooltip-texto {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 240px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.72rem;
+  font-weight: 400;
+  line-height: 1.4;
+  padding: 8px 10px;
+  border-radius: 6px;
+  text-transform: none;
+  letter-spacing: normal;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.info-tooltip:hover .info-tooltip-texto,
+.info-tooltip:focus .info-tooltip-texto {
+  opacity: 1;
+  visibility: visible;
 }

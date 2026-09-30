@@ -67,6 +67,7 @@ export default function ChatsEnVivo() {
   const [nuevoMensaje, setNuevoMensaje] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [filtroCanal, setFiltroCanal] = useState('todos');
+  const [filtroEstado, setFiltroEstado] = useState('todos');
   const [silenciado, setSilenciado] = useState(() => localStorage.getItem(CLAVE_SILENCIADO) === '1');
   const [vistos, setVistos] = useState(leerVistos);
 
@@ -312,12 +313,17 @@ export default function ChatsEnVivo() {
     );
   }
 
-  const conversacionesFiltradas = conversaciones.filter(
-    (conv) => filtroCanal === 'todos' || conv.canal === filtroCanal
-  );
+  const conversacionesFiltradas = conversaciones.filter((conv) => {
+    if (filtroCanal !== 'todos' && conv.canal !== filtroCanal) return false;
+    if (filtroEstado === 'noLeidos' && !esNoLeido(conv, vistos)) return false;
+    if (filtroEstado === 'atencion' && !conv.escaladoAHumano) return false;
+    return true;
+  });
   const totalWhatsapp = conversaciones.filter((c) => c.canal === 'whatsapp').length;
   const totalInstagram = conversaciones.filter((c) => c.canal === 'instagram').length;
   const totalFacebook = conversaciones.filter((c) => c.canal === 'facebook').length;
+  const totalNoLeidos = conversaciones.filter((c) => esNoLeido(c, vistos)).length;
+  const totalRequierenAtencion = conversaciones.filter((c) => c.escaladoAHumano).length;
 
   return (
     <div className="chats-container">
@@ -369,6 +375,30 @@ export default function ChatsEnVivo() {
         </button>
       </div>
 
+      <div className="chats-tabs chats-tabs-estado">
+        <button
+          type="button"
+          className={`chat-tab ${filtroEstado === 'todos' ? 'activo' : ''}`}
+          onClick={() => setFiltroEstado('todos')}
+        >
+          Todos
+        </button>
+        <button
+          type="button"
+          className={`chat-tab ${filtroEstado === 'noLeidos' ? 'activo' : ''}`}
+          onClick={() => setFiltroEstado('noLeidos')}
+        >
+          Sin leer <span className="tab-count">{totalNoLeidos}</span>
+        </button>
+        <button
+          type="button"
+          className={`chat-tab chat-tab-atencion ${filtroEstado === 'atencion' ? 'activo' : ''}`}
+          onClick={() => setFiltroEstado('atencion')}
+        >
+          Requieren atención <span className="tab-count">{totalRequierenAtencion}</span>
+        </button>
+      </div>
+
       <div className="chats-split">
         <div className="chats-lista">
           {conversacionesFiltradas.length === 0 ? (
@@ -386,6 +416,7 @@ export default function ChatsEnVivo() {
                     <div className="chat-nombre">
                       {noLeido && <span className="punto-no-leido" title="No leído" />}
                       {conv.clienteNombre}
+                      {conv.escaladoAHumano && <span className="badge-atencion" title="Requiere atención">Requiere atención</span>}
                       {conv.esEjemplo && <span className="badge-ejemplo">Ejemplo</span>}
                       {conv.canal === 'instagram' && <span className="badge-canal-instagram">Instagram</span>}
                       {conv.canal === 'facebook' && <span className="badge-canal-facebook">Messenger</span>}
@@ -511,7 +542,14 @@ export default function ChatsEnVivo() {
             </>
           ) : (
             <div className="chat-vacio">
-              <p>Selecciona un chat para comenzar</p>
+              <p className="chat-vacio-titulo">Selecciona un chat para comenzar</p>
+              {conversaciones.length > 0 && (
+                <p className="chat-vacio-resumen">
+                  Tienes {conversaciones.length} chat{conversaciones.length === 1 ? '' : 's'} activo{conversaciones.length === 1 ? '' : 's'}
+                  {totalRequierenAtencion > 0 && `, ${totalRequierenAtencion} requiere${totalRequierenAtencion === 1 ? '' : 'n'} tu atención`}
+                  {totalNoLeidos > 0 && ` y ${totalNoLeidos} sin leer`}.
+                </p>
+              )}
             </div>
           )}
         </div>

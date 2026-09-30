@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { fetchInfoNegocio, actualizarInfoNegocio, actualizarOptInMarketing, fetchServicios, fetchEjemplosFormulario } from '../../api/client';
 import Servicios from '../../components/Servicios';
+import InfoTooltip from '../../components/InfoTooltip';
 
 const TEXTO_COMPROMISO = 'Nos comprometemos a usar TotemSystem exclusivamente para responder solicitudes de horas, agendamiento y asesoría directamente relacionada con la atención de nuestros clientes — nunca para enviar publicidad, promociones ni comunicaciones de marketing sin el consentimiento explícito (opt-in) de cada cliente. Entendemos que el incumplimiento de este compromiso puede resultar en la suspensión del servicio.';
 
@@ -123,84 +124,104 @@ export default function InformacionNegocio() {
       {error && <p className="mensaje-error">{error}</p>}
       {guardadoOk && <p className="mensaje-ok">Guardado correctamente.</p>}
 
-      <form className="form-campana" style={{ maxWidth: 560 }} onSubmit={manejarGuardar}>
-        <label>
-          Dirección
-          <input
-            value={direccion}
-            onChange={(e) => setDireccion(e.target.value)}
-            placeholder={ejemplos.direccion || 'Ej. Av. Providencia #1234, comuna'}
-          />
-        </label>
+      <form className="form-campana form-info-negocio" onSubmit={manejarGuardar}>
+        <div className="form-info-negocio-columnas">
+          <div className="form-info-negocio-columna">
+            <h3 className="form-info-negocio-columna-titulo">Datos generales</h3>
+            <label>
+              Dirección
+              <input
+                value={direccion}
+                onChange={(e) => setDireccion(e.target.value)}
+                placeholder={ejemplos.direccion || 'Ej. Av. Providencia #1234, comuna'}
+              />
+            </label>
+
+            <label>
+              <span className="form-label-linea">
+                Teléfono de contacto (WhatsApp)
+                <InfoTooltip texto="A este número te llegan los avisos automáticos por WhatsApp — activación de cuenta, y la alerta urgente cuando un cliente lleva esperando hablar con una persona." />
+              </span>
+              <input
+                value={telefonoContacto}
+                onChange={(e) => setTelefonoContacto(e.target.value)}
+                placeholder="Ej. +56912345678"
+              />
+            </label>
+
+            <label>
+              <span className="form-label-linea">
+                Nota de agendamiento
+                <InfoTooltip texto="El bot puede usar este texto como referencia de tono al confirmar o recordar una cita." />
+              </span>
+              <input
+                value={notaAgendamiento}
+                onChange={(e) => setNotaAgendamiento(e.target.value)}
+                placeholder="Ej. Cupos limitados, avisar con anticipación si no puede asistir."
+              />
+            </label>
+
+            <label>
+              <span className="form-label-linea">
+                Tono de comunicación
+                <InfoTooltip texto="El bot interpretará tu información adicional (precios, promociones) con este tono." />
+              </span>
+              <select value={tonoComunicacion} onChange={(e) => setTonoComunicacion(e.target.value)}>
+                <option value="Formal">Formal — profesional y respetuoso</option>
+                <option value="Neutral">Neutral — equilibrado (recomendado)</option>
+                <option value="Informal">Informal — conversacional y cercano</option>
+              </select>
+            </label>
+
+            <label className="checkbox-segmentacion" style={{ padding: '4px 0' }}>
+              <input type="checkbox" checked={requiereRut} onChange={(e) => setRequiereRut(e.target.checked)} />
+              Exigir RUT del cliente antes de agendar una cita
+            </label>
+          </div>
+
+          <div className="form-info-negocio-columna">
+            <h3 className="form-info-negocio-columna-titulo">Reglas de negocio</h3>
+            <label>
+              <span className="form-label-linea">
+                Minutos de espera antes de la alerta urgente
+                <InfoTooltip texto="Cuando un cliente pide hablar con una persona y nadie responde, a los 5 min el bot le manda un mensaje de contención al cliente. Este número define cuántos minutos más esperar antes de mandarte a ti la alerta urgente por WhatsApp — pon 0 si quieres que te llegue de inmediato." />
+              </span>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={minutosAlertaUrgente}
+                onChange={(e) => setMinutosAlertaUrgente(e.target.value === '' ? '' : Number(e.target.value))}
+              />
+            </label>
+
+            <label>
+              <span className="form-label-linea">
+                Horas mínimas desde que se agenda antes del primer recordatorio
+                <InfoTooltip texto="El recordatorio de confirmación (24h antes de la cita) solo se manda si además pasó este tiempo desde que el cliente agendó — evita que se sienta repetido si agenda justo antes de su hora. Pon 0 si prefieres que salga siempre, sin esperar nada." />
+              </span>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={horasMinimasConfirmacionCita}
+                onChange={(e) => setHorasMinimasConfirmacionCita(e.target.value === '' ? '' : Number(e.target.value))}
+              />
+            </label>
+          </div>
+        </div>
 
         <label>
-          Teléfono de contacto (WhatsApp)
-          <input
-            value={telefonoContacto}
-            onChange={(e) => setTelefonoContacto(e.target.value)}
-            placeholder="Ej. +56912345678"
-          />
-          <span className="texto-ayuda">A este número te llegan los avisos automáticos por WhatsApp — activación de cuenta, y la alerta urgente cuando un cliente lleva esperando hablar con una persona (ver campo de abajo).</span>
-        </label>
-
-        <label>
-          Minutos de espera antes de la alerta urgente
-          <input
-            type="number"
-            min="0"
-            step="1"
-            value={minutosAlertaUrgente}
-            onChange={(e) => setMinutosAlertaUrgente(e.target.value === '' ? '' : Number(e.target.value))}
-          />
-          <span className="texto-ayuda">Cuando un cliente pide hablar con una persona y nadie responde, a los 5 min el bot le manda un mensaje de contención al cliente. Este número define cuántos minutos más esperar antes de mandarte a ti la alerta urgente por WhatsApp — pon 0 si quieres que te llegue de inmediato.</span>
-        </label>
-
-        <label>
-          Horas mínimas desde que se agenda antes del primer recordatorio
-          <input
-            type="number"
-            min="0"
-            step="1"
-            value={horasMinimasConfirmacionCita}
-            onChange={(e) => setHorasMinimasConfirmacionCita(e.target.value === '' ? '' : Number(e.target.value))}
-          />
-          <span className="texto-ayuda">El recordatorio de confirmación (24h antes de la cita) solo se manda si además pasó este tiempo desde que el cliente agendó — evita que se sienta repetido si agenda justo antes de su hora. Pon 0 si prefieres que salga siempre, sin esperar nada.</span>
-        </label>
-
-        <label>
-          Nota de agendamiento
-          <input
-            value={notaAgendamiento}
-            onChange={(e) => setNotaAgendamiento(e.target.value)}
-            placeholder="Ej. Cupos limitados, avisar con anticipación si no puede asistir."
-          />
-          <span className="texto-ayuda">El bot puede usar este texto como referencia de tono al confirmar o recordar una cita.</span>
-        </label>
-
-        <label>
-          Información adicional (precios, promociones, qué incluye cada servicio)
+          <span className="form-label-linea">
+            Información adicional (precios, promociones, qué incluye cada servicio)
+            <InfoTooltip texto="El bot cita esto TAL CUAL cuando un cliente pregunta — no inventa nada fuera de lo que escribas acá." />
+          </span>
           <textarea
             rows={6}
             value={informacionAdicional}
             onChange={(e) => setInformacionAdicional(e.target.value)}
             placeholder={ejemplos.informacionAdicional || 'Ej. Precios, promociones o detalles que quieras que el bot mencione.'}
           />
-          <span className="texto-ayuda">El bot cita esto TAL CUAL cuando un cliente pregunta — no inventa nada fuera de lo que escribas acá.</span>
-        </label>
-
-        <label className="checkbox-segmentacion" style={{ padding: '4px 0' }}>
-          <input type="checkbox" checked={requiereRut} onChange={(e) => setRequiereRut(e.target.checked)} />
-          Exigir RUT del cliente antes de agendar una cita
-        </label>
-
-        <label>
-          Tono de comunicación
-          <select value={tonoComunicacion} onChange={(e) => setTonoComunicacion(e.target.value)}>
-            <option value="Formal">Formal — profesional y respetuoso</option>
-            <option value="Neutral">Neutral — equilibrado (recomendado)</option>
-            <option value="Informal">Informal — conversacional y cercano</option>
-          </select>
-          <span className="texto-ayuda">El bot interpretará tu información adicional (precios, promociones) con este tono.</span>
         </label>
 
         <button type="submit" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar cambios'}</button>

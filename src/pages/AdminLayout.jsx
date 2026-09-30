@@ -65,6 +65,7 @@ export default function AdminLayout() {
     <div className={avisoPagoNivel ? 'layout layout-con-banner' : 'layout'}>
       {avisoPagoNivel && (
         <div className={`banner-pago-pendiente banner-pago-${avisoPagoNivel}`}>
+          <span className="banner-pago-icono">⚠️</span>
           {TEXTO_AVISO[avisoPagoNivel]}
           <a href="/suscripcion/elegir-plan">Activar plan →</a>
         </div>

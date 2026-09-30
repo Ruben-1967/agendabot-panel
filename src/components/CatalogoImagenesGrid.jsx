@@ -37,6 +37,8 @@ export default function CatalogoImagenesGrid({
   const [nombreEdicion, setNombreEdicion] = useState('');
   const [descripcionEdicion, setDescripcionEdicion] = useState('');
   const [valoresExtraEdicion, setValoresExtraEdicion] = useState({});
+  const [menuAbiertoId, setMenuAbiertoId] = useState(null);
+  const [arrastrandoSobre, setArrastrandoSobre] = useState(false);
 
   useEffect(() => {
     if (!archivoPendiente) {
@@ -48,10 +50,8 @@ export default function CatalogoImagenesGrid({
     return () => URL.revokeObjectURL(url);
   }, [archivoPendiente]);
 
-  async function manejarSeleccionArchivo(e) {
-    const archivo = e.target.files?.[0];
+  async function procesarArchivoElegido(archivo) {
     if (!archivo) return;
-    e.target.value = '';
     setErrorArchivo('');
     setArchivoPendiente(archivo);
     setImagenBase64Pendiente(null);
@@ -70,6 +70,24 @@ export default function CatalogoImagenesGrid({
     } catch {
       setErrorArchivo('No se pudo leer este archivo — probá elegirlo de nuevo.');
       setArchivoPendiente(null);
+    }
+  }
+
+  function manejarSeleccionArchivo(e) {
+    const archivo = e.target.files?.[0];
+    e.target.value = '';
+    procesarArchivoElegido(archivo);
+  }
+
+  function manejarDrop(e) {
+    e.preventDefault();
+    setArrastrandoSobre(false);
+    if (limiteAlcanzado) return;
+    const archivo = e.dataTransfer.files?.[0];
+    if (archivo && (archivo.type === 'image/jpeg' || archivo.type === 'image/png')) {
+      procesarArchivoElegido(archivo);
+    } else {
+      setErrorArchivo('Solo se aceptan imágenes JPG o PNG.');
     }
   }
 
@@ -158,16 +176,34 @@ export default function CatalogoImagenesGrid({
               </>
             ) : (
               <>
-                <span className="tarjeta-imagen-nombre">
-                  <span className="indicador-estado" />
-                  {item.nombre}
-                </span>
-                <div className="tarjeta-imagen-acciones">
-                  <button className="btn-link" onClick={() => empezarEdicion(item)}>Editar</button>
-                  <button className="btn-link" onClick={() => onAlternarActivo(item)}>
-                    {item.activo ? 'Pausar' : 'Activar'}
-                  </button>
-                  <button className="btn-link btn-danger" onClick={() => onEliminar(item)}>Eliminar</button>
+                <div className="tarjeta-imagen-fila-nombre">
+                  <span className="tarjeta-imagen-nombre">
+                    <span className="indicador-estado" />
+                    {item.nombre}
+                  </span>
+                  <div className="tarjeta-imagen-menu-wrap">
+                    <button
+                      type="button"
+                      className="tarjeta-imagen-menu-boton"
+                      onClick={() => setMenuAbiertoId(menuAbiertoId === item.id ? null : item.id)}
+                      title="Más acciones"
+                    >
+                      ⋯
+                    </button>
+                    {menuAbiertoId === item.id && (
+                      <div className="tarjeta-imagen-menu" onMouseLeave={() => setMenuAbiertoId(null)}>
+                        <button className="tarjeta-imagen-menu-item" onClick={() => { empezarEdicion(item); setMenuAbiertoId(null); }}>
+                          Editar
+                        </button>
+                        <button className="tarjeta-imagen-menu-item" onClick={() => { onAlternarActivo(item); setMenuAbiertoId(null); }}>
+                          {item.activo ? 'Pausar' : 'Activar'}
+                        </button>
+                        <button className="tarjeta-imagen-menu-item tarjeta-imagen-menu-item-danger" onClick={() => { onEliminar(item); setMenuAbiertoId(null); }}>
+                          Eliminar
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </>
             )}
@@ -209,15 +245,23 @@ export default function CatalogoImagenesGrid({
           </form>
         </div>
       ) : (
-        <label className={`tarjeta-subir ${limiteAlcanzado ? 'disabled' : ''}`}>
+        <label
+          className={`tarjeta-subir ${limiteAlcanzado ? 'disabled' : ''} ${arrastrandoSobre ? 'arrastrando' : ''}`}
+          onDragOver={(e) => { e.preventDefault(); if (!limiteAlcanzado) setArrastrandoSobre(true); }}
+          onDragLeave={() => setArrastrandoSobre(false)}
+          onDrop={manejarDrop}
+        >
           <input
             type="file"
             accept="image/jpeg,image/png"
             disabled={limiteAlcanzado}
             onChange={manejarSeleccionArchivo}
           />
-          <span className="tarjeta-subir-icono">+</span>
-          <span>{limiteAlcanzado ? (mensajeLimite || 'Límite alcanzado') : 'Subir imagen'}</span>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="tarjeta-subir-icono-nube">
+            <path d="M7 18a4.5 4.5 0 0 1-1.44-8.765 4.5 4.5 0 0 1 8.302-3.046 3.5 3.5 0 0 1 4.504 4.272A4 4 0 0 1 17 18H7Z" />
+            <path d="M12 12v6M9.5 14.5 12 12l2.5 2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span>{limiteAlcanzado ? (mensajeLimite || 'Límite alcanzado') : 'Arrastra una imagen aquí o haz clic para subir'}</span>
         </label>
       )}
       {errorArchivo && <p className="mensaje-error">{errorArchivo}</p>}

@@ -203,6 +203,21 @@
   margin: 0 0 8px 0;
 }
 
+.cliente-card-contacto {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 6px 0;
+}
+
+.cliente-card-contacto-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+
 .cliente-card-badge {
   display: inline-block;
   background: var(--color-brass);

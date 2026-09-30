@@ -9,6 +9,13 @@ import { fetchProfesionales, crearProfesional, actualizarProfesional, fetchServi
 
 const NOMBRES_DIAS_CORTO = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
+function inicialesDe(nombre) {
+  const palabras = (nombre || '').trim().split(/\s+/).filter(Boolean);
+  if (palabras.length === 0) return '?';
+  if (palabras.length === 1) return palabras[0].slice(0, 2).toUpperCase();
+  return (palabras[0][0] + palabras[palabras.length - 1][0]).toUpperCase();
+}
+
 function resumenHorario(horarios) {
   if (!horarios || horarios.length === 0) return 'Sin horario cargado';
   const dias = [...new Set(horarios.map((h) => h.diaSemana))].sort();
@@ -162,9 +169,12 @@ function TarjetaProfesional({ profesional, token, onCambio, setError, expandido,
   return (
     <div className="tarjeta-profesional-wrap">
       <div className="tarjeta-profesional" onClick={onToggle} role="button" tabIndex={0}>
-        <div className="tarjeta-profesional-info">
-          <strong>{profesional.nombre}</strong>
-          <span className="texto-muted">{resumenHorario(profesional.horarios)} · {profesional.duracionCitaMinutos} min por cita</span>
+        <div className="tarjeta-profesional-izquierda">
+          <span className="tarjeta-profesional-avatar" aria-hidden="true">{inicialesDe(profesional.nombre)}</span>
+          <div className="tarjeta-profesional-info">
+            <strong>{profesional.nombre}</strong>
+            <span className="texto-muted">{resumenHorario(profesional.horarios)} · {profesional.duracionCitaMinutos} min por cita</span>
+          </div>
         </div>
         <div className="tarjeta-profesional-derecha">
           {profesional.usuarios && profesional.usuarios.length > 0 ? (
