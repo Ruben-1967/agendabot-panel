@@ -71,7 +71,7 @@ export default function AdminLayout() {
       )}
       <aside className="sidebar">
         <div className="sidebar-brand">
-          Agenda<span className="accent">Bot</span>
+          Totem<span className="accent">system</span>
         </div>
         <nav>
           <NavLink to="/admin" end>Dashboard</NavLink>

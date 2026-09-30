@@ -82,7 +82,7 @@ export default function Login() {
     <div className="pantalla-login">
       <div className="login-card">
         <div className="login-brand">
-          Agenda<span className="accent">Bot</span>
+          Totem<span className="accent">system</span>
         </div>
         <p className="login-sub">Panel de gestión</p>
 

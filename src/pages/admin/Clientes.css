@@ -61,57 +61,26 @@
   font-size: 0.9rem;
 }
 
-/* ========== FORMULARIO NUEVO PACIENTE ========== */
-.clientes-form-nuevo {
+/* ========== TOOLBAR (buscador + nuevo paciente) ========== */
+.clientes-toolbar {
   display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: center;
 }
 
-.clientes-form-nuevo input {
-  flex: 1;
-  min-width: 140px;
-  padding: 10px 12px;
-  border: 1px solid var(--color-arena);
-  border-radius: 4px;
-  font-size: 0.9rem;
-  font-family: inherit;
-}
-
-.clientes-form-nuevo input:focus {
-  outline: none;
-  border-color: var(--color-teal);
-  box-shadow: 0 0 0 3px rgba(15, 110, 86, 0.1);
-}
-
-.clientes-form-nuevo button {
-  padding: 10px 16px;
-  background: var(--color-dorado);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
+.clientes-toolbar .btn-primario {
   white-space: nowrap;
-  transition: background 0.2s ease;
+  background: var(--color-dorado);
 }
 
-.clientes-form-nuevo button:hover:not(:disabled) {
+.clientes-toolbar .btn-primario:hover:not(:disabled) {
   background: #9d7432;
 }
 
-.clientes-form-nuevo button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .clientes-buscador {
-  width: 100%;
+  flex: 1;
   padding: 10px 12px;
-  margin-bottom: 16px;
   border: 1px solid var(--color-arena);
   border-radius: 4px;
   font-size: 0.9rem;
@@ -123,6 +92,60 @@
   outline: none;
   border-color: var(--color-teal);
   box-shadow: 0 0 0 3px rgba(15, 110, 86, 0.1);
+}
+
+/* ========== MODAL "NUEVO PACIENTE/CLIENTE" ========== */
+/* Antes era un formulario siempre visible arriba de la lista -- ahora solo
+   aparece al hacer clic en "+ Nuevo paciente/cliente", dejando la pantalla
+   principal limpia con solo el buscador y la lista. */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 78, 68, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 16px;
+}
+
+.clientes-form-nuevo-modal {
+  background: var(--color-fondo-card);
+  border-radius: 10px;
+  padding: 24px;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.clientes-form-nuevo-modal h3 {
+  margin: 0;
+  color: var(--color-verde-oscuro);
+  font-size: 1.1rem;
+}
+
+.clientes-form-nuevo-modal input {
+  padding: 10px 12px;
+  border: 1px solid var(--color-arena);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.clientes-form-nuevo-modal input:focus {
+  outline: none;
+  border-color: var(--color-teal);
+  box-shadow: 0 0 0 3px rgba(15, 110, 86, 0.1);
+}
+
+.clientes-form-nuevo-modal-acciones {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  margin-top: 4px;
 }
 
 /* ========== ESTADOS DE CARGA ========== */
@@ -700,15 +723,14 @@
     font-size: 0.9rem;
   }
 
-  .clientes-form-nuevo {
+  .clientes-toolbar {
     flex-direction: column;
+    align-items: stretch;
     gap: 10px;
   }
 
-  .clientes-form-nuevo input,
-  .clientes-form-nuevo button {
-    width: 100%;
-    min-width: auto;
+  .clientes-form-nuevo-modal {
+    max-width: 100%;
   }
 
   .cliente-detalle-panel {

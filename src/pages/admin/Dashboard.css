@@ -101,6 +101,49 @@
   opacity: 0.5;
 }
 
+/* Tarjetas destacadas (Citas hoy, Mensajes del bot) -- jerarquía visual
+   para que el usuario sepa dónde mirar primero en vez de que las 7
+   tarjetas compitan por igual. */
+.metric-card-destacada {
+  border-color: var(--fill-accent);
+  border-width: 1px;
+  background: linear-gradient(180deg, rgba(45, 90, 82, 0.04) 0%, var(--surface-1) 60px);
+}
+
+.metric-card-destacada .metric-value {
+  font-size: 32px;
+}
+
+.metric-value-sufijo {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-left: 2px;
+}
+
+.metric-barra-fondo {
+  background: var(--border);
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.metric-barra {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  background: var(--fill-accent);
+}
+
+.metric-barra-warning {
+  background: var(--fill-warning);
+}
+
+.metric-barra-danger {
+  background: var(--fill-danger);
+}
+
 .metric-label {
   font-size: 11px;
   text-transform: uppercase;
@@ -311,29 +354,28 @@
   color: var(--text-secondary);
 }
 
-/* Placeholder de agenda vacía */
-.agenda-item-empty {
-  padding: 1rem 1.25rem;
-  border-bottom: 0.5px solid var(--border);
-  background: linear-gradient(90deg, 
-    var(--surface-1) 0%, 
-    var(--surface-1) 50px,
-    rgba(107, 119, 112, 0.08) 50px,
-    rgba(107, 119, 112, 0.08) 100px,
-    var(--surface-1) 100px
-  );
-  height: 60px;
-  animation: shimmer 2s infinite;
+/* Estado vacío de "Agenda de hoy" -- reemplaza el shimmer gris anterior,
+   que no comunicaba nada (se veía como un panel roto/cargando). */
+.agenda-vacia {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--text-secondary);
 }
 
-.agenda-item-empty:last-child {
-  border-bottom: none;
+.agenda-vacia svg {
+  opacity: 0.5;
 }
 
-@keyframes shimmer {
-  0% { opacity: 0.6; }
-  50% { opacity: 0.8; }
-  100% { opacity: 0.6; }
+.agenda-vacia p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  max-width: 320px;
 }
 
 /* Responsive */
@@ -436,6 +478,31 @@
   text-align: center;
   color: var(--text-secondary);
   font-size: 13px;
+}
+
+/* Estado vacío con ícono, usado por BarChartSerie/LineChartSerie/BarChartCategorias
+   cuando no hay datos reales que mostrar -- evita que el gráfico se vea
+   roto o en blanco. */
+.grafico-vacio-estado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 2.5rem 1rem;
+  text-align: center;
+}
+
+.grafico-vacio-estado svg {
+  opacity: 0.5;
+}
+
+.grafico-vacio-estado p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 280px;
+  line-height: 1.4;
 }
 
 /* Gráfico categórico (atenciones por tipo) — filas con barra horizontal */

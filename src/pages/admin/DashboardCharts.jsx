@@ -39,6 +39,23 @@ function formatearMesCorto(mesISO) {
 }
 
 // ------------------------------------------------------------
+// Estado vacío compartido -- se usa cuando un gráfico no tiene ningún dato
+// real que mostrar (array vacío, o con todos los valores en 0), en vez de
+// dejar el SVG en blanco (se veía como un panel roto).
+// ------------------------------------------------------------
+function GraficoVacio({ mensaje }) {
+  return (
+    <div className="grafico-vacio-estado">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={COLOR_TEXTO_MUTED} strokeWidth="1.5">
+        <rect x="3" y="5" width="18" height="16" rx="2" />
+        <path d="M3 9h18M8 3v4M16 3v4" strokeLinecap="round" />
+      </svg>
+      <p>{mensaje}</p>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------
 // Gráfico de barras de una sola serie (citas por día)
 // ------------------------------------------------------------
 export function BarChartSerie({
@@ -48,8 +65,14 @@ export function BarChartSerie({
   formatoEtiqueta,
   formatoEtiquetaEje = formatearFechaCorta,
   todasLasEtiquetas = false,
+  mensajeVacio = 'Aún no hay citas registradas. Cuando tu bot agende la primera, aparecerá aquí.',
 }) {
   const [hover, setHover] = useState(null);
+
+  if (!datos || datos.length === 0 || datos.every((d) => d.value === 0)) {
+    return <GraficoVacio mensaje={mensajeVacio} />;
+  }
+
   const ancho = 560;
   const alto = 200;
   const margen = { arriba: 16, abajo: 28, izquierda: 8, derecha: 8 };
@@ -129,8 +152,19 @@ export function BarChartSerie({
 // ------------------------------------------------------------
 // Gráfico de línea de una sola serie (evolución mensual)
 // ------------------------------------------------------------
-export function LineChartSerie({ datos, color = COLOR_CITAS, etiquetaEje, formatoEtiqueta }) {
+export function LineChartSerie({
+  datos,
+  color = COLOR_CITAS,
+  etiquetaEje,
+  formatoEtiqueta,
+  mensajeVacio = 'Todavía no hay suficiente historial para mostrar la evolución.',
+}) {
   const [hover, setHover] = useState(null);
+
+  if (!datos || datos.length === 0 || datos.every((d) => d.value === 0)) {
+    return <GraficoVacio mensaje={mensajeVacio} />;
+  }
+
   const ancho = 560;
   const alto = 200;
   const margen = { arriba: 16, abajo: 28, izquierda: 8, derecha: 8 };
@@ -209,7 +243,7 @@ export function BarChartCategorias({ datos }) {
   const [hover, setHover] = useState(null);
 
   if (!datos || datos.length === 0) {
-    return <div className="grafico-vacio">Sin atenciones registradas todavía.</div>;
+    return <GraficoVacio mensaje="Aún no hay atenciones registradas por tipo de servicio." />;
   }
 
   const CAPACIDAD = COLORES_CATEGORICOS.length;

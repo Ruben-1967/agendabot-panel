@@ -165,7 +165,7 @@ export default function CatalogoVisual() {
     <div>
       <h1>Catálogo visual</h1>
       <p className="pagina-sub">
-        Imágenes que AgendaBot puede ofrecer durante la conversación (cortes, armazones, tratamientos, platos, etc.) — solo mientras el cliente está indagando, nunca durante un agendamiento ya iniciado.
+        Imágenes que Totemsystem puede ofrecer durante la conversación (cortes, armazones, tratamientos, platos, etc.) — solo mientras el cliente está indagando, nunca durante un agendamiento ya iniciado.
       </p>
 
       <div className="catalogo-switch-row">

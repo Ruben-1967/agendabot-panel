@@ -19,7 +19,7 @@ export default function ResultadoSuscripcion() {
     <div className="pantalla-login">
       <div className="login-card">
         <div className="login-brand">
-          Agenda<span className="accent">Bot</span>
+          Totem<span className="accent">system</span>
         </div>
 
         {estado === 'procesando' && (

@@ -8,7 +8,7 @@ export default function ProfesionalLayout() {
     <div className="layout">
       <aside className="sidebar">
         <div className="sidebar-brand">
-          Agenda<span className="accent">Bot</span>
+          Totem<span className="accent">system</span>
         </div>
         <nav>
           <NavLink to="/profesional" end>Mi agenda</NavLink>

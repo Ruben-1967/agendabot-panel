@@ -1,6 +1,6 @@
 {
-  "name": "AgendaBot — Panel de gestión",
-  "short_name": "AgendaBot",
+  "name": "Totemsystem — Panel de gestión",
+  "short_name": "Totemsystem",
   "description": "Panel de gestión para tu negocio en TotemSystem",
   "start_url": "/login",
   "display": "standalone",

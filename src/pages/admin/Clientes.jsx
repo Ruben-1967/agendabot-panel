@@ -882,6 +882,7 @@ export default function Clientes() {
   const [rutNuevo, setRutNuevo] = useState('');
   const [telefonoNuevo, setTelefonoNuevo] = useState('');
   const [creando, setCreando] = useState(false);
+  const [mostrarModalNuevo, setMostrarModalNuevo] = useState(false);
 
   function cargar() {
     setCargando(true);
@@ -926,6 +927,7 @@ export default function Clientes() {
       setNombreNuevo('');
       setRutNuevo('');
       setTelefonoNuevo('');
+      setMostrarModalNuevo(false);
       cargar();
       setClienteSeleccionadoId(data.cliente.id);
     } catch (err) {
@@ -950,36 +952,56 @@ export default function Clientes() {
 
       {error && <div className="mensaje-error">{error}</div>}
 
-      <form className="clientes-form-nuevo" onSubmit={manejarCrear}>
-        <input
-          placeholder="Nombre completo"
-          value={nombreNuevo}
-          onChange={(e) => setNombreNuevo(e.target.value)}
-          required
-        />
-        <input
-          placeholder="RUT (opcional)"
-          value={rutNuevo}
-          onChange={(e) => setRutNuevo(e.target.value)}
-        />
-        <input
-          placeholder="Teléfono (opcional)"
-          value={telefonoNuevo}
-          onChange={(e) => setTelefonoNuevo(e.target.value)}
-        />
-        <button type="submit" disabled={creando}>
-          {creando ? 'Creando…' : '+ Nuevo paciente/cliente'}
+      <div className="clientes-toolbar">
+        {!cargando && clientes.length > 0 && (
+          <input
+            type="search"
+            className="clientes-buscador"
+            placeholder="Buscar por nombre, RUT o teléfono…"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+        )}
+        <button type="button" className="btn-primario" onClick={() => setMostrarModalNuevo(true)}>
+          + Nuevo paciente/cliente
         </button>
-      </form>
+      </div>
 
-      {!cargando && clientes.length > 0 && (
-        <input
-          type="search"
-          className="clientes-buscador"
-          placeholder="Buscar por nombre, RUT o teléfono…"
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
+      {mostrarModalNuevo && (
+        <div className="modal-overlay" onClick={() => setMostrarModalNuevo(false)}>
+          <form
+            className="clientes-form-nuevo-modal"
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={manejarCrear}
+          >
+            <h3>Nuevo paciente/cliente</h3>
+            <input
+              placeholder="Nombre completo"
+              value={nombreNuevo}
+              onChange={(e) => setNombreNuevo(e.target.value)}
+              autoFocus
+              required
+            />
+            <input
+              placeholder="RUT (opcional)"
+              value={rutNuevo}
+              onChange={(e) => setRutNuevo(e.target.value)}
+            />
+            <input
+              placeholder="Teléfono (opcional)"
+              value={telefonoNuevo}
+              onChange={(e) => setTelefonoNuevo(e.target.value)}
+            />
+            <div className="clientes-form-nuevo-modal-acciones">
+              <button type="button" className="btn-link" onClick={() => setMostrarModalNuevo(false)}>
+                Cancelar
+              </button>
+              <button type="submit" className="btn-primario" disabled={creando}>
+                {creando ? 'Creando…' : 'Crear'}
+              </button>
+            </div>
+          </form>
+        </div>
       )}
 
       {cargando ? (

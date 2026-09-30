@@ -435,7 +435,8 @@ export default function TablaCitas() {
       )}
 
       {mostrarForm && (
-        <form className="tabla-citas-form" onSubmit={guardarCitaNueva}>
+        <div className="reagendar-overlay" onClick={() => setMostrarForm(false)}>
+        <form className="tabla-citas-form tabla-citas-form-modal" onClick={(e) => e.stopPropagation()} onSubmit={guardarCitaNueva}>
           <h2>Nueva cita — {fecha}</h2>
           {errorForm && <p className="mensaje-error">{errorForm}</p>}
           {ofrecerForzarSobrecupo && (
@@ -518,6 +519,7 @@ export default function TablaCitas() {
             </button>
           </div>
         </form>
+        </div>
       )}
 
       <div className="tabla-citas-wrap">

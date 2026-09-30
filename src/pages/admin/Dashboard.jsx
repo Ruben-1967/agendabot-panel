@@ -99,7 +99,7 @@ export default function Dashboard() {
 
       {/* 4 tarjetas KPI */}
       <div className="dashboard-grid">
-        <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
+        <div className={`metric-card metric-card-destacada ${datos ? 'filled' : 'empty'}`}>
           <span className="metric-label">Citas hoy</span>
           <span className="metric-value">{datos_seguros.citasHoy}</span>
           <span className="metric-description">
@@ -141,17 +141,28 @@ export default function Dashboard() {
           <span className="metric-description">de lunes a hoy</span>
         </div>
 
-        {datos_seguros.usoMensajes && (
-          <div className={`metric-card ${datos ? 'filled' : 'empty'}`}>
-            <span className="metric-label">Mensajes del bot (este mes)</span>
-            <span className="metric-value">{datos_seguros.usoMensajes.mensajesEsteMes}</span>
-            <span className="metric-description">
-              {datos_seguros.usoMensajes.mensajesEsteMes <= datos_seguros.usoMensajes.limiteGratis
-                ? `Dentro del tramo gratis de Meta (${datos_seguros.usoMensajes.limiteGratis}/mes) · estimado`
-                : `≈ ${formatoCLP.format(datos_seguros.usoMensajes.costoEstimadoCLP)} sobre el tramo gratis · estimado, no es la factura real de Meta`}
-            </span>
-          </div>
-        )}
+        {datos_seguros.usoMensajes && (() => {
+          const { mensajesEsteMes, limiteGratis, costoEstimadoCLP } = datos_seguros.usoMensajes;
+          const pct = limiteGratis > 0 ? Math.min(100, Math.round((mensajesEsteMes / limiteGratis) * 100)) : 0;
+          const nivel = pct >= 100 ? 'danger' : pct >= 80 ? 'warning' : 'ok';
+          return (
+            <div className={`metric-card metric-card-destacada ${datos ? 'filled' : 'empty'}`}>
+              <span className="metric-label">Mensajes del bot (este mes)</span>
+              <span className="metric-value">
+                {mensajesEsteMes}
+                <span className="metric-value-sufijo">/{limiteGratis}</span>
+              </span>
+              <div className="metric-barra-fondo">
+                <div className={`metric-barra metric-barra-${nivel}`} style={{ width: `${pct}%` }} />
+              </div>
+              <span className="metric-description">
+                {mensajesEsteMes <= limiteGratis
+                  ? `Dentro del tramo gratis de Meta · estimado`
+                  : `≈ ${formatoCLP.format(costoEstimadoCLP)} sobre el tramo gratis · estimado, no es la factura real de Meta`}
+              </span>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Gráficos de negocio */}
@@ -164,6 +175,7 @@ export default function Dashboard() {
             formatoEtiqueta={(v) => `${v} cita${v === 1 ? '' : 's'}`}
             formatoEtiquetaEje={formatearDiaSemanaCorto}
             todasLasEtiquetas
+            mensajeVacio="Aún no hay citas agendadas para los próximos días. Cuando tu bot agende la primera, aparecerá aquí."
           />
         </div>
 
@@ -173,6 +185,7 @@ export default function Dashboard() {
             datos={datos_seguros.citasPorDia.map((d) => ({ label: d.fecha, value: d.cantidad }))}
             etiquetaEje="Citas por día, últimos 14 días"
             formatoEtiqueta={(v) => `${v} cita${v === 1 ? '' : 's'}`}
+            mensajeVacio="Aún no hay citas registradas en los últimos 14 días."
           />
         </div>
 
@@ -189,6 +202,7 @@ export default function Dashboard() {
             datos={datos_seguros.citasPorMes.map((d) => ({ label: d.mes, value: d.cantidad }))}
             etiquetaEje="Citas por mes, últimos 6 meses"
             formatoEtiqueta={(v) => `${v} cita${v === 1 ? '' : 's'}`}
+            mensajeVacio="Todavía no hay suficiente historial de citas para mostrar la evolución mensual."
           />
         </div>
 
@@ -199,6 +213,7 @@ export default function Dashboard() {
             color={COLOR_DINERO}
             etiquetaEje="Monto en ventas por mes, últimos 6 meses"
             formatoEtiqueta={(v) => formatoCLP.format(v)}
+            mensajeVacio="Todavía no hay ventas registradas para mostrar la evolución mensual."
           />
         </div>
       </div>
@@ -229,11 +244,13 @@ export default function Dashboard() {
                 </div>
               ))
             ) : (
-              <>
-                <div className="agenda-item-empty"></div>
-                <div className="agenda-item-empty"></div>
-                <div className="agenda-item-empty"></div>
-              </>
+              <div className="agenda-vacia">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="3" y="5" width="18" height="16" rx="2" />
+                  <path d="M3 9h18M8 3v4M16 3v4" strokeLinecap="round" />
+                </svg>
+                <p>Aún no hay citas registradas para hoy. Cuando tu bot agende la primera, aparecerá aquí.</p>
+              </div>
             )}
           </div>
         </div>

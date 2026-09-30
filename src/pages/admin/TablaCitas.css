@@ -200,6 +200,17 @@
   gap: 14px;
 }
 
+/* Ahora se muestra dentro de .reagendar-overlay (mismo patrón que
+   "Reagendar") en vez de rellenar la pantalla principal -- reduce la
+   carga cognitiva de la tabla cuando no se está agendando nada. */
+.tabla-citas-form-modal {
+  margin-bottom: 0;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
 .tabla-citas-form h2 {
   margin: 0;
   font-size: 1rem;
