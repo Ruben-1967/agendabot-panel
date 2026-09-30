@@ -3,25 +3,26 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { solicitarCodigo, verificarCodigo } from '../api/client';
 
-// Login sin contraseña (código de 6 dígitos por WhatsApp) como camino por
-// defecto -- mismo patrón ya probado en el proyecto hermano Norman. El
-// email+contraseña sigue funcionando (ver PASO_PASSWORD más abajo) para
-// cuentas creadas antes de esta feature, que todavía no tienen un teléfono
-// vinculado -- nunca se quitó, solo dejó de ser el camino principal.
-const PASOS = { TELEFONO: 'telefono', CODIGO: 'codigo', PASSWORD: 'password' };
+// Login sin contraseña (código de 6 dígitos por email) como camino por
+// defecto. Idea original: código por WhatsApp (mismo patrón del proyecto
+// hermano Norman) -- Meta rechazó la plantilla necesaria (un código de
+// acceso es contenido categoría AUTHENTICATION, que exige un piso de
+// volumen que esta WABA compartida no alcanza), así que se manda por email
+// en su lugar -- reusa el mismo campo `email` que el login viejo. El
+// email+contraseña sigue funcionando (ver PASOS.PASSWORD más abajo), nunca
+// se quitó, solo dejó de ser el camino principal.
+const PASOS = { EMAIL: 'email', CODIGO: 'codigo', PASSWORD: 'password' };
 
 export default function Login() {
   const { iniciarSesion, establecerSesion } = useAuth();
   const navigate = useNavigate();
 
-  const [paso, setPaso] = useState(PASOS.TELEFONO);
+  const [paso, setPaso] = useState(PASOS.EMAIL);
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
 
-  const [telefono, setTelefono] = useState('');
-  const [codigo, setCodigo] = useState('');
-
   const [email, setEmail] = useState('');
+  const [codigo, setCodigo] = useState('');
   const [password, setPassword] = useState('');
 
   function irAlPanel(usuario) {
@@ -33,7 +34,7 @@ export default function Login() {
     setError('');
     setEnviando(true);
     try {
-      await solicitarCodigo(telefono);
+      await solicitarCodigo(email);
       setPaso(PASOS.CODIGO);
     } catch (err) {
       setError(err.message || 'No se pudo enviar el código');
@@ -47,7 +48,7 @@ export default function Login() {
     setError('');
     setEnviando(true);
     try {
-      const data = await verificarCodigo(telefono, codigo);
+      const data = await verificarCodigo(email, codigo);
       establecerSesion(data);
       irAlPanel(data.usuario);
     } catch (err) {
@@ -71,10 +72,10 @@ export default function Login() {
     }
   }
 
-  function volverATelefono() {
+  function volverAEmail() {
     setError('');
     setCodigo('');
-    setPaso(PASOS.TELEFONO);
+    setPaso(PASOS.EMAIL);
   }
 
   return (
@@ -85,16 +86,15 @@ export default function Login() {
         </div>
         <p className="login-sub">Panel de gestión</p>
 
-        {paso === PASOS.TELEFONO && (
+        {paso === PASOS.EMAIL && (
           <form onSubmit={manejarSolicitarCodigo}>
             <label>
-              Tu WhatsApp
+              Tu email
               <input
-                type="tel"
-                value={telefono}
-                onChange={(e) => setTelefono(e.target.value)}
-                placeholder="+56912345678"
-                autoComplete="tel"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="username"
                 required
               />
             </label>
@@ -111,14 +111,14 @@ export default function Login() {
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
               onClick={() => { setError(''); setPaso(PASOS.PASSWORD); }}
             >
-              ¿Prefieres entrar con tu email y contraseña?
+              ¿Prefieres entrar con tu contraseña?
             </button>
           </form>
         )}
 
         {paso === PASOS.CODIGO && (
           <form onSubmit={manejarVerificarCodigo}>
-            <p className="login-sub">Te enviamos un código por WhatsApp a {telefono}</p>
+            <p className="login-sub">Te enviamos un código a {email}</p>
 
             <label>
               Código de 6 dígitos
@@ -144,9 +144,9 @@ export default function Login() {
               type="button"
               className="login-olvide-password"
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-              onClick={volverATelefono}
+              onClick={volverAEmail}
             >
-              ¿Número equivocado? Volver
+              ¿Email equivocado? Volver
             </button>
           </form>
         )}
@@ -187,9 +187,9 @@ export default function Login() {
               type="button"
               className="login-olvide-password"
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-              onClick={() => { setError(''); setPaso(PASOS.TELEFONO); }}
+              onClick={() => { setError(''); setPaso(PASOS.EMAIL); }}
             >
-              ¿Prefieres entrar con tu WhatsApp?
+              ¿Prefieres entrar con un código?
             </button>
           </form>
         )}

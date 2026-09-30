@@ -44,12 +44,13 @@ export function login(email, password) {
   return apiFetch('/auth/login', { method: 'POST', body: { email, password } });
 }
 
-// Login sin contraseña -- código de 6 dígitos por WhatsApp.
-export function solicitarCodigo(telefono) {
-  return apiFetch('/auth/solicitar-codigo', { method: 'POST', body: { telefono } });
+// Login sin contraseña -- código de 6 dígitos por email (se intentó por
+// WhatsApp primero, Meta lo rechazó -- ver comentario en Login.jsx).
+export function solicitarCodigo(email) {
+  return apiFetch('/auth/solicitar-codigo', { method: 'POST', body: { email } });
 }
-export function verificarCodigo(telefono, codigo) {
-  return apiFetch('/auth/verificar-codigo', { method: 'POST', body: { telefono, codigo } });
+export function verificarCodigo(email, codigo) {
+  return apiFetch('/auth/verificar-codigo', { method: 'POST', body: { email, codigo } });
 }
 
 export function fetchMe(token) {
