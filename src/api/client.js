@@ -271,6 +271,11 @@ export function actualizarEstadoCita(token, citaId, estado) {
 export function fetchDisponibilidadRecurso(token, recursoId, fecha) {
   return apiFetch(`/agenda/disponibilidad/${recursoId}?fecha=${fecha}`, { token });
 }
+// Corrige nombre/RUT de quién se atiende en UNA cita puntual (no toca la
+// ficha compartida del cliente) -- ver backend PATCH /agenda/citas/:id/paciente.
+export function actualizarPacienteCita(token, citaId, { nombre, rut }) {
+  return apiFetch(`/agenda/citas/${citaId}/paciente`, { method: 'PATCH', body: { nombre, rut }, token });
+}
 export function reagendarCita(token, citaId, { nuevaFecha, nuevaHora }) {
   return apiFetch(`/agenda/citas/${citaId}/reagendar`, { method: 'POST', body: { nuevaFecha, nuevaHora }, token });
 }

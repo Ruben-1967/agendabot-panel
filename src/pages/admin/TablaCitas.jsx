@@ -7,6 +7,7 @@ import {
   actualizarEstadoCita,
   fetchDisponibilidadRecurso,
   reagendarCita,
+  actualizarPacienteCita,
   fetchProfesionales,
   fetchServicios,
   fetchClientes,
@@ -74,6 +75,11 @@ export default function TablaCitas() {
   const [camposFicha, setCamposFicha] = useState({ grupos: [] });
   const [mediosPago, setMediosPago] = useState([]);
   const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState(null);
+  const [citaAEditarPaciente, setCitaAEditarPaciente] = useState(null);
+  const [pacienteNombre, setPacienteNombre] = useState('');
+  const [pacienteRut, setPacienteRut] = useState('');
+  const [guardandoPaciente, setGuardandoPaciente] = useState(false);
+  const [errorPaciente, setErrorPaciente] = useState(null);
 
   const [citaAReagendar, setCitaAReagendar] = useState(null);
   const [reagendarFecha, setReagendarFecha] = useState('');
@@ -274,6 +280,33 @@ export default function TablaCitas() {
       alert(`Error: ${err.message}`);
     } finally {
       setActualizandoId(null);
+    }
+  }
+
+  // Corrige nombre/RUT de ESTA cita (quién se atiende) sin tocar la ficha
+  // del cliente -- 2 familiares con el mismo teléfono comparten un solo
+  // Cliente, y "Ver ficha" edita ese Cliente compartido (cambia ambos).
+  // Caso real Ahorróptica 2026-10-05.
+  function abrirEditarPaciente(cita) {
+    setCitaAEditarPaciente(cita);
+    setPacienteNombre(cita.nombre || '');
+    setPacienteRut(cita.rut || '');
+    setErrorPaciente(null);
+  }
+
+  async function guardarPaciente(e) {
+    e.preventDefault();
+    if (!citaAEditarPaciente || !pacienteNombre.trim()) return;
+    setGuardandoPaciente(true);
+    setErrorPaciente(null);
+    try {
+      await actualizarPacienteCita(token, citaAEditarPaciente.id, { nombre: pacienteNombre.trim(), rut: pacienteRut.trim() });
+      setCitaAEditarPaciente(null);
+      cargarCitas();
+    } catch (err) {
+      setErrorPaciente(err.message);
+    } finally {
+      setGuardandoPaciente(false);
     }
   }
 
@@ -615,6 +648,7 @@ export default function TablaCitas() {
                     </td>
                     <td className="tabla-citas-acciones-celda">
                       <button className="btn-link" onClick={() => setClienteSeleccionadoId(cita.clienteId)}>Ver ficha</button>
+                      <button className="btn-link" onClick={() => abrirEditarPaciente(cita)}>Editar paciente</button>
                       {cita.estado !== 'CANCELADA' && (
                         <>
                           <button className="btn-link" disabled={bloqueado} onClick={() => abrirReagendar(cita)}>Reagendar</button>
@@ -688,6 +722,7 @@ export default function TablaCitas() {
                 )}
                 <div className="tabla-citas-card-links">
                   <button className="btn-link" onClick={() => setClienteSeleccionadoId(cita.clienteId)}>Ver ficha</button>
+                  <button className="btn-link" onClick={() => abrirEditarPaciente(cita)}>Editar paciente</button>
                   {cita.estado !== 'CANCELADA' && (
                     <>
                       <button className="btn-link" disabled={bloqueado} onClick={() => abrirReagendar(cita)}>Reagendar</button>
@@ -740,6 +775,33 @@ export default function TablaCitas() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {citaAEditarPaciente && (
+        <div className="reagendar-overlay" onClick={() => setCitaAEditarPaciente(null)}>
+          <form className="tabla-citas-form tabla-citas-form-modal" onClick={(e) => e.stopPropagation()} onSubmit={guardarPaciente}>
+            <h2>Editar paciente de esta cita</h2>
+            <p className="reagendar-actual">
+              Hora {citaAEditarPaciente.hora}. Solo cambia el nombre y RUT de ESTA cita — la ficha del cliente
+              (compartida por teléfono) no se modifica.
+            </p>
+            {errorPaciente && <p className="mensaje-error">{errorPaciente}</p>}
+            <label>
+              Nombre
+              <input value={pacienteNombre} onChange={(e) => setPacienteNombre(e.target.value)} required />
+            </label>
+            <label>
+              RUT
+              <input value={pacienteRut} onChange={(e) => setPacienteRut(e.target.value)} placeholder="12345678-9" />
+            </label>
+            <div className="tabla-citas-form-acciones">
+              <button type="button" className="btn-link" onClick={() => setCitaAEditarPaciente(null)}>Cancelar</button>
+              <button type="submit" className="btn-primario" disabled={guardandoPaciente || !pacienteNombre.trim()}>
+                {guardandoPaciente ? 'Guardando…' : 'Guardar'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
