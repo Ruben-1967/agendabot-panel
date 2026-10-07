@@ -26,9 +26,9 @@ const ETIQUETA_FASE = { primer_contacto: 'sin primer contacto', aging: 'sin avan
 // para mostrar precio en el selector del modal, el backend es la fuente de
 // verdad real al crear la Suscripcion.
 const PLANES = {
-  A: { etiqueta: 'Plan A', montoMensual: 9900 },
-  B: { etiqueta: 'Plan B', montoMensual: 19900 },
-  C: { etiqueta: 'Plan C', montoMensual: 49900 },
+  A: { etiqueta: 'Plan A', montoMensual: 14900 },
+  B: { etiqueta: 'Plan B', montoMensual: 24900 },
+  C: { etiqueta: 'Plan C', montoMensual: 59900 },
 };
 
 const ETIQUETA_ESTADO_SUSCRIPCION = { PENDIENTE_PAGO: 'Pendiente de pago', ACTIVA: 'Activa', SUSPENDIDA: 'Suspendida' };

@@ -33,7 +33,7 @@ const PLANES = {
   },
   D: {
     nombre: 'Plan D',
-    precio: 99900,
+    precio: 149900,
     citas: 2500,
     excedente: 55,
     descripcion: 'Para operaciones grandes',
@@ -185,7 +185,7 @@ export default function ElegirPlan() {
               
               <div style={styles.precio}>
                 <span style={styles.monto}>${planData.precio.toLocaleString()}</span>
-                <span style={styles.moneda}>/mes</span>
+                <span style={styles.moneda}>/mes · IVA incluido</span>
               </div>
 
               <ul style={styles.features}>
