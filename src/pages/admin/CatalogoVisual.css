@@ -232,9 +232,13 @@
 }
 .tarjeta-imagen-menu-boton:hover { background: var(--paper); color: var(--ink); }
 
+/* Se abre HACIA ARRIBA: el nombre es lo último de la tarjeta y la tarjeta tiene
+   overflow:hidden (para redondear la miniatura), así que un menú que se abre
+   hacia abajo (top:100%) quedaba recortado -- no se veía "Editar/Pausar/Eliminar"
+   y no se podía borrar ninguna foto (reportado 2026-10-08). */
 .tarjeta-imagen-menu {
   position: absolute;
-  top: 100%;
+  bottom: 100%;
   right: 0;
   z-index: 10;
   background: #fff;
