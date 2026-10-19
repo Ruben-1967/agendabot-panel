@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
-// Mismos montos que DETALLE_PLANES en src/services/contratoHtml.js (backend)
-// — fuente única de verdad real al momento de cobrar; esto es solo para
-// mostrar el precio antes de elegir. El texto de "Excedente: $X/cita" se arma
+// Mismos montos NETOS que DETALLE_PLANES en src/services/contratoHtml.js (backend)
+// — fuente única de verdad real al momento de cobrar (neto + IVA 19%); esto es
+// solo para mostrar el precio antes de elegir. El texto de "Excedente: $X/cita" se arma
 // desde el propio campo `excedente` de cada plan más abajo, para que no
 // puedan quedar desincronizados como pasó acá antes (excedente:70 vs texto
 // "$60/cita").
@@ -40,6 +40,8 @@ const PLANES = {
     featuresExtra: ['Profesionales ilimitados', 'Historial de clientes', 'Todas las features'],
   },
 };
+
+const conIva = (neto) => Math.round(neto * 1.19);
 
 export default function ElegirPlan() {
   const searchParams = new URLSearchParams(window.location.search);
@@ -185,12 +187,13 @@ export default function ElegirPlan() {
               
               <div style={styles.precio}>
                 <span style={styles.monto}>${planData.precio.toLocaleString()}</span>
-                <span style={styles.moneda}>/mes · IVA incluido</span>
+                <span style={styles.moneda}>/mes + IVA</span>
               </div>
 
               <ul style={styles.features}>
                 <li style={styles.feature}>✓ {planData.citas.toLocaleString()} citas/mes</li>
-                <li style={styles.feature}>✓ Excedente: ${planData.excedente.toLocaleString()}/cita</li>
+                <li style={styles.feature}>✓ Total con IVA: ${conIva(planData.precio).toLocaleString()}/mes</li>
+                <li style={styles.feature}>✓ Excedente: ${planData.excedente.toLocaleString()} + IVA/cita</li>
                 {planData.featuresExtra.map((f, i) => (
                   <li key={i} style={styles.feature}>✓ {f}</li>
                 ))}

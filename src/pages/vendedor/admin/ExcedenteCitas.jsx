@@ -60,8 +60,8 @@ export default function ExcedenteCitas() {
                 <th>Citas del ciclo</th>
                 <th>Incluidas</th>
                 <th>Exceso</th>
-                <th>Precio/cita</th>
-                <th>Monto sugerido</th>
+                <th>Precio/cita (+ IVA)</th>
+                <th>Monto sugerido (con IVA)</th>
                 <th>Ciclo desde</th>
               </tr>
             </thead>

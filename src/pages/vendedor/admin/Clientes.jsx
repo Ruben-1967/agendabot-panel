@@ -33,7 +33,7 @@ function TarjetaCliente({ cliente: c, expandido, onToggle, onMarcarPagado, proce
         <div className="detalle-vendedor-admin">
           <h3 className="subtitulo-tarjeta">Datos</h3>
           <p className="texto-ayuda" style={{ margin: '0 0 4px' }}>Vendedor: {c.vendedorNombre || '—'}</p>
-          <p className="texto-ayuda" style={{ margin: '0 0 4px' }}>Monto mensual: ${c.montoMensualActual?.toLocaleString('es-CL')}</p>
+          <p className="texto-ayuda" style={{ margin: '0 0 4px' }}>Monto mensual (con IVA): ${c.montoMensualActual?.toLocaleString('es-CL')}</p>
           <p className="texto-ayuda" style={{ margin: '0 0 4px' }}>Desde: {formatFecha(c.fechaInicio)}</p>
           {c.estado === 'ACTIVA' && (
             <p className="texto-ayuda" style={{ marginBottom: 16 }}>Activo desde: {formatFecha(c.fechaActivacion)}</p>

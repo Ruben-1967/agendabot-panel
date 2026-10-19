@@ -108,7 +108,7 @@ function ModalConvertirCliente({ demo, token, esAdmin, onCerrar, onConvertido })
             Plan
             <select value={plan} onChange={(e) => setPlan(e.target.value)}>
               {Object.entries(PLANES).map(([clave, p]) => (
-                <option key={clave} value={clave}>{p.etiqueta} — {formatoCLP(p.montoMensual)}/mes</option>
+                <option key={clave} value={clave}>{p.etiqueta} — {formatoCLP(p.montoMensual)} + IVA/mes</option>
               ))}
             </select>
           </label>
@@ -192,7 +192,7 @@ function ModalEditarPlan({ cliente, token, onCerrar, onGuardado }) {
             Plan
             <select value={plan} onChange={(e) => setPlan(e.target.value)}>
               {Object.entries(PLANES).map(([clave, p]) => (
-                <option key={clave} value={clave}>{p.etiqueta} — {formatoCLP(p.montoMensual)}/mes</option>
+                <option key={clave} value={clave}>{p.etiqueta} — {formatoCLP(p.montoMensual)} + IVA/mes</option>
               ))}
             </select>
           </label>
@@ -643,7 +643,7 @@ export default function MisDemos() {
                     <p className="texto-ayuda">
                       {c.plan ? PLANES[c.plan.replace('PLAN_', '')]?.etiqueta || c.plan : 'Sin plan'}
                       {c.estadoSuscripcion && ` · ${ETIQUETA_ESTADO_SUSCRIPCION[c.estadoSuscripcion] || c.estadoSuscripcion}`}
-                      {c.montoMensualActual ? ` · ${formatoCLP(c.montoMensualActual)}/mes` : ''}
+                      {c.montoMensualActual ? ` · ${formatoCLP(c.montoMensualActual)}/mes con IVA` : ''}
                     </p>
                     <p className="texto-ayuda">
                       Convertido: {formatearFecha(c.creadoEn)}
