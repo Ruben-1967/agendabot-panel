@@ -16,6 +16,10 @@ export default function AdminLayout() {
   // A diferencia del banner, el botón del menú no espera las 12h — aparece
   // apenas la Suscripcion queda en PENDIENTE_PAGO y desaparece al pagar.
   const [pendientePago, setPendientePago] = useState(false);
+  // Cobro fallido de una suscripción ya activa (política de impago): null o
+  // { etapa: 'AVISO' | 'ULTIMO_AVISO' | 'PAUSADO', fechaCorte }. Lo calcula el
+  // backend para que la franja diga lo mismo que el correo que recibió el cliente.
+  const [impago, setImpago] = useState(null);
 
   useEffect(() => {
     if (!token) return;
@@ -23,6 +27,7 @@ export default function AdminLayout() {
       .then((data) => {
         setAvisoPagoNivel(data.avisoPagoNivel);
         setPendientePago(data.estado === 'PENDIENTE_PAGO');
+        setImpago(data.impago || null);
       })
       .catch(() => {}); // si falla la consulta, simplemente no se muestra el banner/botón
   }, [token]);
@@ -61,9 +66,30 @@ export default function AdminLayout() {
     rojo: 'Tu suscripción lleva varios días pendiente de pago — activa tu plan ahora para no perder el acceso al sistema.',
   };
 
+  const fechaCorteTexto = impago?.fechaCorte
+    ? new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Santiago', day: 'numeric', month: 'long' }).format(new Date(impago.fechaCorte))
+    : null;
+  const TEXTO_IMPAGO = {
+    AVISO: `No pudimos cobrar tu mensualidad. Tu servicio sigue funcionando, pero se pausará el ${fechaCorteTexto} si no se regulariza el pago.`,
+    ULTIMO_AVISO: `Último aviso: tu servicio se pausará el ${fechaCorteTexto} por un pago pendiente.`,
+    PAUSADO: 'Servicio pausado por pago pendiente: el asistente no responde y no puedes crear registros nuevos (sí puedes ver y editar tus datos).',
+  };
+  const NIVEL_IMPAGO = { AVISO: 'amarillo', ULTIMO_AVISO: 'rojo', PAUSADO: 'rojo' };
+  // Un mismo espacio para una sola franja: el impago (cliente que ya pagaba) y
+  // el aviso de plan pendiente (cliente nuevo) nunca coinciden, pero si llegaran
+  // a hacerlo manda el impago, que es el más urgente.
+  const hayFranjaImpago = !!impago && (impago.etapa === 'PAUSADO' || !!fechaCorteTexto);
+  const hayBanner = hayFranjaImpago || !!avisoPagoNivel;
+
   return (
-    <div className={avisoPagoNivel ? 'layout layout-con-banner' : 'layout'}>
-      {avisoPagoNivel && (
+    <div className={hayBanner ? 'layout layout-con-banner' : 'layout'}>
+      {hayFranjaImpago ? (
+        <div className={`banner-pago-pendiente banner-pago-${NIVEL_IMPAGO[impago.etapa]}`}>
+          <span className="banner-pago-icono">⚠️</span>
+          {TEXTO_IMPAGO[impago.etapa]}
+          <a href="mailto:contacto@multidigital.cl?subject=Pago%20pendiente%20TotemSystem">Regularizar pago →</a>
+        </div>
+      ) : avisoPagoNivel && (
         <div className={`banner-pago-pendiente banner-pago-${avisoPagoNivel}`}>
           <span className="banner-pago-icono">⚠️</span>
           {TEXTO_AVISO[avisoPagoNivel]}
