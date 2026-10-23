@@ -581,4 +581,30 @@ export function eliminarCatalogoDemoItem(token, id) {
   return apiFetch(`/admin-vendedores/catalogo-demo/items/${id}`, { method: 'DELETE', token, tipoSesion: 'vendedor' });
 }
 
+// ---------- Clientes Web de Multidigital (sitio web + correos, solo Vendedor ADMIN) ----------
+export function fetchClientesWeb(token) {
+  return apiFetch('/admin-vendedores/clientes-web', { token, tipoSesion: 'vendedor' });
+}
+export function fetchClienteWeb(token, id) {
+  return apiFetch(`/admin-vendedores/clientes-web/${id}`, { token, tipoSesion: 'vendedor' });
+}
+export function crearClienteWeb(token, data) {
+  return apiFetch('/admin-vendedores/clientes-web', { method: 'POST', body: data, token, tipoSesion: 'vendedor' });
+}
+export function actualizarClienteWeb(token, id, data) {
+  return apiFetch(`/admin-vendedores/clientes-web/${id}`, { method: 'PATCH', body: data, token, tipoSesion: 'vendedor' });
+}
+export function eliminarClienteWeb(token, id) {
+  return apiFetch(`/admin-vendedores/clientes-web/${id}`, { method: 'DELETE', token, tipoSesion: 'vendedor' });
+}
+export function crearMovimientoClienteWeb(token, id, data) {
+  return apiFetch(`/admin-vendedores/clientes-web/${id}/movimientos`, { method: 'POST', body: data, token, tipoSesion: 'vendedor' });
+}
+export function eliminarMovimientoClienteWeb(token, id, movId) {
+  return apiFetch(`/admin-vendedores/clientes-web/${id}/movimientos/${movId}`, { method: 'DELETE', token, tipoSesion: 'vendedor' });
+}
+export function crearLinkSuscripcionClienteWeb(token, id, data) {
+  return apiFetch(`/admin-vendedores/clientes-web/${id}/link-suscripcion`, { method: 'POST', body: data, token, tipoSesion: 'vendedor' });
+}
+
 export { API_URL };

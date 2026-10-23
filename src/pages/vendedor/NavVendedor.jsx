@@ -28,6 +28,9 @@ export default function NavVendedor() {
           <NavLink to="/vendedor/admin/clientes" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
             Clientes
           </NavLink>
+          <NavLink to="/vendedor/admin/clientes-web" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
+            Clientes Web
+          </NavLink>
           <NavLink to="/vendedor/admin/excedente-citas" className={({ isActive }) => isActive ? 'nav-vendedor-link activo' : 'nav-vendedor-link'}>
             Excedente citas
           </NavLink>

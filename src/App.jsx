@@ -34,6 +34,7 @@ import Ranking from './pages/vendedor/Ranking';
 import GestionVenta from './pages/vendedor/GestionVenta';
 import ClientesVendedor from './pages/vendedor/admin/Clientes';
 import ExcedenteCitas from './pages/vendedor/admin/ExcedenteCitas';
+import ClientesWeb from './pages/vendedor/admin/ClientesWeb';
 import CalidadWhatsApp from './pages/vendedor/admin/CalidadWhatsApp';
 import AdminVendedores from './pages/vendedor/admin/AdminVendedores';
 import Leads from './pages/vendedor/admin/Leads';
@@ -141,6 +142,14 @@ function AppRoutes() {
         element={
           <ProtectedRouteVendedorAdmin>
             <ClientesVendedor />
+          </ProtectedRouteVendedorAdmin>
+        }
+      />
+      <Route
+        path="/vendedor/admin/clientes-web"
+        element={
+          <ProtectedRouteVendedorAdmin>
+            <ClientesWeb />
           </ProtectedRouteVendedorAdmin>
         }
       />
