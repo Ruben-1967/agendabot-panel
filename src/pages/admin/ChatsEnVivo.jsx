@@ -66,6 +66,7 @@ export default function ChatsEnVivo() {
   const [error, setError] = useState(null);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [cambiandoBot, setCambiandoBot] = useState(false);
   const [filtroCanal, setFiltroCanal] = useState('todos');
   const [filtroEstado, setFiltroEstado] = useState('todos');
   const [silenciado, setSilenciado] = useState(() => localStorage.getItem(CLAVE_SILENCIADO) === '1');
@@ -210,6 +211,37 @@ export default function ChatsEnVivo() {
       }
     } catch (err) {
       console.error('Error:', err);
+    }
+  };
+
+  // Silencia o reactiva el bot para este contacto, de forma permanente (backend:
+  // PATCH /conversaciones/:empresaId/:id/bot-silenciado). El silencio automático de
+  // Clientes Web (prospecto en negociación) no se cambia desde acá: depende de la etapa.
+  const cambiarSilencioBot = async (silenciar) => {
+    if (!conversacionSeleccionada) return;
+    const idConversacion = conversacionSeleccionada.id;
+    setCambiandoBot(true);
+    try {
+      const empresaId = usuario?.empresaId;
+      const res = await fetch(
+        `${API_URL}/conversaciones/${empresaId}/${conversacionSeleccionada.id}/bot-silenciado`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ silenciado: silenciar }),
+        }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'No se pudo cambiar el bot');
+      // Solo si sigue abierta la misma conversación (se pudo cambiar de chat mientras tanto).
+      setConversacionSeleccionada((c) => (c && c.id === idConversacion ? { ...c, botSilenciado: data.botSilenciado } : c));
+      setConversaciones((lista) => lista.map((c) => (
+        c.id === idConversacion ? { ...c, botSilenciado: data.botSilenciado } : c
+      )));
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setCambiandoBot(false);
     }
   };
 
@@ -418,6 +450,7 @@ export default function ChatsEnVivo() {
                       {conv.clienteNombre}
                       {conv.escaladoAHumano && <span className="badge-atencion" title="Requiere atención">Requiere atención</span>}
                       {conv.esEjemplo && <span className="badge-ejemplo">Ejemplo</span>}
+                      {conv.botSilenciado && <span className="badge-bot-silenciado" title="El bot no le responde a este contacto">Bot silenciado</span>}
                       {conv.canal === 'instagram' && <span className="badge-canal-instagram">Instagram</span>}
                       {conv.canal === 'facebook' && <span className="badge-canal-facebook">Messenger</span>}
                     </div>
@@ -446,7 +479,31 @@ export default function ChatsEnVivo() {
                 {conversacionSeleccionada.esEjemplo ? (
                   <span className="badge-ejemplo">Ejemplo</span>
                 ) : (
-                  <span className="status-online">● En linea</span>
+                  <div className="bot-estado">
+                    {!conversacionSeleccionada.botSilenciado && <span className="status-online">🤖 Bot activo</span>}
+                    {conversacionSeleccionada.botSilenciado === 'MANUAL' && <span className="status-online">🔇 Bot silenciado</span>}
+                    {conversacionSeleccionada.botSilenciado === 'CLIENTE_WEB' && (
+                      <span
+                        className="status-online"
+                        title="Este prospecto ya avanzó en Clientes Web. El bot vuelve a atenderlo si la ficha vuelve a Interesado o pasa a Baja."
+                      >
+                        🔇 Bot silenciado (prospecto en negociación)
+                      </span>
+                    )}
+                    {conversacionSeleccionada.botSilenciado !== 'CLIENTE_WEB' && (
+                      <button
+                        type="button"
+                        className="btn-bot-silencio"
+                        disabled={cambiandoBot}
+                        onClick={() => cambiarSilencioBot(!conversacionSeleccionada.botSilenciado)}
+                        title={conversacionSeleccionada.botSilenciado
+                          ? 'El bot vuelve a responderle a este contacto'
+                          : 'El bot deja de responderle a este contacto hasta que lo reactives. Sus mensajes siguen llegando.'}
+                      >
+                        {conversacionSeleccionada.botSilenciado ? 'Reactivar bot' : 'Silenciar bot'}
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
 
