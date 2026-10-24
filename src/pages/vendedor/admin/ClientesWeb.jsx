@@ -20,6 +20,9 @@ const ETAPAS = [
   { clave: 'BAJA', etiqueta: 'Baja' },
 ];
 const ETIQUETA_ETAPA = Object.fromEntries(ETAPAS.map((e) => [e.clave, e.etiqueta]));
+// Etapas en que el bot de WhatsApp deja de responderle al prospecto (backend:
+// src/lib/botSilenciado.js, ETAPAS_CLIENTE_WEB_QUE_SILENCIAN -- mantener iguales).
+const ETAPAS_BOT_SILENCIADO = ['EJEMPLO_ENVIADO', 'EN_ESPERA', 'ABONO', 'ACTIVO'];
 const CONCEPTOS = [
   ['MENSUALIDAD', 'Mensualidad'], ['ANUALIDAD', 'Plan anual'], ['HOSTING', 'Hosting'], ['DOMINIO', 'Dominio'],
   ['CAMBIO', 'Cambio puntual'], ['CORREO_EXTRA', 'Correo extra'], ['OTRO', 'Otro'],
@@ -339,6 +342,13 @@ function Ficha({ id, token, onCambioLista, setError }) {
         {cliente.fechaActivacion ? ` · activo desde ${formatFecha(cliente.fechaActivacion)}` : ''}
         {cliente.preferencia ? ` · prefirió ${cliente.preferencia === 'LLAMADA' ? `llamada${cliente.horarioLlamada ? ` (${cliente.horarioLlamada})` : ''}` : 'el ejemplo'}` : ''}
       </p>
+      {cliente.telefono && (
+        <p className="texto-ayuda" style={{ marginTop: -8, marginBottom: 16 }}>
+          {ETAPAS_BOT_SILENCIADO.includes(cliente.etapa)
+            ? '🔇 El bot de WhatsApp no le responde: lo atiendes tú. Vuelve a atenderlo si pasa a Interesado o Baja.'
+            : '🤖 El bot de WhatsApp le responde. Se silencia solo cuando avanza a Ejemplo enviado o más.'}
+        </p>
+      )}
 
       <h3 className="subtitulo-tarjeta">Cuenta</h3>
       <Cuenta cliente={cliente} token={token} onCambio={refrescar} setError={setError} />
@@ -487,7 +497,7 @@ export default function ClientesWeb() {
                     <span className="texto-muted">{[c.contactoNombre, c.comuna, c.rubro].filter(Boolean).join(' · ') || 'Sin datos de contacto'}</span>
                     <span className="cw-badges">
                       <span className={`badge-cw-etapa etapa-${c.etapa.toLowerCase()}`}>{ETIQUETA_ETAPA[c.etapa]}</span>
-                      {c.origen === 'BOT' && <span className="badge-cw-gris">Bot</span>}
+                      {c.origen === 'BOT' && <span className="badge-cw-gris" title="Llegó por el bot de WhatsApp">Vía bot</span>}
                       {flow && <span className={flow.clase}>{flow.texto}</span>}
                       {dias !== null && dias >= DIAS_ALERTA_SIN_RESPUESTA && <span className="badge-cw-rojo">{dias} días sin respuesta</span>}
                     </span>
