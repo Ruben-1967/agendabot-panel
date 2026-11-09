@@ -443,8 +443,17 @@ export default function ClientesWeb() {
   const sinRespuesta = clientes.filter((c) => ['EJEMPLO_ENVIADO', 'EN_ESPERA'].includes(c.etapa) && diasDesde(c.fechaEjemplo || c.actualizadoEn) >= DIAS_ALERTA_SIN_RESPUESTA).length;
   const flowRechazado = clientes.filter((c) => c.suscripcion?.ultimoPagoFallido).length;
 
+  // Los 4 datos del guion (nombre, rubro, empresa, ciudad): el backend dice cuáles faltan.
+  // Solo cuentan los que siguen en proceso; un cliente activo o de baja ya no se prospecta.
+  const enProceso = (c) => ['INTERESADO', 'EJEMPLO_ENVIADO', 'EN_ESPERA'].includes(c.etapa);
+  const faltanDatos = (c) => enProceso(c) && (c.datosFaltantes || []).length > 0;
+  const completos = clientes.filter((c) => enProceso(c) && !faltanDatos(c)).length;
+  const incompletos = clientes.filter(faltanDatos).length;
+
   const visibles = clientes.filter((c) => {
     if (filtro === 'CON_SALDO') { if (c.cuenta.saldo <= 0) return false; }
+    else if (filtro === 'COMPLETOS') { if (!enProceso(c) || faltanDatos(c)) return false; }
+    else if (filtro === 'INCOMPLETOS') { if (!faltanDatos(c)) return false; }
     else if (filtro !== 'TODOS' && c.etapa !== filtro) return false;
     if (!busqueda.trim()) return true;
     const q = busqueda.trim().toLowerCase();
@@ -481,6 +490,8 @@ export default function ClientesWeb() {
             <button key={e.clave} type="button" className={`pestana-filtro ${filtro === e.clave ? 'activa' : ''}`} onClick={() => setFiltro(e.clave)}>{e.etiqueta} ({conteo[e.clave]})</button>
           ))}
           <button type="button" className={`pestana-filtro ${filtro === 'CON_SALDO' ? 'activa' : ''}`} onClick={() => setFiltro('CON_SALDO')}>Con saldo pendiente</button>
+          <button type="button" className={`pestana-filtro ${filtro === 'COMPLETOS' ? 'activa' : ''}`} onClick={() => setFiltro('COMPLETOS')} title="En proceso, con nombre, rubro, empresa y ciudad">Datos completos ({completos})</button>
+          <button type="button" className={`pestana-filtro ${filtro === 'INCOMPLETOS' ? 'activa' : ''}`} onClick={() => setFiltro('INCOMPLETOS')}>Faltan datos ({incompletos})</button>
         </div>
 
         {cargando && <p>Cargando…</p>}
@@ -507,6 +518,7 @@ export default function ClientesWeb() {
                       {c.origen === 'BOT' && <span className="badge-cw-gris" title="Llegó por el bot de WhatsApp">Vía bot</span>}
                       {c.anuncioOrigen && <span className="badge-cw-gris" title={c.anuncioOrigen.titulo || 'Anuncio de WhatsApp'}>Vía anuncio</span>}
                       {flow && <span className={flow.clase}>{flow.texto}</span>}
+                      {faltanDatos(c) && <span className="badge-cw-rojo" title="Sin estos datos no se puede preparar el ejemplo">Falta: {c.datosFaltantes.join(', ')}</span>}
                       {dias !== null && dias >= DIAS_ALERTA_SIN_RESPUESTA && <span className="badge-cw-rojo">{dias} días sin respuesta</span>}
                     </span>
                   </div>
