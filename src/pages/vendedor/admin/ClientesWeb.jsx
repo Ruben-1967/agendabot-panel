@@ -342,6 +342,13 @@ function Ficha({ id, token, onCambioLista, setError }) {
         {cliente.fechaActivacion ? ` · activo desde ${formatFecha(cliente.fechaActivacion)}` : ''}
         {cliente.preferencia ? ` · prefirió ${cliente.preferencia === 'LLAMADA' ? `llamada${cliente.horarioLlamada ? ` (${cliente.horarioLlamada})` : ''}` : 'el ejemplo'}` : ''}
       </p>
+      {cliente.anuncioOrigen && (
+        <p className="texto-ayuda" style={{ marginTop: -8, marginBottom: 16 }}>
+          📣 Llegó desde el anuncio «{cliente.anuncioOrigen.titulo || 'sin título'}»
+          {cliente.anuncioOrigen.sourceId ? ` (id ${cliente.anuncioOrigen.sourceId})` : ''}
+          {cliente.anuncioOrigen.sourceUrl && <> · <a href={cliente.anuncioOrigen.sourceUrl} target="_blank" rel="noopener noreferrer">ver anuncio</a></>}
+        </p>
+      )}
       {cliente.telefono && (
         <p className="texto-ayuda" style={{ marginTop: -8, marginBottom: 16 }}>
           {ETAPAS_BOT_SILENCIADO.includes(cliente.etapa)
@@ -498,6 +505,7 @@ export default function ClientesWeb() {
                     <span className="cw-badges">
                       <span className={`badge-cw-etapa etapa-${c.etapa.toLowerCase()}`}>{ETIQUETA_ETAPA[c.etapa]}</span>
                       {c.origen === 'BOT' && <span className="badge-cw-gris" title="Llegó por el bot de WhatsApp">Vía bot</span>}
+                      {c.anuncioOrigen && <span className="badge-cw-gris" title={c.anuncioOrigen.titulo || 'Anuncio de WhatsApp'}>Vía anuncio</span>}
                       {flow && <span className={flow.clase}>{flow.texto}</span>}
                       {dias !== null && dias >= DIAS_ALERTA_SIN_RESPUESTA && <span className="badge-cw-rojo">{dias} días sin respuesta</span>}
                     </span>
