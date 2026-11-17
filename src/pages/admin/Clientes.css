@@ -940,3 +940,35 @@
   font-size: 0.9rem;
   margin: 0;
 }
+
+/* Historial médico con nota nueva dentro de la misma pestaña (17-nov) */
+.btn-nueva-nota {
+  align-self: flex-start;
+  margin-bottom: 14px;
+  padding: 10px 16px;
+  background: var(--color-teal);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-nueva-nota:hover { background: #0a4d3f; }
+.nueva-nota-form {
+  margin-bottom: 18px;
+  padding: 12px;
+  border: 1px solid var(--color-arena);
+  border-radius: 6px;
+}
+.ficha-field-ancho {
+  grid-column: 1 / -1;
+}
+.ficha-field textarea {
+  resize: vertical;
+  min-height: 70px;
+  font-family: inherit;
+}
+.historial-campo-nota {
+  white-space: pre-wrap;
+}

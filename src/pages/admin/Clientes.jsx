@@ -21,30 +21,63 @@ import {
 import SimpleDatePicker from '../../components/SimpleDatePicker';
 import './Clientes.css';
 
+// Las fechas "solo día" (fecha de la consulta, próxima visita, fecha de una
+// venta) llegan del backend como medianoche UTC ("2026-11-17T00:00:00.000Z").
+// Leídas en hora de Chile caían el día ANTERIOR (21:00 del 16), y cada edición
+// las retrocedía un día más (17-nov). Si la hora es exactamente 00:00:00.000
+// UTC se tratan como fecha pura y se leen en UTC; las demás (marcas de tiempo
+// reales) se siguen mostrando en hora local.
+function esFechaSoloDia(d) {
+  return d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0 && d.getUTCMilliseconds() === 0;
+}
+function partesFecha(iso) {
+  const d = new Date(iso);
+  return esFechaSoloDia(d)
+    ? { anio: d.getUTCFullYear(), mes: d.getUTCMonth(), dia: d.getUTCDate() }
+    : { anio: d.getFullYear(), mes: d.getMonth(), dia: d.getDate() };
+}
+const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
 function formatearFecha(iso) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' });
+  const { anio, mes, dia } = partesFecha(iso);
+  return `${dia} ${MESES_CORTOS[mes]} ${anio}`;
 }
 
 function formatearFechaCorta(iso) {
   if (!iso) return '—';
-  const d = new Date(iso);
-  const mes = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][d.getMonth()];
-  return `${d.getDate()} ${mes} ${d.getFullYear()}`;
+  const { anio, mes, dia } = partesFecha(iso);
+  return `${dia} ${MESES_CORTOS[mes]} ${anio}`;
 }
 
 // Convierte un ISO/Date a "YYYY-MM-DD" para inputs type="date"
 function aFechaInput(iso) {
   if (!iso) return '';
-  const d = new Date(iso);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
+  const { anio, mes, dia } = partesFecha(iso);
+  return `${anio}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+}
+
+// La nota nueva se prellena con lo último conocido (antecedentes, medicamentos,
+// zona...), pero los campos marcados `porSesion` en la ficha del rubro
+// (evolución, exámenes, indicaciones) parten vacíos: son de cada sesión.
+// Ojo: `tipo: 'textarea'` solo cambia cómo se dibuja, no esto.
+function sinCamposDeNota(fichaJson, camposFicha) {
+  const copia = JSON.parse(JSON.stringify(fichaJson || {}));
+  for (const grupo of camposFicha?.grupos || []) {
+    for (const campo of grupo.campos || []) {
+      if (!campo.porSesion) continue;
+      let nodo = copia;
+      for (let i = 0; i < campo.path.length - 1 && nodo; i++) nodo = nodo[campo.path[i]];
+      if (nodo && typeof nodo === 'object') delete nodo[campo.path[campo.path.length - 1]];
+    }
+  }
+  return copia;
 }
 
 function hoyFechaInput() {
-  return aFechaInput(new Date().toISOString());
+  // Hoy en hora local (no en UTC: de noche en Chile, toISOString ya es mañana).
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 const MEDIO_PAGO_LABEL = {
@@ -101,15 +134,28 @@ function FormularioAtencion({ valores, onCambioFicha, onCambioCampo, camposFicha
           {grupo.titulo && <h4 className="ficha-seccion-titulo">{grupo.titulo}</h4>}
           <div className="ficha-campos-grid">
             {grupo.campos.map((campo) => (
-              <label className="ficha-field" key={campo.path.join('.')}>
+              <label
+                className={`ficha-field ${campo.tipo === 'textarea' ? 'ficha-field-ancho' : ''}`}
+                key={campo.path.join('.')}
+              >
                 {campo.label}
-                <input
-                  type={campo.tipo === 'number' ? 'number' : 'text'}
-                  step={campo.tipo === 'number' ? campo.step ?? 'any' : undefined}
-                  placeholder={campo.placeholder}
-                  value={obtenerValorAnidado(valores.fichaJson, campo.path) ?? ''}
-                  onChange={(e) => onCambioFicha(campo.path, e.target.value)}
-                />
+                {campo.tipo === 'textarea' ? (
+                  // Notas largas (evolución, exámenes, indicaciones): varias líneas.
+                  <textarea
+                    rows={3}
+                    placeholder={campo.placeholder}
+                    value={obtenerValorAnidado(valores.fichaJson, campo.path) ?? ''}
+                    onChange={(e) => onCambioFicha(campo.path, e.target.value)}
+                  />
+                ) : (
+                  <input
+                    type={campo.tipo === 'number' ? 'number' : 'text'}
+                    step={campo.tipo === 'number' ? campo.step ?? 'any' : undefined}
+                    placeholder={campo.placeholder}
+                    value={obtenerValorAnidado(valores.fichaJson, campo.path) ?? ''}
+                    onChange={(e) => onCambioFicha(campo.path, e.target.value)}
+                  />
+                )}
               </label>
             ))}
           </div>
@@ -186,7 +232,7 @@ export function DetalleCliente({ clienteId, token, usuario, categoriasProductoSu
   const [medioPagoVenta, setMedioPagoVenta] = useState('');
   const [atendidoPorVenta, setAtendidoPorVenta] = useState('');
   const [recursoAgendableIdVenta, setRecursoAgendableIdVenta] = useState('');
-  const [fechaVenta, setFechaVenta] = useState(() => new Date().toISOString().slice(0, 10));
+  const [fechaVenta, setFechaVenta] = useState(() => hoyFechaInput());
   const [editandoVentaId, setEditandoVentaId] = useState(null);
   const [fechaEditVenta, setFechaEditVenta] = useState('');
   const [guardandoFechaVenta, setGuardandoFechaVenta] = useState(false);
@@ -203,6 +249,10 @@ export function DetalleCliente({ clienteId, token, usuario, categoriasProductoSu
     fechaProximaCitaFijada: '',
   });
   const [guardandoAtencion, setGuardandoAtencion] = useState(false);
+  // La nota nueva se escribe dentro de la pestaña de historial (17-nov): antes
+  // vivía en una pestaña aparte y no se notaba dónde quedaba lo guardado.
+  const [mostrarNuevaNota, setMostrarNuevaNota] = useState(false);
+  const [notaGuardadaOk, setNotaGuardadaOk] = useState('');
 
   // ---- Tab Historial Clínico ----
   const [atenciones, setAtenciones] = useState([]);
@@ -228,7 +278,7 @@ export function DetalleCliente({ clienteId, token, usuario, categoriasProductoSu
         // edite lo que cambió en esta visita.
         setNuevaAtencion({
           fecha: hoyFechaInput(),
-          fichaJson: data.cliente.fichaJson || {},
+          fichaJson: sinCamposDeNota(data.cliente.fichaJson, camposFicha),
           diagnostico: data.cliente.diagnostico || '',
           profesionalAtendio: data.cliente.profesionalAtendio || '',
           fechaProximaCitaFijada: aFechaInput(data.cliente.fechaProximaCita),
@@ -395,7 +445,7 @@ export function DetalleCliente({ clienteId, token, usuario, categoriasProductoSu
       setMedioPagoVenta('');
       setAtendidoPorVenta('');
       setRecursoAgendableIdVenta('');
-      setFechaVenta(new Date().toISOString().slice(0, 10));
+      setFechaVenta(hoyFechaInput());
       setVentaRegistradaOk(`✓ Atención registrada (${items.length === 1 ? items[0].descripcion : `${items.length} ítems`}). Aparece abajo, en el historial de atenciones y pagos.`);
       cargar();
       onCambio();
@@ -437,6 +487,7 @@ async function guardarFechaVenta(ventaId) {
     // guardado si se cancelaba, aunque el campo siempre fue opcional.
     setGuardandoAtencion(true);
     setError('');
+    setNotaGuardadaOk('');
     try {
       await crearAtencion(token, clienteId, {
         fecha: nuevaAtencion.fecha,
@@ -445,8 +496,10 @@ async function guardarFechaVenta(ventaId) {
         profesionalAtendio: nuevaAtencion.profesionalAtendio || null,
         fechaProximaCitaFijada: nuevaAtencion.fechaProximaCitaFijada || null,
       });
+      setMostrarNuevaNota(false);
+      setNotaGuardadaOk(`✓ Nota del ${formatearFecha(nuevaAtencion.fecha)} guardada. Quedó primera en la lista.`);
       cargar();
-      if (tabActiva === 'historialClinico') cargarAtenciones();
+      cargarAtenciones();
       onCambio();
     } catch (err) {
       setError(err.message);
@@ -552,10 +605,10 @@ async function guardarFechaVenta(ventaId) {
         </button>
         <button
           type="button"
-          className={`tab ${tabActiva === 'fichaClinica' ? 'active' : ''}`}
-          onClick={() => setTabActiva('fichaClinica')}
+          className={`tab ${tabActiva === 'historialClinico' ? 'active' : ''}`}
+          onClick={() => setTabActiva('historialClinico')}
         >
-          {nombreRegistro}
+          {nombreHistorial}
         </button>
         <button
           type="button"
@@ -563,13 +616,6 @@ async function guardarFechaVenta(ventaId) {
           onClick={() => setTabActiva('atenciones')}
         >
           Atenciones
-        </button>
-        <button
-          type="button"
-          className={`tab ${tabActiva === 'historialClinico' ? 'active' : ''}`}
-          onClick={() => setTabActiva('historialClinico')}
-        >
-          {nombreHistorial}
         </button>
       </div>
 
@@ -744,7 +790,7 @@ async function guardarFechaVenta(ventaId) {
                         title="Clic para editar la fecha"
                         onClick={() => {
                           setEditandoVentaId(v.id);
-                          setFechaEditVenta(new Date(v.fecha || v.creadoEn).toISOString().slice(0, 10));
+                          setFechaEditVenta(aFechaInput(v.fecha || v.creadoEn));
                         }}
                       >
                         {formatearFecha(v.fecha || v.creadoEn)}
@@ -769,33 +815,51 @@ async function guardarFechaVenta(ventaId) {
         </div>
       )}
 
-      {/* TAB: FICHA CLÍNICA (crea una atención nueva) */}
-      {tabActiva === 'fichaClinica' && (
-        <form className="cliente-tab-content cliente-ficha-form" onSubmit={guardarNuevaAtencion}>
-          <p className="texto-muted" style={{ marginBottom: '12px' }}>
-            Guardar esto lo agrega como un nuevo registro a {nombreHistorial} — no
-            sobrescribe los anteriores.
-          </p>
-          <FormularioAtencion
-            valores={nuevaAtencion}
-            onCambioFicha={actualizarFichaNuevaAtencion}
-            onCambioCampo={actualizarCampoNuevaAtencion}
-            camposFicha={camposFicha}
-            profesionales={profesionales}
-          />
-          <button type="submit" disabled={guardandoAtencion} className="btn-guardar">
-            {guardandoAtencion ? 'Guardando…' : 'Registrar atención'}
-          </button>
-        </form>
-      )}
-
       {/* TAB: HISTORIAL CLÍNICO */}
       {tabActiva === 'historialClinico' && (
         <div className="cliente-tab-content">
+          {!mostrarNuevaNota ? (
+            <button
+              type="button"
+              className="btn-nueva-nota"
+              onClick={() => {
+                // Se limpia al abrir (no solo en cargar()): al entrar con ?clienteId=
+                // la ficha del rubro puede llegar después de la primera carga.
+                setNuevaAtencion((prev) => ({ ...prev, fichaJson: sinCamposDeNota(prev.fichaJson, camposFicha) }));
+                setMostrarNuevaNota(true);
+                setNotaGuardadaOk('');
+              }}
+            >
+              + Nueva nota ({nombreRegistro.toLowerCase()})
+            </button>
+          ) : (
+            <form className="cliente-ficha-form nueva-nota-form" onSubmit={guardarNuevaAtencion}>
+              <h4 className="historial-titulo">Nueva nota ({nombreRegistro.toLowerCase()})</h4>
+              <FormularioAtencion
+                valores={nuevaAtencion}
+                onCambioFicha={actualizarFichaNuevaAtencion}
+                onCambioCampo={actualizarCampoNuevaAtencion}
+                camposFicha={camposFicha}
+                profesionales={profesionales}
+              />
+              <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                <button type="submit" disabled={guardandoAtencion} className="btn-guardar">
+                  {guardandoAtencion ? 'Guardando…' : 'Guardar nota'}
+                </button>
+                <button type="button" className="btn-cancelar" onClick={() => setMostrarNuevaNota(false)}>
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          )}
+          {notaGuardadaOk && <p className="mensaje-venta-ok">{notaGuardadaOk}</p>}
           {cargandoAtenciones ? (
             <p className="texto-muted">Cargando…</p>
           ) : atenciones.length === 0 ? (
-            <p className="texto-vacio">Sin atenciones registradas todavía.</p>
+            <p className="texto-vacio">
+              Aún no hay notas de este paciente. Usa «+ Nueva nota» para registrar cómo llega, su evolución,
+              los exámenes solicitados y las indicaciones.
+            </p>
           ) : (
             <div className="historial-items">
               {atenciones.map((a) => {
@@ -850,14 +914,24 @@ async function guardarFechaVenta(ventaId) {
                             <p><strong>Fecha de la próxima visita:</strong> {formatearFecha(a.fechaProximaCitaFijada)}</p>
                           )}
                           <div className="historial-item-clinico-receta">
-                            {(camposFicha?.grupos || []).map((grupo, i) => (
+                            {(camposFicha?.grupos || [])
+                              .filter((grupo) => grupo.campos.some((campo) => {
+                                const v = obtenerValorAnidado(a.fichaJson, campo.path);
+                                return v !== undefined && v !== null && String(v).trim() !== '';
+                              }))
+                              .map((grupo, i) => (
                               <div key={grupo.titulo || i}>
                                 {grupo.titulo && <span className="receta-ojo-label">{grupo.titulo}</span>}
-                                {grupo.campos.map((campo) => (
-                                  <span key={campo.path.join('.')}>
-                                    {campo.label}: {obtenerValorAnidado(a.fichaJson, campo.path) ?? '—'}
-                                  </span>
-                                ))}
+                                {grupo.campos
+                                  .filter((campo) => {
+                                    const v = obtenerValorAnidado(a.fichaJson, campo.path);
+                                    return v !== undefined && v !== null && String(v).trim() !== '';
+                                  })
+                                  .map((campo) => (
+                                    <span key={campo.path.join('.')} className="historial-campo-nota">
+                                      <strong>{campo.label}:</strong> {obtenerValorAnidado(a.fichaJson, campo.path)}
+                                    </span>
+                                  ))}
                               </div>
                             ))}
                           </div>
