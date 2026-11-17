@@ -17,7 +17,7 @@ const PLANES = {
   },
   B: {
     nombre: 'Plan B',
-    precio: 24900,
+    precio: 29900,
     citas: 400,
     excedente: 85,
     descripcion: 'El más popular',

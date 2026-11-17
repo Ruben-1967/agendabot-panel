@@ -27,7 +27,7 @@ const ETIQUETA_FASE = { primer_contacto: 'sin primer contacto', aging: 'sin avan
 // verdad real al crear la Suscripcion.
 const PLANES = {
   A: { etiqueta: 'Plan A', montoMensual: 14900 },
-  B: { etiqueta: 'Plan B', montoMensual: 24900 },
+  B: { etiqueta: 'Plan B', montoMensual: 29900 },
   C: { etiqueta: 'Plan C', montoMensual: 59900 },
 };
 
