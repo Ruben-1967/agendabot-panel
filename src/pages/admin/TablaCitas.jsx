@@ -236,7 +236,7 @@ export default function TablaCitas() {
   const mensajeVacio = !recursoParaGrilla
     ? 'Sin citas agendadas este día.'
     : !hayHorarioParaEsteDia
-    ? 'Este profesional no tiene horario configurado para este día (revisa Configuración de agenda).'
+    ? 'Este profesional no tiene horario configurado para este día (revisa su horario en Profesionales o en Configuración de agenda).'
     : 'Sin citas agendadas este día. Activa "Mostrar horarios disponibles" arriba para ver los horarios libres.';
 
   async function marcarConfirmado(cita, valor) {

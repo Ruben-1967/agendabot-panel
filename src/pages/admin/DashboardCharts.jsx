@@ -17,6 +17,14 @@ const COLOR_TEXTO_SECUNDARIO = '#52514e';
 
 const formatoCLP = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
 
+// Etiqueta corta para escribir el valor sobre la barra o el punto (17-nov: además
+// del alto de la barra, se ve el número).
+function formatoCLPCorto(v) {
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toLocaleString('es-CL', { maximumFractionDigits: 1 })} M`;
+  if (v >= 1_000) return `$${Math.round(v / 1_000).toLocaleString('es-CL')} mil`;
+  return `$${v}`;
+}
+
 function formatearFechaCorta(fechaISO) {
   const [, mes, dia] = fechaISO.split('-');
   return `${dia}/${mes}`;
@@ -65,6 +73,7 @@ export function BarChartSerie({
   formatoEtiqueta,
   formatoEtiquetaEje = formatearFechaCorta,
   todasLasEtiquetas = false,
+  formatoValor = (v) => v,
   mensajeVacio = 'Aún no hay citas registradas. Cuando tu bot agende la primera, aparecerá aquí.',
 }) {
   const [hover, setHover] = useState(null);
@@ -75,7 +84,7 @@ export function BarChartSerie({
 
   const ancho = 560;
   const alto = 200;
-  const margen = { arriba: 16, abajo: 28, izquierda: 8, derecha: 8 };
+  const margen = { arriba: 22, abajo: 28, izquierda: 8, derecha: 8 };
   const alturaGrafico = alto - margen.arriba - margen.abajo;
   const anchoGrafico = ancho - margen.izquierda - margen.derecha;
 
@@ -115,6 +124,19 @@ export function BarChartSerie({
                 onMouseEnter={() => setHover(i)}
                 onMouseLeave={() => setHover(null)}
               />
+              {d.value > 0 && (
+                <text
+                  x={x + anchoBarraReal / 2}
+                  y={y - 5}
+                  textAnchor="middle"
+                  fontSize="10"
+                  fontWeight="600"
+                  fill={COLOR_TEXTO_SECUNDARIO}
+                  pointerEvents="none"
+                >
+                  {formatoValor(d.value)}
+                </text>
+              )}
               {(todasLasEtiquetas || i % 2 === 0) && (
                 <text
                   x={x + anchoBarraReal / 2}
@@ -157,6 +179,7 @@ export function LineChartSerie({
   color = COLOR_CITAS,
   etiquetaEje,
   formatoEtiqueta,
+  formatoValor = (v) => v,
   mensajeVacio = 'Todavía no hay suficiente historial para mostrar la evolución.',
 }) {
   const [hover, setHover] = useState(null);
@@ -167,15 +190,17 @@ export function LineChartSerie({
 
   const ancho = 560;
   const alto = 200;
-  const margen = { arriba: 16, abajo: 28, izquierda: 8, derecha: 8 };
+  const margen = { arriba: 22, abajo: 28, izquierda: 8, derecha: 8 };
   const alturaGrafico = alto - margen.arriba - margen.abajo;
   const anchoGrafico = ancho - margen.izquierda - margen.derecha;
 
   const valorMax = Math.max(1, ...datos.map((d) => d.value));
-  const paso = datos.length > 1 ? anchoGrafico / (datos.length - 1) : 0;
+  // Margen lateral para que el valor del primer y último punto no se corte.
+  const margenX = 28;
+  const paso = datos.length > 1 ? (anchoGrafico - 2 * margenX) / (datos.length - 1) : 0;
 
   const puntos = datos.map((d, i) => ({
-    x: margen.izquierda + i * paso,
+    x: margen.izquierda + margenX + i * paso,
     y: margen.arriba + alturaGrafico - (d.value / valorMax) * alturaGrafico,
     ...d,
   }));
@@ -209,6 +234,9 @@ export function LineChartSerie({
               onMouseEnter={() => setHover(i)}
               onMouseLeave={() => setHover(null)}
             />
+            <text x={p.x} y={p.y - 9} textAnchor="middle" fontSize="10" fontWeight="600" fill={COLOR_TEXTO_SECUNDARIO} pointerEvents="none">
+              {formatoValor(p.value)}
+            </text>
             <text x={p.x} y={alto - 8} textAnchor="middle" fontSize="9" fill={COLOR_TEXTO_MUTED}>
               {formatearMesCorto(p.label)}
             </text>
@@ -289,4 +317,4 @@ export function BarChartCategorias({ datos }) {
   );
 }
 
-export { formatoCLP, COLOR_CITAS, COLOR_DINERO, COLOR_TEXTO_SECUNDARIO, formatearDiaSemanaCorto };
+export { formatoCLP, formatoCLPCorto, COLOR_CITAS, COLOR_DINERO, COLOR_TEXTO_SECUNDARIO, formatearDiaSemanaCorto };

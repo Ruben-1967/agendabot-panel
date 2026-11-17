@@ -618,7 +618,7 @@
 }
 
 .historial-item-badge {
-  background: var(--color-brass);
+  background: var(--color-dorado);
   color: white;
   padding: 2px 6px;
   border-radius: 8px;
@@ -919,4 +919,24 @@
     align-items: flex-start;
     gap: 8px;
   }
+}
+/* Monto de cada ítem marcado, bajo la fecha (17-nov) */
+.historial-monto-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.88rem;
+}
+.historial-monto-item span {
+  min-width: 160px;
+}
+.historial-monto-item input {
+  max-width: 160px;
+}
+.mensaje-venta-ok {
+  color: var(--color-teal);
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin: 0;
 }

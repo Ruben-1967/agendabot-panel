@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { fetchDashboard, fetchProfesionales } from '../../api/client';
-import { BarChartSerie, LineChartSerie, BarChartCategorias, formatoCLP, COLOR_DINERO, formatearDiaSemanaCorto } from './DashboardCharts';
+import { BarChartSerie, LineChartSerie, BarChartCategorias, formatoCLP, formatoCLPCorto, COLOR_DINERO, formatearDiaSemanaCorto } from './DashboardCharts';
 import './Dashboard.css';
+
+// "2025-11-17" -> "17 nov 2025"
+function formatearFechaLarga(fechaISO) {
+  const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  const [anio, mes, dia] = fechaISO.split('-');
+  return `${parseInt(dia, 10)} ${meses[parseInt(mes, 10) - 1]} ${anio}`;
+}
 
 export default function Dashboard() {
   const { token, usuario } = useAuth();
@@ -83,6 +90,11 @@ export default function Dashboard() {
             ))}
           </select>
         )}
+        {datos?.ventasFiltradasPorProfesional && (
+          <p className="dashboard-nota-filtro">
+            Montos y atenciones de este profesional: solo cuentan las ventas que tienen a este profesional elegido en el campo «Profesional».
+          </p>
+        )}
       </div>
 
       {datos_seguros.alertaWhatsApp && (
@@ -111,7 +123,7 @@ export default function Dashboard() {
           <span className="metric-label">Confirmadas</span>
           <span className="metric-value">{datos_seguros.confirmadas}</span>
           <span className="metric-description">
-            de {datos_seguros.citasHoy} citas agendadas
+            de {datos_seguros.citasHoy} citas agendadas (incluye las ya atendidas)
           </span>
         </div>
 
@@ -191,6 +203,11 @@ export default function Dashboard() {
 
         <div className="grafico-card">
           <h2>Atenciones por tipo de servicio</h2>
+          {datos?.atencionesPorTipoDesde && (
+            <p className="grafico-subtitulo">
+              Últimos 12 meses: del {formatearFechaLarga(datos.atencionesPorTipoDesde)} al {formatearFechaLarga(datos.atencionesPorTipoHasta)}
+            </p>
+          )}
           <BarChartCategorias
             datos={datos_seguros.atencionesPorTipo.map((d) => ({ categoria: d.categoria, cantidad: d.cantidad }))}
           />
@@ -198,6 +215,7 @@ export default function Dashboard() {
 
         <div className="grafico-card">
           <h2>Evolución mensual de citas</h2>
+          <p className="grafico-subtitulo">Últimos 6 meses, incluido el mes en curso</p>
           <LineChartSerie
             datos={datos_seguros.citasPorMes.map((d) => ({ label: d.mes, value: d.cantidad }))}
             etiquetaEje="Citas por mes, últimos 6 meses"
@@ -208,11 +226,13 @@ export default function Dashboard() {
 
         <div className="grafico-card">
           <h2>Evolución mensual de dinero</h2>
+          <p className="grafico-subtitulo">Últimos 6 meses, incluido el mes en curso</p>
           <LineChartSerie
             datos={datos_seguros.dineroPorMes.map((d) => ({ label: d.mes, value: d.monto }))}
             color={COLOR_DINERO}
             etiquetaEje="Monto en ventas por mes, últimos 6 meses"
             formatoEtiqueta={(v) => formatoCLP.format(v)}
+            formatoValor={formatoCLPCorto}
             mensajeVacio="Todavía no hay ventas registradas para mostrar la evolución mensual."
           />
         </div>

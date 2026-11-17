@@ -121,6 +121,15 @@ button {
 
 .login-card button:hover:not(:disabled) { background: var(--teal); }
 .login-card button:disabled { opacity: 0.6; cursor: default; }
+/* Los enlaces-botón del login ("¿Email equivocado? Volver", "¿Prefieres entrar con
+   tu contraseña?") heredaban el color blanco de .login-card button y casi no se veían. */
+.login-card button.login-olvide-password,
+.login-card button.login-olvide-password:hover:not(:disabled) {
+  background: none;
+  color: var(--teal-deep);
+  text-decoration: underline;
+  font-size: 0.85rem;
+}
 
 .login-error {
   background: var(--red-soft);

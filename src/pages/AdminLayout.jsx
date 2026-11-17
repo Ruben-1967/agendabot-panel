@@ -1,14 +1,27 @@
 import { useEffect, useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { fetchEstadoSuscripcion, fetchConversacionesPendientesCount, fetchInfoNegocio } from '../api/client';
+import { fetchEstadoSuscripcion, fetchConversacionesPendientesCount, fetchInfoNegocio, fetchProfesionales } from '../api/client';
 
 const MS_ENTRE_CONSULTAS_PENDIENTES = 30_000;
 
 export default function AdminLayout() {
   const { usuario, token, cerrarSesion } = useAuth();
   const esCatalogoRotativo = usuario?.empresaModoOperacion === 'CATALOGO_ROTATIVO';
-  const ocultarConfiguracionAgenda = usuario?.plan === 'PLAN_B' || usuario?.plan === 'PLAN_C';
+  // "Configuración de agenda" edita UNA sola agenda (el primer profesional), así
+  // que con varios profesionales confunde: todo eso se hace en "Profesionales".
+  // Se oculta en los planes multi-profesional (B, C y D -- D faltaba) y, sin plan
+  // (prueba, exentos, demos), cuando la empresa ya tiene más de un profesional.
+  // Plan A la sigue viendo: ahí "Profesionales" es solo lectura.
+  const esPlanMultiProfesional = ['PLAN_B', 'PLAN_C', 'PLAN_D'].includes(usuario?.plan);
+  const [variasAgendas, setVariasAgendas] = useState(false);
+  useEffect(() => {
+    if (!token || usuario?.plan || esCatalogoRotativo) return;
+    fetchProfesionales(token)
+      .then((data) => setVariasAgendas((data.profesionales || []).length > 1))
+      .catch(() => {}); // si falla, el menú queda como siempre
+  }, [token, usuario?.plan, esCatalogoRotativo]);
+  const ocultarConfiguracionAgenda = esPlanMultiProfesional || (!usuario?.plan && variasAgendas);
 
   // null = sin aviso (o todavía dentro de las primeras 12h desde que activó
   // la cuenta) — 'verde'/'amarillo'/'rojo' según cuántos días lleva sin pagar.

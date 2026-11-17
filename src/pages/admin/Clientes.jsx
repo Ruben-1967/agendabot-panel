@@ -191,6 +191,8 @@ export function DetalleCliente({ clienteId, token, usuario, categoriasProductoSu
   const [fechaEditVenta, setFechaEditVenta] = useState('');
   const [guardandoFechaVenta, setGuardandoFechaVenta] = useState(false);
   const [registrandoVenta, setRegistrandoVenta] = useState(false);
+  // Confirmación visible tras registrar: antes no se notaba dónde quedaba la atención.
+  const [ventaRegistradaOk, setVentaRegistradaOk] = useState('');
 
   // ---- Tab Ficha clínica (crea una AtencionClinica nueva) ----
   const [nuevaAtencion, setNuevaAtencion] = useState({
@@ -358,6 +360,7 @@ export function DetalleCliente({ clienteId, token, usuario, categoriasProductoSu
   async function manejarRegistrarVenta(e) {
     e.preventDefault();
     setError('');
+    setVentaRegistradaOk('');
 
     const itemsServicios = servicios
       .filter((s) => serviciosSeleccionados[s.id] !== undefined)
@@ -393,6 +396,7 @@ export function DetalleCliente({ clienteId, token, usuario, categoriasProductoSu
       setAtendidoPorVenta('');
       setRecursoAgendableIdVenta('');
       setFechaVenta(new Date().toISOString().slice(0, 10));
+      setVentaRegistradaOk(`✓ Atención registrada (${items.length === 1 ? items[0].descripcion : `${items.length} ítems`}). Aparece abajo, en el historial de atenciones y pagos.`);
       cargar();
       onCambio();
     } catch (err) {
@@ -548,17 +552,17 @@ async function guardarFechaVenta(ventaId) {
         </button>
         <button
           type="button"
-          className={`tab ${tabActiva === 'atenciones' ? 'active' : ''}`}
-          onClick={() => setTabActiva('atenciones')}
-        >
-          Atenciones
-        </button>
-        <button
-          type="button"
           className={`tab ${tabActiva === 'fichaClinica' ? 'active' : ''}`}
           onClick={() => setTabActiva('fichaClinica')}
         >
           {nombreRegistro}
+        </button>
+        <button
+          type="button"
+          className={`tab ${tabActiva === 'atenciones' ? 'active' : ''}`}
+          onClick={() => setTabActiva('atenciones')}
+        >
+          Atenciones
         </button>
         <button
           type="button"
@@ -633,17 +637,6 @@ async function guardarFechaVenta(ventaId) {
                           />
                           {s.nombre}
                         </label>
-                        {marcado && (
-                          <input
-                            type="number"
-                            min="0"
-                            placeholder="Monto CLP"
-                            value={serviciosSeleccionados[s.id]}
-                            onChange={(e) =>
-                              setServiciosSeleccionados((prev) => ({ ...prev, [s.id]: e.target.value }))
-                            }
-                          />
-                        )}
                       </div>
                     );
                   })}
@@ -656,29 +649,49 @@ async function guardarFechaVenta(ventaId) {
                   value={otroDescripcion}
                   onChange={(e) => setOtroDescripcion(e.target.value)}
                 />
-                {otroDescripcion.trim() && (
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="Monto CLP"
-                    value={otroMonto}
-                    onChange={(e) => setOtroMonto(e.target.value)}
-                  />
-                )}
               </div>
 
               <div className="historial-form-inline">
                 <SimpleDatePicker value={fechaVenta} onChange={setFechaVenta} />
+                {/* Montos bajo la fecha y antes del medio de pago (pedido de Rubén,
+                    17-nov): al costado del servicio quedaban en el otro extremo de
+                    la pantalla en notebook. Uno por cada ítem marcado. */}
+                {servicios.filter((s) => serviciosSeleccionados[s.id] !== undefined).map((s) => (
+                  <label key={s.id} className="historial-monto-item">
+                    <span>{s.nombre}</span>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Monto CLP"
+                      value={serviciosSeleccionados[s.id]}
+                      onChange={(e) =>
+                        setServiciosSeleccionados((prev) => ({ ...prev, [s.id]: e.target.value }))
+                      }
+                    />
+                  </label>
+                ))}
+                {otroDescripcion.trim() && (
+                  <label className="historial-monto-item">
+                    <span>{otroDescripcion.trim()}</span>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Monto CLP"
+                      value={otroMonto}
+                      onChange={(e) => setOtroMonto(e.target.value)}
+                    />
+                  </label>
+                )}
                 {mediosPago.length > 0 && (
                   <select value={medioPagoVenta} onChange={(e) => setMedioPagoVenta(e.target.value)}>
-                    <option value="">Medio de pago (opt.)</option>
+                    <option value="">Medio de pago (opcional)</option>
                     {mediosPago.map((m) => (
                       <option key={m} value={m}>{MEDIO_PAGO_LABEL[m] || m}</option>
                     ))}
                   </select>
                 )}
                 <input
-                  placeholder="Atendido por (opt.)"
+                  placeholder="Atendido por (opcional)"
                   value={atendidoPorVenta}
                   onChange={(e) => setAtendidoPorVenta(e.target.value)}
                 />
@@ -687,7 +700,7 @@ async function guardarFechaVenta(ventaId) {
                     value={recursoAgendableIdVenta}
                     onChange={(e) => setRecursoAgendableIdVenta(e.target.value)}
                   >
-                    <option value="">Profesional (opt.)</option>
+                    <option value="">Profesional (opcional)</option>
                     {profesionales.map((p) => (
                       <option key={p.id} value={p.id}>{p.nombre}</option>
                     ))}
@@ -698,11 +711,12 @@ async function guardarFechaVenta(ventaId) {
               <button type="submit" disabled={registrandoVenta} className="btn-guardar">
                 {registrandoVenta ? 'Registrando…' : 'Registrar atención'}
               </button>
+              {ventaRegistradaOk && <p className="mensaje-venta-ok">{ventaRegistradaOk}</p>}
             </form>
           </div>
 
           <div className="historial-seccion">
-            <h4 className="historial-titulo">Todas las transacciones</h4>
+            <h4 className="historial-titulo">Atenciones y pagos de {cliente.nombre}</h4>
             {cliente.ventas.length === 0 ? (
               <p className="texto-vacio">Sin ventas registradas.</p>
             ) : (
@@ -1067,6 +1081,7 @@ export default function Clientes() {
 
       {clienteSeleccionadoId && (
         <DetalleCliente
+          key={clienteSeleccionadoId}
           clienteId={clienteSeleccionadoId}
           token={token}
           usuario={usuario}
